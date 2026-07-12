@@ -1,0 +1,40 @@
+###############################################################################
+# Pool Controller HA
+# templates.yaml
+#
+# Calculs métier
+###############################################################################
+
+template:
+
+###############################################################################
+# Temps minimum de filtration
+###############################################################################
+
+  - sensor:
+
+      - name: Pool Controller Temps filtration minimum
+
+        unique_id: pool_controller_temps_filtration_minimum
+
+        unit_of_measurement: "h"
+
+        icon: mdi:clock-outline
+
+        state: >
+
+          {% set t = states('sensor.pool_controller_temperature_eau') | float(0) %}
+
+          {% if t < 20 %}
+            4
+
+          {% elif t < 24 %}
+            6
+
+          {% elif t < 27 %}
+            8
+
+          {% else %}
+            {{ (10 + ((t - 27) * 2)) | round(1) }}
+
+          {% endif %}
