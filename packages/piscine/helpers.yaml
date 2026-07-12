@@ -1,0 +1,198 @@
+###############################################################################
+# Pool Controller HA
+# helpers.yaml
+#
+# Tous les paramètres réglables par l'utilisateur.
+###############################################################################
+
+###############################################################################
+# ACTIVATION
+###############################################################################
+
+input_boolean:
+
+  pool_controller_enabled:
+    name: Contrôleur piscine actif
+    icon: mdi:robot
+
+  pool_controller_debug:
+    name: Mode debug
+    icon: mdi:bug
+
+  pool_controller_protection_serpentin:
+    name: Protection serpentin
+    icon: mdi:white-balance-sunny
+
+###############################################################################
+# MODE DE FONCTIONNEMENT
+###############################################################################
+
+input_select:
+
+  pool_controller_mode:
+
+    name: Mode de filtration
+
+    options:
+      - Automatique
+      - Filtration continue
+      - Traitement
+      - Marche forcée
+      - Arrêt forcé
+      - Maintenance
+
+    initial: Automatique
+    icon: mdi:pool
+
+  pool_controller_priorite:
+
+    name: Priorité
+
+    options:
+      - Chauffage
+      - Équilibré
+      - Filtration
+
+    initial: Équilibré
+
+###############################################################################
+# TEMPERATURE
+###############################################################################
+
+input_number:
+
+  pool_controller_temperature_cible:
+
+    name: Température cible
+
+    min: 15
+    max: 35
+    step: 0.5
+
+    unit_of_measurement: "°C"
+
+    initial: 29
+
+###############################################################################
+# LUMINOSITE
+###############################################################################
+
+  pool_controller_lux_on:
+
+    name: Luminosité démarrage
+
+    min: 5000
+    max: 60000
+    step: 500
+
+    unit_of_measurement: lx
+
+    initial: 27000
+
+  pool_controller_lux_off:
+
+    name: Luminosité arrêt
+
+    min: 5000
+    max: 60000
+    step: 500
+
+    unit_of_measurement: lx
+
+    initial: 22000
+
+###############################################################################
+# DELTA TEMPERATURE
+###############################################################################
+
+  pool_controller_delta_on:
+
+    name: Delta température ON
+
+    min: 0
+    max: 10
+    step: 0.5
+
+    unit_of_measurement: "°C"
+
+    initial: 2
+
+  pool_controller_delta_off:
+
+    name: Delta température OFF
+
+    min: 0
+    max: 10
+    step: 0.5
+
+    unit_of_measurement: "°C"
+
+    initial: 1
+
+###############################################################################
+# FILTRATION
+###############################################################################
+
+  pool_controller_debit_min:
+
+    name: Débit minimum
+
+    min: 1000
+    max: 6000
+    step: 100
+
+    unit_of_measurement: "L/h"
+
+    initial: 3000
+
+  pool_controller_puissance_min:
+
+    name: Puissance pompe minimum
+
+    min: 100
+    max: 1000
+    step: 10
+
+    unit_of_measurement: W
+
+    initial: 300
+
+  pool_controller_puissance_max:
+
+    name: Puissance pompe maximum
+
+    min: 100
+    max: 1000
+    step: 10
+
+    unit_of_measurement: W
+
+    initial: 350
+
+###############################################################################
+# HYSTERESIS
+###############################################################################
+
+  pool_controller_marche_min:
+
+    name: Temps minimum marche
+
+    min: 5
+    max: 180
+    step: 5
+
+    unit_of_measurement: min
+
+    initial: 30
+
+  pool_controller_arret_min:
+
+    name: Temps minimum arrêt
+
+    min: 5
+    max: 180
+    step: 5
+
+    unit_of_measurement: min
+
+    initial: 15
