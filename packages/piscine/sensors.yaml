@@ -1,0 +1,117 @@
+###############################################################################
+# Pool Controller HA
+# sensors.yaml
+#
+# Capteurs de base et validation des mesures
+###############################################################################
+
+template:
+
+  - binary_sensor:
+
+      #########################################################################
+      # Pompe en fonctionnement
+      #########################################################################
+
+      - name: Pool Controller Pompe active
+        unique_id: pool_controller_pompe_active
+
+        state: >
+          {{ is_state('switch.jardin_prises_exterieur_pompe_de_filtration','on') }}
+
+        icon: >
+          {% if this.state == 'on' %}
+          mdi:pump
+          {% else %}
+          mdi:pump-off
+          {% endif %}
+
+
+      #########################################################################
+      # Débit valide
+      #########################################################################
+
+      - name: Pool Controller Débit valide
+        unique_id: pool_controller_debit_valide
+
+        state: >
+
+          {{
+            is_state('switch.jardin_prises_exterieur_pompe_de_filtration','on')
+            and
+            states('sensor.jardin_esp32_jardin_debit_filtration_piscine')|float(0)
+            >=
+            states('input_number.pool_controller_debit_min')|float
+          }}
+
+        icon: >
+          {% if this.state == 'on' %}
+          mdi:water-check
+          {% else %}
+          mdi:water-alert
+          {% endif %}
+
+  - sensor:
+
+      #########################################################################
+      # Débit actuel
+      #########################################################################
+
+      - name: Pool Controller Débit
+
+        unique_id: pool_controller_debit
+
+        unit_of_measurement: "L/h"
+
+        state: >
+          {{ states('sensor.jardin_esp32_jardin_debit_filtration_piscine')|float(0)|round(0) }}
+
+        icon: mdi:waves
+
+
+      #########################################################################
+      # Puissance pompe
+      #########################################################################
+
+      - name: Pool Controller Puissance pompe
+
+        unique_id: pool_controller_puissance
+
+        unit_of_measurement: "W"
+
+        state: >
+          {{ states('sensor.prises_exterieur_power')|float(0)|round(0) }}
+
+        icon: mdi:flash
+
+
+      #########################################################################
+      # Température piscine
+      #########################################################################
+
+      - name: Pool Controller Température eau
+
+        unique_id: pool_controller_temperature_eau
+
+        unit_of_measurement: "°C"
+
+        state: >
+          {{ states('sensor.jardin_esp32_jardin_temperature_piscine')|float(0)|round(1) }}
+
+        icon: mdi:pool-thermometer
+
+
+      #########################################################################
+      # Température extérieure
+      #########################################################################
+
+      - name: Pool Controller Température extérieure
+
+        unique_id: pool_controller_temperature_exterieure
+
+        unit_of_measurement: "°C"
+
+        state: >
+          {{ states('sensor.temperature_exterieure_temperature')|float(0)|round(1) }}
+
+        icon: mdi:thermometer
