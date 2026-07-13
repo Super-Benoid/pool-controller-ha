@@ -115,3 +115,26 @@ template:
           {{ states('sensor.temperature_exterieure_temperature')|float(0)|round(1) }}
 
         icon: mdi:thermometer
+
+
+###############################################################################
+# Temps de filtration depuis minuit
+###############################################################################
+
+sensor:
+
+  - platform: history_stats
+
+    name: Pool Controller Temps filtration aujourd'hui
+
+    entity_id: switch.jardin_prises_exterieur_pompe_de_filtration
+
+    state: "on"
+
+    type: time
+
+    start: >
+      {{ today_at() }}
+
+    end: >
+      {{ now() }}
