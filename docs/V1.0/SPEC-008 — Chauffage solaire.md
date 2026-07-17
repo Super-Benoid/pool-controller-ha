@@ -42,10 +42,10 @@ Le chauffage solaire est autorisé uniquement lorsque toutes les conditions suiv
 * le mode utilisateur autorise le chauffage ;
 * la machine à états n'est pas en **DEFAUT** ;
 * le débit est suffisant ;
-* les mesures nécessaires sont disponibles ;
+* la mesure de luminosité ou de température extérieur est disponible ;
 * les conditions de chauffage sont satisfaites.
 
-Les seuils sont configurables via les Helpers définis dans la **SPEC-004**.
+Les seuils de débit, de luminosité et de température sont configurables via les Helpers définis dans la **SPEC-004**.
 
 ---
 
