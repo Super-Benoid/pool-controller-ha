@@ -1,253 +1,169 @@
-# SPEC-000 — Architecture générale du Pool Controller
+# SPEC-000 — Principes généraux
 
-**Projet :** Pool Controller HA
-
-**Version :** V1.0.0
-
-**Statut :** GELÉE (Frozen Specification)
+Version : 1.1
+Statut : Figée
 
 ---
 
 # 1. Objet
 
-La présente spécification définit l'architecture générale du Pool Controller.
+Le Pool Controller Home Assistant (PCHA) est un contrôleur logiciel destiné à automatiser le fonctionnement d'une piscine équipée d'un chauffage solaire passif.
 
-Elle constitue le document de référence de l'ensemble du projet.
+Cette SPEC définit les principes généraux du projet.
 
-Toutes les autres spécifications (SPEC-001 à SPEC-009) doivent respecter les principes définis dans ce document.
-
----
-
-# 2. Objectifs
-
-Le Pool Controller a pour objectif d'automatiser la gestion d'une piscine en garantissant :
-
-* la sécurité du matériel ;
-* la continuité de service ;
-* une filtration optimisée ;
-* un chauffage solaire autonome ;
-* une architecture simple, robuste et maintenable.
-
-Le système est entièrement supervisé par Home Assistant.
+Les comportements détaillés sont décrits dans les SPEC suivantes.
 
 ---
 
-# 3. Périmètre
+# 2. Philosophie
 
-La V1 comprend :
+Le contrôleur est conçu selon les principes suivants :
 
-* gestion automatique de la filtration ;
-* chauffage solaire ;
-* protection du serpentin ;
-* gestion des modes utilisateur ;
-* machine à états ;
-* diagnostics ;
-* journalisation.
+* simplicité de fonctionnement ;
+* robustesse ;
+* sécurité des personnes ;
+* protection de l'installation ;
+* modularité ;
+* évolutivité.
 
-La V1 est figée.
+Les SPEC constituent la référence fonctionnelle du projet.
 
-Toute évolution fonctionnelle relève d'une nouvelle version.
-
----
-
-# 4. Principes fondamentaux
-
-Le développement repose sur les principes suivants.
-
-## 4.1 Sécurité
-
-La protection du matériel est toujours prioritaire.
+Le code est uniquement une implémentation des SPEC.
 
 ---
 
-## 4.2 Continuité de service
+# 3. Priorités
 
-Le fonctionnement est maintenu aussi longtemps que la sécurité peut être garantie.
+Les priorités du contrôleur sont les suivantes :
 
----
+1. Sécurité des personnes.
+2. Protection de l'installation.
+3. Chauffage de la piscine.
+4. Optimisation énergétique.
 
-## 4.3 Déterminisme
-
-À un instant donné :
-
-* une seule décision ;
-* une seule transition d'état.
-
-Le comportement doit être parfaitement reproductible.
+La sécurité des personnes est toujours prioritaire sur la protection du matériel.
 
 ---
 
-## 4.4 Centralisation
+# 4. Installation hydraulique
 
-Toutes les décisions passent par la machine à états.
+Le contrôleur pilote une installation composée d'un **circuit hydraulique unique**.
 
-Aucune automatisation parallèle ne doit prendre une décision métier.
-
----
-
-## 4.5 Paramétrage
-
-Toutes les constantes métier sont configurables via des Helpers Home Assistant.
-
-Aucune valeur métier ne doit être codée en dur.
-
----
-
-# 5. Architecture générale
-
-Le contrôleur est organisé en couches.
+Schéma de principe :
 
 ```text
-Capteurs
-
-↓
-
-Validation des mesures
-
-↓
-
-Diagnostics
-
-↓
-
-Machine à états
-
-↓
-
-Décision
-
-↓
-
-Scripts / Actionneurs
+Aspiration piscine
+        │
+        ▼
+Pompe de filtration
+        │
+        ▼
+Débitmètre
+        │
+        ▼
+Thermomètre
+        │
+        ▼
+Serpentin solaire
+        │
+        ▼
+Refoulement piscine
 ```
 
-Chaque couche possède une responsabilité unique.
+Il n'existe :
+
+* qu'une seule pompe ;
+* qu'un seul débit ;
+* qu'un seul circuit hydraulique.
 
 ---
 
-# 6. Machine à états
+# 5. Principe de fonctionnement
 
-Le système est piloté exclusivement par la machine à états définie dans la **SPEC-005**.
+Le chauffage solaire n'est **pas** un circuit indépendant.
 
-Les états officiels sont :
+Le serpentin solaire est un élément du circuit de filtration.
 
-* OFF
-* AUTO
-* TRAITEMENT
-* MARCHE_FORCÉE
-* SECURISATION
-* DEFAUT
+Par conséquent :
 
-Aucun autre état n'est autorisé.
+* toute période de chauffage est une période de filtration ;
+* une période de filtration n'est pas obligatoirement une période de chauffage.
 
----
+Le chauffage solaire consiste simplement à faire fonctionner la filtration lorsque les conditions d'ensoleillement sont favorables.
 
-# 7. Architecture des diagnostics
+Le contrôleur ne distingue donc jamais un « circuit de chauffage » et un « circuit de filtration ».
 
-Les diagnostics sont définis dans la **SPEC-007**.
-
-Ils sont organisés en trois familles :
-
-* MES : mesure ;
-* COH : cohérence ;
-* PRO : procédé.
-
-Chaque diagnostic possède un niveau :
-
-* INFORMATIF ;
-* DÉGRADÉ ;
-* CRITIQUE.
+Il pilote toujours un unique circuit hydraulique.
 
 ---
 
-# 8. Journalisation
+# 6. Modes de fonctionnement
 
-Toutes les décisions importantes sont journalisées.
+Les différents modes sont définis dans la SPEC-006.
 
-Le format officiel est défini dans la **SPEC-009**.
+Leur philosophie est la suivante :
 
----
-
-# 9. Configuration
-
-Toutes les valeurs métier sont configurables.
-
-Les Helpers Home Assistant sont définis dans la **SPEC-004**.
-
----
-
-# 10. Règles d'architecture
-
-Le développement doit respecter les règles suivantes :
-
-* une seule machine à états ;
-* une seule source de décision ;
-* aucune logique dupliquée ;
-* aucune automatisation parallèle ;
-* toutes les décisions sont journalisées ;
-* tous les scripts sont idempotents.
+| Mode         | Description                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| OFF          | Arrêt absolu. Aucun démarrage automatique n'est autorisé.                                                   |
+| SÉCURISATION | Le fonctionnement normal est arrêté. Seules les protections automatiques de l'installation restent actives. |
+| AUTO         | Fonctionnement automatique complet conformément aux SPEC.                                                   |
+| MANUEL       | Fonctionnement commandé par l'utilisateur.                                                                  |
 
 ---
 
-# 11. Principe de responsabilité unique
+# 7. Règles générales
 
-Chaque spécification possède une responsabilité unique.
+Le contrôleur applique les principes suivants :
 
-Une SPEC ne traite qu'un seul domaine fonctionnel.
-
-Si une information appartient à une autre spécification, celle-ci est uniquement référencée.
-
-Aucune duplication de contenu n'est autorisée.
-
----
-
-# 12. Principe de source unique
-
-Chaque règle métier est définie une seule fois dans l'ensemble de la documentation.
-
-Cela concerne notamment :
-
-* les constantes ;
-* les seuils ;
-* les algorithmes ;
-* les diagnostics ;
-* les états ;
-* les conventions ;
-* les règles de priorité.
-
-Les autres spécifications ne doivent jamais recopier cette information.
-
-Elles doivent uniquement faire référence à la spécification qui en est propriétaire.
-
-Ce principe garantit la cohérence de la documentation et simplifie sa maintenance.
+* une seule information possède une seule source de vérité ;
+* aucune décision n'est dupliquée ;
+* les comportements sont déterministes ;
+* toute fonction est documentée dans une SPEC dédiée.
 
 ---
 
-# 13. Organisation des spécifications
+# 8. Découpage fonctionnel
 
-| Document | Responsabilité           |
-| -------- | ------------------------ |
-| SPEC-000 | Architecture générale    |
-| SPEC-001 | Exigences fonctionnelles |
-| SPEC-002 | Architecture logicielle  |
-| SPEC-003 | Gestion de la filtration |
-| SPEC-004 | Modèle Home Assistant    |
-| SPEC-005 | Machine à états          |
-| SPEC-006 | Modes utilisateur        |
-| SPEC-007 | Diagnostics              |
-| SPEC-008 | Chauffage solaire        |
-| SPEC-009 | Journalisation           |
+Le projet est organisé selon les domaines suivants :
+
+| SPEC     | Domaine                 |
+| -------- | ----------------------- |
+| SPEC-001 | Matériel                |
+| SPEC-002 | Interfaces              |
+| SPEC-003 | Filtration              |
+| SPEC-004 | Configuration           |
+| SPEC-005 | Machine à états         |
+| SPEC-006 | Modes de fonctionnement |
+| SPEC-007 | Diagnostics             |
+| SPEC-008 | Chauffage solaire       |
+| SPEC-009 | Journalisation          |
+
+Chaque SPEC possède une responsabilité unique.
 
 ---
 
-# 14. Évolutions
+# 9. Évolutions
 
-La version V1 est figée.
+La version V1 est considérée comme figée.
 
-Toute modification de comportement doit obligatoirement :
+Toute évolution fonctionnelle doit faire l'objet :
 
-* modifier la spécification concernée ;
-* conserver la cohérence avec la présente SPEC-000 ;
-* être documentée avant toute implémentation.
+* d'une nouvelle SPEC ;
+* ou d'une nouvelle version d'une SPEC existante.
 
-Le code est une implémentation des spécifications et ne constitue jamais la référence du projet.
+Aucune modification du code ne doit introduire un comportement non décrit dans les SPEC.
+
+---
+
+# 10. Références
+
+Les documents de référence du projet sont :
+
+* ARCHITECTURE.md
+* SPEC-000 à SPEC-009
+
+En cas de contradiction :
+
+1. Les SPEC prévalent sur le code.
+2. ARCHITECTURE.md définit les règles d'organisation et d'implémentation.

@@ -56,6 +56,10 @@ Le temps quotidien de filtration est déterminé selon les paliers suivants :
 
 Cette règle constitue la référence de la V1.
 
+# 4.1 Mode dégradé
+
+En cas d'indisponibilité du capteur de la température de l'eau, sa valeur sera remplacé par la consigne de température d'eau désiré pour le calcul du temps de filtration.
+
 ---
 
 # 5. Objectif quotidien

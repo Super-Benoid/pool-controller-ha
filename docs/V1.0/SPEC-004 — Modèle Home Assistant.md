@@ -76,33 +76,13 @@ Les Helpers contiennent toutes les valeurs configurables.
 Exemples :
 
 * température de consigne ;
-* débit minimal ;
-* débit nominal ;
+* seuil débit critique ;
+* seuil débit nominal ;
 * durée de validation des défauts ;
 * paramètres de protection ;
 * paramètres de filtration.
-• autorisation temporaire des sécurités en mode OFF.
 
 Aucune constante métier ne doit être codée dans les scripts.
-
----
-
-# 5.1 Dérogations temporaires
-
-Certaines fonctions peuvent être temporairement autorisées ou interdites par l'utilisateur.
-
-Ces dérogations sont implémentées à l'aide de Helpers de type input_boolean.
-
-Elles ne constituent pas des modes de fonctionnement.
-
-Elles modifient uniquement le comportement de certaines fonctions métier.
-
-Les règles associées sont définies dans les spécifications fonctionnelles correspondantes.
-
-Exemple :
-
-Entité	Description
-input_boolean.desactiver_securites_off	Interdit temporairement les démarrages automatiques liés aux fonctions de sécurité lorsque le contrôleur est en mode OFF. Ce Helper est automatiquement réinitialisé lors du retour en mode AUTO.
 
 ---
 
@@ -114,10 +94,8 @@ Ils ne prennent aucune décision.
 
 Exemples :
 
-* démarrer la pompe ;
-* arrêter la pompe ;
-* ouvrir une vanne ;
-* fermer une vanne ;
+* démarrer la filtration ;
+* arrêter la filtration ;
 * lancer un traitement.
 
 Les décisions sont exclusivement prises par la machine à états (SPEC-005).

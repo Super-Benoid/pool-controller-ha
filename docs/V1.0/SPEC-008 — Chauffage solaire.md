@@ -1,178 +1,182 @@
 # SPEC-008 — Chauffage solaire
 
-**Projet :** Pool Controller HA
-
-**Version :** V1.0.0
-
-**Statut :** GELÉE (Frozen Specification)
+Version : 1.1
+Statut : Figée
 
 ---
 
 # 1. Objet
 
-Cette spécification définit le fonctionnement du chauffage solaire.
+Cette SPEC définit le fonctionnement du chauffage solaire du Pool Controller Home Assistant (PCHA).
 
-Elle décrit :
+Le chauffage solaire est entièrement passif.
 
-* les conditions d'autorisation du chauffage ;
-* la protection du serpentin ;
-* le comportement dans les différents modes utilisateur ;
-* les stratégies de fonctionnement dégradé.
-
-Les diagnostics associés sont définis dans la **SPEC-007**.
+Il n'existe aucun circuit hydraulique dédié au chauffage.
 
 ---
 
-# 2. Principes
+# 2. Principe
 
-Le chauffage solaire utilise exclusivement l'énergie solaire disponible.
+Le chauffage solaire repose sur un principe simple :
 
-Le contrôleur :
+> **Le chauffage solaire est une période de filtration réalisée lorsque les conditions d'ensoleillement sont favorables.**
 
-* optimise le chauffage de l'eau ;
-* protège le serpentin contre la surchauffe ;
-* respecte les priorités de sécurité définies par la machine à états.
+Il n'existe :
 
----
+* qu'une seule pompe ;
+* qu'un seul circuit hydraulique ;
+* qu'un seul débit.
 
-# 3. Conditions d'autorisation
+Le serpentin solaire est intégré au circuit de filtration.
 
-Le chauffage solaire est autorisé uniquement lorsque toutes les conditions suivantes sont satisfaites :
-
-* le mode utilisateur autorise le chauffage ;
-* la machine à états n'est pas en **DEFAUT** ;
-* le débit est suffisant ;
-* la mesure de luminosité ou de température extérieur est disponible ;
-* les conditions de chauffage sont satisfaites.
-
-Les seuils de débit, de luminosité et de température sont configurables via les Helpers définis dans la **SPEC-004**.
+Toute circulation d'eau traverse donc naturellement le serpentin.
 
 ---
 
-# 4. Conditions d'arrêt
+# 3. Fonctionnement hydraulique
 
-Le chauffage solaire est arrêté lorsque l'une des conditions d'autorisation disparaît.
-
-L'arrêt est immédiat.
-
-Les protections du serpentin restent actives si nécessaire.
-
----
-
-# 5. Protection du serpentin
-
-## Objectif
-
-Empêcher une montée excessive en température du serpentin lorsque celui-ci est exposé au rayonnement solaire.
-
-La protection du serpentin fait partie du fonctionnement normal du chauffage solaire.
-
-Elle ne constitue pas un diagnostic.
-
----
-
-## Déclenchement
-
-La protection est activée lorsque les conditions définies pour le risque de surchauffe sont réunies.
-
-Les critères exacts (température, luminosité, durée, etc.) sont configurables.
-
----
-
-## Fonctionnement
-
-Lorsque la protection est active :
-
-* la circulation d'eau est autorisée afin de refroidir le serpentin ;
-* le fonctionnement est maintenu jusqu'à disparition du risque.
-
-Les algorithmes de pilotage sont définis par l'implémentation.
-
----
-
-## Cas du mode OFF
-
-Par défaut :
-
-* la protection du serpentin reste active.
-
-Si le Helper :
+Le chauffage utilise exactement le même circuit que la filtration.
 
 ```text
-input_boolean.desactiver_securites_off
+Aspiration piscine
+        │
+        ▼
+Pompe de filtration
+        │
+        ▼
+Débitmètre
+        │
+        ▼
+Thermomètre
+        │
+        ▼
+Serpentin solaire
+        │
+        ▼
+Refoulement piscine
 ```
 
-est activé :
+Aucune vanne n'est utilisée.
 
-* aucun démarrage automatique de la pompe n'est autorisé ;
-* la protection du serpentin est volontairement inhibée.
-
-Ce Helper est automatiquement réinitialisé lors du retour en mode **AUTO**.
+Aucun basculement hydraulique n'est réalisé.
 
 ---
 
-## Protection impossible
+# 4. Conditions d'autorisation
 
-Lorsque la protection est nécessaire mais ne peut pas être assurée, le diagnostic **PRO-003** est activé conformément à la **SPEC-007**.
+Le chauffage solaire est autorisé uniquement lorsque :
 
----
+* le mode de fonctionnement l'autorise (SPEC-006) ;
+* la filtration est autorisée (SPEC-003) ;
+* le seuil minimal de luminosité est atteint ;
+* la température de consigne de la piscine n'est pas atteinte ;
+* aucun défaut bloquant n'est présent.
 
-# 6. Fonctionnement dégradé
-
-En cas de fonctionnement dégradé :
-
-* le chauffage solaire applique les stratégies de repli définies pour chaque diagnostic ;
-* seules les fonctions compatibles avec la sécurité restent autorisées.
-
-Les diagnostics correspondants sont définis dans la **SPEC-007**.
+Si une seule de ces conditions n'est plus satisfaite, le chauffage solaire cesse.
 
 ---
 
-# 7. Compatibilité avec les modes utilisateur
+# 5. Détection de l'ensoleillement
 
-| Mode                          | Chauffage solaire | Protection serpentin |
-| ----------------------------- | ----------------- | -------------------- |
-| AUTO                          | Oui               | Oui                  |
-| OFF                           | Non               | Oui (par défaut)     |
-| OFF + désactivation sécurités | Non               | Non                  |
-| TRAITEMENT                    | Oui               | Oui                  |
-| MARCHE FORCÉE                 | Oui               | Oui                  |
+Le chauffage solaire est piloté à partir de la luminosité mesurée.
 
-Les transitions entre modes sont définies dans la **SPEC-005**.
+Un helper permet de définir le seuil minimal d'ensoleillement.
 
----
+Exemple :
 
-# 8. Journalisation
+```text
+input_number.pcha_seuil_luminosite_chauffage
+```
 
-Les événements suivants sont journalisés conformément à la **SPEC-009** :
-
-* démarrage du chauffage solaire ;
-* arrêt du chauffage solaire ;
-* activation de la protection du serpentin ;
-* fin de la protection du serpentin ;
-* impossibilité d'assurer la protection.
+Le choix du seuil dépend des caractéristiques de l'installation et est configurable par l'utilisateur.
 
 ---
 
-# 9. Critères d'acceptation
+# 6. Température de consigne
 
-Le chauffage solaire est conforme lorsque :
+L'utilisateur définit la température souhaitée de la piscine.
 
-* il respecte les autorisations définies par la machine à états ;
-* la protection du serpentin est assurée dès qu'un risque est détecté ;
-* le mode OFF conserve les protections par défaut ;
-* la désactivation temporaire des sécurités en mode OFF inhibe uniquement les protections automatiques ;
-* toute impossibilité d'assurer la protection déclenche le diagnostic **PRO-003** ;
-* tous les événements sont journalisés.
+Exemple :
+
+```text
+input_number.pcha_consigne_temperature
+```
+
+Lorsque cette température est atteinte :
+
+* le chauffage solaire est arrêté ;
+* la filtration continue selon les règles définies dans la SPEC-003.
 
 ---
 
-# 10. Références
+# 7. Fin d'une période de chauffage
 
-* SPEC-000 — Architecture générale
-* SPEC-003 — Gestion de la filtration
-* SPEC-004 — Modèle Home Assistant
-* SPEC-005 — Machine à états
-* SPEC-006 — Modes utilisateur
-* SPEC-007 — Diagnostics et sécurités
-* SPEC-009 — Journalisation
+Une période de chauffage se termine lorsque :
+
+* la température de consigne est atteinte ;
+* la luminosité devient insuffisante ;
+* la filtration n'est plus autorisée ;
+* le mode de fonctionnement change ;
+* un défaut bloquant est détecté.
+
+---
+
+# 8. Équipements utilisés
+
+Version V1 :
+
+| Équipement                | Utilisation |
+| ------------------------- | ----------- |
+| Pompe de filtration       | Oui         |
+| Débitmètre                | Oui         |
+| Sonde température piscine | Oui         |
+| Capteur de luminosité     | Oui         |
+| Serpentin solaire         | Oui         |
+| Vanne motorisée           | Non         |
+| Sonde serpentin           | Non         |
+| Sonde local technique     | Non         |
+
+---
+
+# 9. Philosophie
+
+Le chauffage solaire ne constitue pas une fonction indépendante.
+
+Le contrôleur ne décide jamais de :
+
+> « démarrer le chauffage ».
+
+Il décide uniquement de :
+
+> **prolonger ou démarrer une période de filtration lorsque les conditions permettent de récupérer de l'énergie solaire.**
+
+Le chauffage est donc une conséquence du fonctionnement de la filtration.
+
+---
+
+# 10. Interaction avec les autres SPEC
+
+Cette SPEC dépend :
+
+* SPEC-000 — Principes généraux ;
+* SPEC-003 — Filtration ;
+* SPEC-006 — Modes de fonctionnement ;
+* SPEC-007 — Diagnostics.
+
+Elle ne définit aucun comportement de filtration.
+
+La gestion de la durée de filtration reste exclusivement décrite dans la SPEC-003.
+
+---
+
+# 11. Évolutions futures
+
+Les fonctionnalités suivantes sont exclues de la V1 :
+
+* vanne trois voies motorisée ;
+* mesure de température du serpentin ;
+* température du local technique ;
+* optimisation thermique avancée ;
+* estimation du rendement solaire.
+
+Elles pourront être intégrées dans une version ultérieure sans modifier le principe fondamental : **un seul circuit hydraulique, une seule filtration, dont certaines périodes sont exploitées pour le chauffage solaire.**

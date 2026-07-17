@@ -56,7 +56,7 @@ Les règles de fonctionnement sont définies dans la **SPEC-008**.
 
 ## EXI-004 — Protection du serpentin
 
-Le système doit protéger le serpentin solaire contre les risques liés à une stagnation de l'eau.
+Le système doit protéger le serpentin solaire contre les risques liés à une exposition prolongé au soleil sans circulation d'eau pouvant provoquer une surchauffe.
 
 Les stratégies de protection sont définies dans la **SPEC-008**.
 

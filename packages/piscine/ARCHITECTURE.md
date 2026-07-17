@@ -1,38 +1,46 @@
+# ARCHITECTURE.md
+
 # Pool Controller Home Assistant (PCHA)
 
-# Philosophie du projet
-
-Le Pool Controller Home Assistant est conçu comme un logiciel industriel.
-
-Les **spécifications (SPEC)** constituent la référence fonctionnelle.
-
-Le **code est une implémentation des SPEC**, jamais l'inverse.
+Version : V1.0
+Statut : Figée
 
 ---
 
-# Architecture du projet
+# 1. Philosophie du projet
 
-Le projet est organisé selon les principes suivants :
+Le Pool Controller Home Assistant (PCHA) est conçu comme un logiciel industriel.
+
+Les **SPEC** définissent le comportement fonctionnel.
+
+Le code est uniquement une implémentation de ces SPEC.
+
+Les règles suivantes sont immuables :
 
 * une SPEC = un domaine fonctionnel ;
-* un domaine fonctionnel = un ensemble de fichiers ;
-* un fichier = une responsabilité unique.
+* une responsabilité = un fichier ;
+* une information = une source unique de vérité ;
+* aucun accès direct aux équipements physiques par la logique métier.
+
+---
+
+# 2. Architecture générale
 
 ```text
 config/
 └── pool-controller-ha/
     │
     ├── docs/
-    │   ├── SPEC-000
-    │   ├── SPEC-001
-    │   ├── SPEC-002
-    │   ├── SPEC-003
-    │   ├── SPEC-004
-    │   ├── SPEC-005
-    │   ├── SPEC-006
-    │   ├── SPEC-007
-    │   ├── SPEC-008
-    │   └── SPEC-009
+    │   ├── SPEC-000.md
+    │   ├── SPEC-001.md
+    │   ├── SPEC-002.md
+    │   ├── SPEC-003.md
+    │   ├── SPEC-004.md
+    │   ├── SPEC-005.md
+    │   ├── SPEC-006.md
+    │   ├── SPEC-007.md
+    │   ├── SPEC-008.md
+    │   └── SPEC-009.md
     │
     └── packages/
         └── piscine/
@@ -71,49 +79,27 @@ config/
             └── ARCHITECTURE.md
 ```
 
----
+Les dossiers et les fichiers sont classés par ordre alphabétique.
 
-# Conventions de développement
-
-## Préfixe des entités
-
-Toutes les entités créées par le contrôleur utilisent le préfixe :
-
-`pcha_`
-
-Les entités provenant d'intégrations externes (ESPHome, Shelly, MQTT, etc.) conservent leur nom d'origine.
+Un fichier n'est créé que s'il possède une responsabilité réelle.
 
 ---
 
-# Convention de nommage
+# 3. Architecture logique
 
-Le nom d'une entité doit permettre d'identifier immédiatement sa fonction.
-
-| Type                  | Préfixe               | Exemple                                       |
-| --------------------- | --------------------- | --------------------------------------------- |
-| Mesure                | `sensor.pcha_`        | `sensor.pcha_debit`                           |
-| Consigne              | `pcha_consigne_`      | `input_number.pcha_consigne_temperature`      |
-| Seuil                 | `pcha_seuil_`         | `input_number.pcha_seuil_debit_critique`      |
-| Temporisation         | `pcha_tempo_`         | `input_number.pcha_tempo_validation_debit`    |
-| État logique          | `binary_sensor.pcha_` | `binary_sensor.pcha_filtration_active`        |
-| Paramètre utilisateur | `input_boolean.pcha_` | `input_boolean.pcha_desactiver_securites_off` |
-| Sélection utilisateur | `input_select.pcha_`  | `input_select.pcha_mode`                      |
-
----
-
-# Couche d'abstraction
-
-Le contrôleur ne manipule jamais directement les entités physiques.
-
-Les capteurs physiques sont convertis en entités métier via les Templates.
-
-Architecture logique :
+Le contrôleur est construit par couches.
 
 ```text
-Capteurs physiques
+Équipements physiques
         │
         ▼
-Templates
+Templates (abstraction)
+        │
+        ▼
+Entités métier PCHA
+        │
+        ▼
+Machine à états
         │
         ▼
 Scripts
@@ -122,66 +108,221 @@ Scripts
 Automatisations
 ```
 
-Règles :
+Chaque couche dépend uniquement de la couche située immédiatement en dessous.
 
-* les Scripts n'accèdent jamais aux capteurs physiques ;
-* les Automatisations n'accèdent jamais aux capteurs physiques ;
-* les Diagnostics n'accèdent jamais aux capteurs physiques.
-
-Toute la logique métier utilise exclusivement des entités `pcha_*`.
+Aucune dépendance directe n'est autorisée entre une couche haute et les équipements physiques.
 
 ---
 
-# Organisation des fichiers
+# 4. Couche d'abstraction
 
-Chaque fichier possède une responsabilité unique.
+Les équipements physiques ne sont jamais utilisés directement par la logique métier.
 
-Un fichier n'est créé que s'il contient une logique propre.
+Exemple :
 
-Aucun fichier vide n'est conservé dans le projet.
+```text
+sensor.jardin_esp32_jardin_debit_filtration_piscine
+                │
+                ▼
+sensor.pcha_debit
+```
 
----
+Toutes les couches supérieures utilisent exclusivement :
 
-# Correspondance avec les SPEC
+* `sensor.pcha_*`
+* `binary_sensor.pcha_*`
 
-| Domaine           | SPEC     |
-| ----------------- | -------- |
-| Helpers           | SPEC-004 |
-| Machine à états   | SPEC-005 |
-| Modes utilisateur | SPEC-006 |
-| Diagnostics       | SPEC-007 |
-| Filtration        | SPEC-003 |
-| Chauffage solaire | SPEC-008 |
-| Journalisation    | SPEC-009 |
-
-Toute évolution fonctionnelle doit être réalisée dans la SPEC concernée avant toute modification du code.
+Les équipements physiques peuvent être remplacés sans modifier la logique métier.
 
 ---
 
-# Cycle de développement
+# 5. Organisation des Templates
 
-Chaque module suit systématiquement le cycle suivant :
+Les Templates sont organisés en deux niveaux.
+
+## Niveau 1 — Abstraction
+
+Transformation des équipements physiques en entités PCHA.
+
+Exemple :
+
+```text
+sensor.jardin_esp32_jardin_debit_filtration_piscine
+        │
+        ▼
+sensor.pcha_debit
+```
+
+Aucun calcul métier.
+
+---
+
+## Niveau 2 — Métier
+
+Création des états logiques utilisés par le contrôleur.
+
+Exemple :
+
+```text
+sensor.pcha_debit
+        │
+        ▼
+binary_sensor.pcha_debit_nominal
+
+binary_sensor.pcha_debit_critique
+```
+
+Les scripts et automatisations utilisent exclusivement ces états métier.
+
+---
+
+# 6. Contrat d'interface
+
+Chaque fichier commence par un contrat d'interface.
+
+Exemple :
+
+```text
+Entrées
+
+    sensor.pcha_debit
+
+Sorties
+
+    binary_sensor.pcha_debit_nominal
+```
+
+Le contrat décrit uniquement :
+
+* les entités consommées ;
+* les entités produites.
+
+---
+
+# 7. Convention de nommage
+
+Toutes les entités créées par le projet utilisent le préfixe :
+
+```text
+pcha_
+```
+
+Exemples :
+
+```text
+sensor.pcha_debit
+
+sensor.pcha_puissance_filtration
+
+sensor.pcha_energie_filtration
+
+binary_sensor.pcha_filtration_active
+
+script.pcha_demarrer_filtration
+```
+
+Les équipements physiques conservent leur nom d'origine.
+
+---
+
+# 8. Helpers
+
+Les Helpers représentent uniquement les paramètres configurables par l'utilisateur.
+
+Ils ne contiennent jamais :
+
+* une mesure ;
+* un état calculé ;
+* une information déductible.
+
+Le nombre de Helpers est volontairement limité au strict nécessaire.
+
+---
+
+# 9. Scripts
+
+Les Scripts réalisent des actions.
+
+Ils :
+
+* utilisent exclusivement des entités PCHA ;
+* n'accèdent jamais directement aux équipements physiques.
+
+Les commandes des équipements passent toujours par les Scripts.
+
+---
+
+# 10. Automatisations
+
+Les Automatisations orchestrent le fonctionnement global.
+
+Elles :
+
+* utilisent uniquement des entités PCHA ;
+* ne réalisent aucun calcul complexe ;
+* ne pilotent jamais directement les équipements physiques.
+
+---
+
+# 11. Diagnostics
+
+Les Diagnostics utilisent uniquement :
+
+* les entités PCHA ;
+* les états métier.
+
+Ils ne lisent jamais directement les équipements physiques.
+
+Ils surveillent uniquement les informations indispensables au fonctionnement.
+
+---
+
+# 12. Développement
+
+Chaque nouveau module suit obligatoirement le cycle suivant :
 
 1. Validation de la SPEC.
-2. Implémentation.
-3. Tests unitaires.
-4. Validation fonctionnelle.
-5. Gel du module.
-
-Une fois un module validé, seules des corrections de bugs sont autorisées.
-
-Les évolutions fonctionnelles sont intégrées dans une nouvelle version des SPEC.
+2. Définition du contrat d'interface.
+3. Création du squelette.
+4. Implémentation.
+5. Tests.
+6. Validation.
+7. Module figé.
 
 ---
 
-# Principes d'architecture
+# 13. Source unique de vérité
 
-Le projet applique les règles suivantes :
+Chaque information possède une seule source.
 
-* une SPEC = un domaine fonctionnel ;
-* un domaine fonctionnel = un ensemble de fichiers ;
-* un fichier = une responsabilité unique ;
-* une entité = une fonction ;
-* une information = une source unique de vérité ;
-* aucune duplication de logique ;
-* aucune dépendance directe entre la logique métier et les équipements physiques.
+Une règle métier ne doit jamais être dupliquée.
+
+Une même décision ne doit jamais être implémentée à plusieurs endroits.
+
+---
+
+# 14. Évolutions
+
+Une fois une SPEC validée :
+
+* elle est considérée comme figée pour la V1 ;
+* toute évolution devient une proposition pour une version ultérieure.
+
+L'architecture suit le même principe.
+
+Elle n'évolue que si un besoin réel apparaît pendant l'implémentation.
+
+---
+
+# 15. Objectif
+
+Cette architecture garantit :
+
+* indépendance vis-à-vis du matériel ;
+* forte modularité ;
+* maintenance facilitée ;
+* testabilité ;
+* évolutivité ;
+* lisibilité du projet.
+
+Toute implémentation doit respecter intégralement ce document.

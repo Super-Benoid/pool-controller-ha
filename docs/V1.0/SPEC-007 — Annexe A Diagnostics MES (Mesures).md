@@ -93,7 +93,7 @@ Automatique.
 
 ### Conséquences
 
-Le calcul normal de la filtration n'est plus possible.
+Le calcul du temps de filtration journalier n'est plus possible.
 
 Le contrôleur applique le comportement dégradé défini dans la **SPEC-003**.
 

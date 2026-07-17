@@ -1,214 +1,154 @@
-# 00 - Introduction
+# INTRODUCTION.md
 
-**Projet :** Pool Controller HA
+# Pool Controller Home Assistant (PCHA)
 
-**Version :** V1.0.0
-
-**Statut :** GELÉE (Frozen Specification)
-
-**Auteur :** Super-Benoid
+Version : V1.0
+Statut : Figée
 
 ---
 
-# 1. Objet du document
+# Présentation
 
-Ce document constitue l'introduction officielle du projet **Pool Controller HA**.
+Le projet **Pool Controller Home Assistant (PCHA)** est un contrôleur logiciel destiné à automatiser la gestion d'une piscine équipée d'un système de chauffage solaire passif.
 
-Il décrit les objectifs du projet, sa philosophie de conception et les règles qui régissent son développement.
+Son objectif est de piloter l'installation de manière simple, fiable et évolutive, tout en restant indépendant du matériel utilisé.
 
-L'ensemble des documents de spécification (SPEC) constitue la référence unique du projet.
-
-Aucune implémentation ne doit s'écarter des spécifications validées.
+Le projet est entièrement intégré à **Home Assistant** et repose sur des composants standards (ESPHome, Shelly, etc.).
 
 ---
 
-# 2. Présentation du projet
+# Philosophie
 
-Pool Controller HA est un contrôleur logiciel destiné à Home Assistant permettant de piloter automatiquement la filtration et le chauffage solaire d'une piscine.
+Le contrôleur a été conçu autour de quelques principes fondamentaux :
 
-Le projet repose exclusivement sur les fonctionnalités natives de Home Assistant et des intégrations existantes.
+* simplicité avant complexité ;
+* sécurité avant performance ;
+* modularité avant optimisation ;
+* une seule source de vérité pour chaque information.
 
-L'objectif n'est pas de réaliser une simple automatisation mais de développer un véritable contrôleur capable de prendre des décisions cohérentes en fonction de nombreux paramètres.
+L'installation hydraulique est volontairement modélisée de façon fidèle à la réalité.
+
+Il n'existe qu'un seul circuit hydraulique.
+
+Le chauffage solaire n'est pas un circuit indépendant.
+
+Il s'agit simplement d'une période de filtration réalisée lorsque les conditions d'ensoleillement permettent de récupérer de l'énergie solaire.
 
 ---
 
-# 3. Objectifs
+# Objectifs
 
-Les objectifs principaux sont les suivants :
+Le projet poursuit plusieurs objectifs :
 
-* garantir une excellente qualité d'eau ;
-* optimiser le chauffage solaire ;
+* automatiser complètement la filtration ;
+* exploiter gratuitement l'énergie solaire disponible ;
+* protéger l'installation ;
 * limiter la consommation électrique ;
-* protéger les équipements ;
-* être totalement configurable ;
-* être entièrement documenté ;
-* rester simple à maintenir.
+* proposer une architecture simple à maintenir ;
+* permettre des évolutions futures sans remettre en cause les fondations du projet.
 
 ---
 
-# 4. Philosophie du projet
+# Principes de développement
 
-Le contrôleur doit toujours privilégier :
+Le projet est construit selon une séparation stricte entre :
 
-1. La sécurité des personnes et du matériel.
-2. La qualité sanitaire de l'eau.
-3. L'utilisation de l'énergie solaire.
-4. La réduction de la consommation électrique.
-5. Le confort d'utilisation.
+* les besoins fonctionnels ;
+* l'architecture logicielle ;
+* l'implémentation.
 
-Lorsqu'un conflit apparaît entre plusieurs objectifs, cette hiérarchie est toujours respectée.
+Cette séparation garantit la cohérence du projet et facilite sa maintenance.
 
 ---
 
-# 5. Principe général
+# Organisation documentaire
 
-Toutes les décisions sont prises à partir :
+Le projet repose sur quatre documents de référence.
 
-* des mesures physiques ;
-* des paramètres configurés par l'utilisateur ;
-* de l'état interne du contrôleur.
+## INTRODUCTION.md
 
-Le contrôleur ne réalise aucune action aléatoire.
-
-Chaque décision doit être :
-
-* explicable ;
-* reproductible ;
-* enregistrée dans le journal.
+Présente le projet, ses objectifs et sa philosophie.
 
 ---
 
-# 6. Architecture générale
+## SPEC-000 à SPEC-009
 
-Le contrôleur est organisé en cinq couches.
+Décrivent le comportement fonctionnel attendu.
 
-```
-Capteurs
-      │
-      ▼
-Acquisition
-      │
-      ▼
-Calculs
-      │
-      ▼
+Elles répondent à la question :
+
+> **Que doit faire le contrôleur ?**
+
+---
+
+## ARCHITECTURE.md
+
+Décrit l'organisation technique du projet.
+
+Il répond à la question :
+
+> **Comment le projet est-il organisé ?**
+
+---
+
+## CONVENTIONS.md
+
+Décrit les règles de développement.
+
+Il répond à la question :
+
+> **Comment le projet est-il développé ?**
+
+---
+
+# Organisation générale
+
+Le développement suit une architecture par couches.
+
+```text
+Équipements physiques
+        │
+        ▼
+Templates d'abstraction
+        │
+        ▼
+Entités métier PCHA
+        │
+        ▼
 Machine à états
-      │
-      ▼
-Commande de la pompe
+        │
+        ▼
+Scripts
+        │
+        ▼
+Automatisations
+        │
+        ▼
+Diagnostics
 ```
 
-Chaque couche possède une responsabilité unique.
+Cette architecture permet de remplacer un équipement physique sans modifier la logique métier.
 
 ---
 
-# 7. Cycle de fonctionnement
+# Versions
 
-Le contrôleur fonctionne en continu.
+La version **V1** constitue une base stable et opérationnelle.
 
-Toutes les dix secondes :
+Son objectif est de couvrir les besoins essentiels de l'installation.
 
-1. lecture des capteurs ;
-2. validation des données ;
-3. mise à jour des calculs ;
-4. détection des événements ;
-5. éventuelle transition d'état ;
-6. commande de la pompe ;
-7. journalisation.
-
-Le contrôleur utilise une architecture hybride :
-
-* supervision cyclique toutes les dix secondes ;
-* décisions déclenchées uniquement lorsqu'une transition est nécessaire.
+Les évolutions futures (V2, V3, …) pourront enrichir les fonctionnalités sans remettre en cause l'architecture générale.
 
 ---
 
-# 8. Principes de conception
+# Conclusion
 
-Le projet respecte les principes suivants :
+Le Pool Controller Home Assistant (PCHA) est conçu comme un projet logiciel structuré, documenté et évolutif.
 
-* une responsabilité par fichier ;
-* une responsabilité par script ;
-* aucune duplication de logique ;
-* paramètres configurables ;
-* comportement déterministe ;
-* priorité aux sécurités ;
-* documentation avant implémentation.
+Chaque fonctionnalité est décrite par une SPEC.
 
----
+Chaque choix technique est documenté dans l'architecture.
 
-# 9. Version V1
+Chaque règle de développement est définie dans les conventions.
 
-La version V1 est figée.
-
-Les éléments suivants ne seront plus modifiés :
-
-* architecture générale ;
-* algorithmes ;
-* hiérarchie des priorités ;
-* organisation des packages ;
-* noms des entités ;
-* stratégie de décision.
-
-Les évolutions futures seront intégrées dans une version V2.
-
----
-
-# 10. Documentation
-
-La documentation officielle est composée des documents suivants :
-
-* 00 – Introduction
-* SPEC-001 – Cahier des charges
-* SPEC-002 – Architecture technique
-* SPEC-003 – Algorithme
-* SPEC-004 – Catalogue des entités
-* SPEC-005 – Machine à états
-* SPEC-006 – Variables internes
-* SPEC-007 – Gestion des défauts
-* SPEC-008 – Protection serpentin
-* SPEC-009 – Packages
-* SPEC-010 – Scripts
-* SPEC-011 – Automatisations
-* SPEC-012 – Dashboard
-* SPEC-013 – Plan de tests
-* SPEC-014 – Mise en service
-* SPEC-015 – Maintenance
-
-Cette documentation constitue la référence unique du projet.
-
----
-
-# 11. Gestion des versions
-
-Le développement suit le cycle suivant :
-
-```
-Spécifications
-        ↓
-Implémentation
-        ↓
-Tests
-        ↓
-Corrections
-        ↓
-Validation
-        ↓
-Publication
-```
-
-Toute modification fonctionnelle doit faire l'objet d'une nouvelle version des spécifications.
-
----
-
-# 12. Objectif final
-
-À l'issue de la V1, le projet devra permettre :
-
-* une installation simple dans Home Assistant ;
-* une configuration entièrement graphique ;
-* un fonctionnement autonome ;
-* une maintenance aisée ;
-* une compréhension complète grâce à la documentation.
-
-Le projet a vocation à devenir un contrôleur open source fiable, documenté et évolutif pour la gestion de la filtration et du chauffage solaire d'une piscine.
+Cette organisation garantit un projet cohérent, maintenable et pérenne.

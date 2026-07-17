@@ -1,61 +1,103 @@
-# SPEC-006 — Modes utilisateur
+# SPEC-006 — Modes de fonctionnement
 
-**Projet :** Pool Controller HA
-
-**Version :** V1.0.0
-
-**Statut :** GELÉE (Frozen Specification)
+Version : 1.1
+Statut : Figée
 
 ---
 
 # 1. Objet
 
-Cette spécification définit les modes de fonctionnement accessibles à l'utilisateur.
+Cette SPEC définit les différents modes de fonctionnement du Pool Controller Home Assistant (PCHA).
 
-Elle décrit le comportement attendu de chaque mode.
+Un seul mode est actif à un instant donné.
 
-Les transitions entre états sont définies dans la **SPEC-005**.
-
----
-
-# 2. Principes
-
-Le mode utilisateur représente le fonctionnement souhaité par l'utilisateur.
-
-Le mode sélectionné ne peut jamais contourner les règles de sécurité.
-
-En présence d'un diagnostic de niveau supérieur, la machine à états applique les priorités définies dans la **SPEC-005**.
+Les modes déterminent les fonctions autorisées ainsi que le niveau d'automatisation du contrôleur.
 
 ---
 
-# 3. Modes disponibles
+# 2. Modes disponibles
 
-La V1 comporte quatre modes utilisateur :
+Le contrôleur possède quatre modes de fonctionnement :
 
-| Mode          | Description                                        |
-| ------------- | -------------------------------------------------- |
-| OFF           | Arrêt volontaire de l'installation.                |
-| AUTO          | Fonctionnement entièrement automatique.            |
-| TRAITEMENT    | Fonctionnement imposé pour un traitement de l'eau. |
-| MARCHE_FORCÉE | Fonctionnement manuel imposé par l'utilisateur.    |
+| Mode         | Description                                                         |
+| ------------ | ------------------------------------------------------------------- |
+| OFF          | Arrêt absolu du contrôleur.                                         |
+| SÉCURISATION | Fonctionnement normal arrêté. Seules les sécurités restent actives. |
+| AUTO         | Fonctionnement automatique complet.                                 |
+| MANUEL       | Fonctionnement commandé par l'utilisateur.                          |
 
 ---
 
-# 4. Mode OFF
+# 3. Mode OFF
 
 ## Objectif
 
-Permettre l'arrêt volontaire de l'installation.
+Garantir qu'aucun équipement ne puisse démarrer automatiquement.
 
-## Comportement
+Ce mode est destiné :
 
-Le contrôleur ne réalise aucune fonction automatique.
+* aux opérations de maintenance ;
+* aux interventions sur l'installation ;
+* à toute situation nécessitant un arrêt total.
 
-Par défaut, les fonctions de sécurité restent actives.
+La sécurité des personnes est prioritaire sur la protection du matériel.
 
-Lorsque l'option Désactiver les sécurités en mode OFF est activée, aucun démarrage automatique de la pompe n'est autorisé.
+---
 
-Cette option est temporaire et est automatiquement réinitialisée lors du passage en mode AUTO.
+## Fonctionnement
+
+Lorsque le mode OFF est sélectionné :
+
+* aucune filtration automatique n'est autorisée ;
+* aucun chauffage solaire n'est autorisé ;
+* aucune temporisation ne peut provoquer un démarrage ;
+* aucune sécurité ne peut provoquer un démarrage ;
+* aucune reprise automatique n'est autorisée.
+
+Le contrôleur ne réalise aucune action automatique.
+
+---
+
+## Autorisations
+
+Sont uniquement autorisés :
+
+* le changement de mode ;
+* la consultation des informations ;
+* la modification des paramètres.
+
+---
+
+# 4. Mode SÉCURISATION
+
+## Objectif
+
+Protéger l'installation sans assurer le fonctionnement normal de la piscine.
+
+Ce mode est destiné :
+
+* aux périodes d'hivernage partiel ;
+* aux essais ;
+* aux absences prolongées ;
+* à toute situation où la filtration normale est volontairement arrêtée mais où les protections doivent rester actives.
+
+---
+
+## Fonctionnement
+
+Dans ce mode :
+
+* la filtration programmée est désactivée ;
+* le chauffage solaire est désactivé ;
+* les protections définies dans les SPEC restent autorisées.
+
+Exemples :
+
+* protection manque d'eau ;
+* protection débit ;
+* protection antigel (version future).
+
+Les protections sont détaillées dans les SPEC correspondantes.
 
 ---
 
@@ -65,104 +107,92 @@ Cette option est temporaire et est automatiquement réinitialisée lors du passa
 
 Assurer le fonctionnement normal de la piscine.
 
-## Comportement
+Dans ce mode :
 
-Le contrôleur pilote automatiquement :
+* la filtration est entièrement automatique ;
+* le chauffage solaire est géré automatiquement conformément à la SPEC-008 ;
+* les diagnostics sont actifs ;
+* les sécurités sont actives.
 
-* la filtration ;
-* le chauffage solaire ;
-* la protection du serpentin.
-
-Les règles de fonctionnement sont définies dans :
-
-* **SPEC-003** (filtration) ;
-* **SPEC-008** (chauffage solaire).
+Toutes les décisions sont prises par la machine à états.
 
 ---
 
-# 6. Mode TRAITEMENT
+# 6. Mode MANUEL
 
 ## Objectif
 
-Permettre un traitement de l'eau nécessitant une filtration continue.
+Permettre à l'utilisateur de commander directement les fonctions principales.
 
-## Comportement
+Dans ce mode :
 
-Le contrôleur maintient la filtration pendant la durée demandée.
+* les commandes utilisateur sont prioritaires ;
+* les sécurités restent actives ;
+* les diagnostics restent actifs.
 
-Les fonctions de sécurité restent actives.
-
-Le chauffage solaire continue de fonctionner si ses conditions de fonctionnement sont satisfaites.
+Les automatismes de confort sont suspendus.
 
 ---
 
-# 7. Mode MARCHE_FORCÉE
+# 7. Changement de mode
 
-## Objectif
+Le changement de mode est immédiat.
 
-Permettre à l'utilisateur d'imposer le fonctionnement de la pompe.
+Le contrôleur applique instantanément les règles du nouveau mode.
 
-## Comportement
-
-La filtration est maintenue tant que le mode est actif.
-
-Le chauffage solaire reste autorisé lorsque ses conditions sont satisfaites.
-
-Les diagnostics de sécurité restent prioritaires.
+Les temporisations incompatibles avec le nouveau mode sont annulées.
 
 ---
 
 # 8. Priorité des modes
 
-Lorsque plusieurs demandes sont simultanément présentes, les priorités sont définies par la machine à états (SPEC-005).
+Les modes sont exclusifs.
 
-Un mode utilisateur ne peut jamais empêcher :
+Un seul mode peut être actif.
 
-* une mise en SECURISATION ;
-* un passage en DEFAUT.
+Ordre de priorité :
 
----
+1. OFF
+2. SÉCURISATION
+3. MANUEL
+4. AUTO
 
-# 9. Sélection du mode
-
-Le mode actif est sélectionné par l'utilisateur via Home Assistant.
-
-Le modèle des entités est défini dans la **SPEC-004**.
-
-Le changement de mode est pris en compte par la machine à états conformément à la **SPEC-005**.
+En cas de conflit, le mode ayant la priorité la plus élevée est appliqué.
 
 ---
 
-# 10. Journalisation
+# 9. Interaction avec la machine à états
 
-Tout changement de mode est enregistré conformément à la **SPEC-009**.
+La machine à états adapte son comportement en fonction du mode sélectionné.
 
-Les informations minimales enregistrées sont :
+* OFF : aucun état actif.
+* SÉCURISATION : uniquement les états liés aux protections.
+* AUTO : fonctionnement normal.
+* MANUEL : fonctionnement piloté par l'utilisateur.
 
-* mode précédent ;
-* nouveau mode ;
-* date et heure ;
-* origine de la demande (utilisateur ou système).
-
----
-
-# 11. Critères d'acceptation
-
-La gestion des modes est conforme lorsque :
-
-* un seul mode utilisateur est actif à tout instant ;
-* le changement de mode est pris en compte par la machine à états ;
-* les fonctions de sécurité restent prioritaires ;
-* tous les changements sont journalisés.
+Les états sont définis dans la SPEC-005.
 
 ---
 
-# 12. Références
+# 10. Interaction avec le chauffage solaire
 
-* SPEC-000 — Architecture générale
-* SPEC-003 — Gestion de la filtration
-* SPEC-004 — Modèle Home Assistant
+Le chauffage solaire n'est jamais considéré comme une fonction indépendante.
+
+Une période de chauffage est toujours une période de filtration.
+
+Par conséquent :
+
+* OFF interdit toute circulation d'eau.
+* SÉCURISATION interdit le chauffage solaire.
+* AUTO autorise le chauffage solaire lorsque les conditions définies dans la SPEC-008 sont réunies.
+* MANUEL laisse l'utilisateur commander la filtration tout en conservant les sécurités.
+
+---
+
+# 11. Références
+
+* SPEC-000 — Principes généraux
+* SPEC-003 — Filtration
 * SPEC-005 — Machine à états
 * SPEC-007 — Diagnostics
 * SPEC-008 — Chauffage solaire
-* SPEC-009 — Journalisation

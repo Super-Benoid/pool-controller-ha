@@ -32,6 +32,10 @@ Le Pool Controller est piloté par une unique machine à états.
 * une seule transition est autorisée ;
 * toutes les décisions transitent par cette machine.
 
+La machine à états ne manipule que des entités pcha_*.
+
+Elle ne manipule jamais des capteurs physiques.
+
 Les principes généraux sont définis dans la **SPEC-000**.
 
 ---
@@ -40,14 +44,14 @@ Les principes généraux sont définis dans la **SPEC-000**.
 
 La V1 comporte exclusivement les états suivants.
 
-| État          | Description                                                    |
-| ------------- | -------------------------------------------------------------- |
-| OFF           | Installation arrêtée à la demande de l'utilisateur.            |
-| AUTO          | Fonctionnement automatique normal.                             |
-| TRAITEMENT    | Fonctionnement imposé pour un traitement de l'eau.             |
-| MARCHE_FORCÉE | Fonctionnement imposé par l'utilisateur.                       |
-| SECURISATION  | Fonctionnement dégradé permettant de protéger les équipements. |
-| DEFAUT        | Arrêt de sécurité de l'installation.                           |
+| État          | Description                                                              |
+| ------------- | ------------------------------------------------------------------------ |
+| OFF           | Installation arrêtée à la demande de l'utilisateur.                      |
+| AUTO          | Fonctionnement automatique normal.                                       |
+| TRAITEMENT    | Fonctionnement imposé pour un traitement de l'eau.                       |
+| MARCHE_FORCÉE | Fonctionnement imposé par l'utilisateur.                                 |
+| SECURISATION  | Fonctionnement imposé ou dégradé permettant de protéger les équipements. |
+| DEFAUT        | Arrêt de sécurité de l'installation.                                     |
 
 Aucun autre état n'est autorisé.
 
@@ -82,8 +86,8 @@ Les conditions sont définies ci-dessous.
 | Depuis        | Vers          | Condition                                        |
 | ------------- | ------------- | ------------------------------------------------ |
 | OFF           | AUTO          | Activation du fonctionnement automatique         |
-| OFF           | SECURISATION  | Désactiver les sécurités en mode OFF = Faux      |
-| AUTO          | OFF           | Arrêt demandé par l'utilisateur                  |
+| OFF           | SECURISATION  | Activation de la securisation                    |
+| AUTO          | OFF           | Arrêt total demandé par l'utilisateur            |
 | AUTO          | TRAITEMENT    | Sélection du mode Traitement                     |
 | AUTO          | MARCHE_FORCÉE | Sélection du mode Marche forcée                  |
 | TRAITEMENT    | AUTO          | Fin ou annulation du traitement                  |
