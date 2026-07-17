@@ -1,0 +1,49 @@
+###############################################################################
+# Pool Controller Home Assistant (PCHA)
+#
+# Fichier....... : hydraulique.yaml
+# Domaine....... : Helpers
+# SPEC.......... : SPEC-004
+# Version....... : V1.0.0
+#
+# Description :
+#   Paramètres hydrauliques utilisés par les diagnostics et les fonctions
+#   de filtration.
+###############################################################################
+
+input_number:
+
+###############################################################################
+# SEUILS DE DEBIT
+###############################################################################
+
+  pcha_seuil_debit_nominal:
+    name: Seuil débit nominal
+    icon: mdi:waves-arrow-right
+    min: 1000
+    max: 20000
+    step: 100
+    unit_of_measurement: "L/h"
+    mode: box
+
+  pcha_seuil_debit_critique:
+    name: Seuil débit critique
+    icon: mdi:alert
+    min: 100
+    max: 5000
+    step: 100
+    unit_of_measurement: "L/h"
+    mode: box
+
+###############################################################################
+# TEMPORISATIONS
+###############################################################################
+
+  pcha_tempo_validation_debit:
+    name: Temporisation validation défaut débit
+    icon: mdi:timer-alert
+    min: 1
+    max: 300
+    step: 1
+    unit_of_measurement: "s"
+    mode: box
