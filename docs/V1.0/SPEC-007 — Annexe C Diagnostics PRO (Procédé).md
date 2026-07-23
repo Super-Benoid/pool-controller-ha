@@ -4,7 +4,7 @@
 
 **Projet :** Pool Controller HA
 
-**Version :** V1.0.0
+**Version :** V1.0
 
 **Statut :** GELÉE (Frozen Specification)
 
@@ -71,7 +71,7 @@ Temporisé.
 
 ### Conséquences
 
-Le contrôleur demande un passage en **DEFAUT** conformément à la **SPEC-005**.
+Le contrôleur demande un passage en **DÉFAUT BLOQUANT** conformément à la **SPEC-005**.
 
 ---
 
@@ -99,9 +99,9 @@ Temporisé.
 
 ### Conséquences
 
-Le contrôleur demande un passage en **SECURISATION**.
+Le contrôleur passe au niveau de fonctionnement DÉGRADÉ.
 
-Le fonctionnement dégradé est défini dans la **SPEC-003**.
+Le comportement est défini dans la SPEC-003.
 
 ---
 
@@ -135,7 +135,7 @@ Automatique lorsque les conditions permettant la protection redeviennent satisfa
 
 ### Conséquences
 
-Le contrôleur demande un passage en **DEFAUT**.
+Le contrôleur demande une transition vers DÉFAUT BLOQUANT conformément à la SPEC-005.
 
 Une notification utilisateur est obligatoire.
 

@@ -4,7 +4,7 @@
 
 **Projet :** Pool Controller HA
 
-**Version :** V1.0.0
+**Version :** V1.0
 
 **Statut :** GELÉE (Frozen Specification)
 
@@ -42,7 +42,7 @@ Les modes autorisés sont :
 | --------------- | ------------------------------------------------------------------------------------------------ |
 | **Automatique** | Le diagnostic disparaît immédiatement lorsque la condition n'est plus présente.                  |
 | **Temporisé**   | La condition doit rester absente pendant une durée configurable avant disparition du diagnostic. |
-| **Manuel**      | Une action volontaire de l'utilisateur est nécessaire.                                           |
+| **MARCHE FORCÉE**      | Une action volontaire de l'utilisateur est nécessaire.                                           |
 
 Le mode de réarmement est défini individuellement dans chaque diagnostic.
 
@@ -55,8 +55,8 @@ Les temporisations sont configurables depuis Home Assistant conformément à la 
 Un diagnostic peut uniquement provoquer les actions suivantes :
 
 * génération d'un événement de diagnostic ;
-* demande de transition vers **SECURISATION** ;
-* demande de transition vers **DEFAUT** ;
+* passage du niveau NORMAL à DÉGRADÉ ;
+* demande de transition vers **DÉFAUT BLOQUANT** ;
 * génération d'une notification ;
 * journalisation.
 
@@ -106,6 +106,14 @@ Les notifications utilisateur sont générées selon le niveau du diagnostic.
 | CRITIQUE   | Obligatoire  |
 
 Le contenu et le canal de notification sont définis dans la **SPEC-009**.
+
+---
+
+# 17. Niveau de fonctionnement
+
+* NORMAL, les diagnostiques n'ont révélé aucun defaut
+* DEGRADE, les diagnostiques ont révélé un defaut non critique
+* BLOQUE, les diagnostiques ont révélé un defaut critique
 
 ---
 

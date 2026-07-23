@@ -4,7 +4,7 @@
 
 **Projet :** Pool Controller HA
 
-**Version :** V1.0.0
+**Version :** V1.0
 
 **Statut :** GELÉE (Frozen Specification)
 
@@ -113,9 +113,9 @@ Chaque diagnostic possède un niveau unique.
 
 | Niveau         | Conséquence                                                  |
 | -------------- | ------------------------------------------------------------ |
-| **INFORMATIF** | Information enregistrée sans modification du fonctionnement. |
-| **DÉGRADÉ**    | Demande de passage en état **SECURISATION**.                 |
-| **CRITIQUE**   | Demande de passage en état **DEFAUT**.                       |
+| **INFORMATIF** | Journalisation uniquement.                                   |
+| **DÉGRADÉ**    | Passage au niveau de fonctionnement **DÉGRADÉ**.             |
+| **CRITIQUE**   | Demande de transition vers **DÉFAUT BLOQUANT** (SPEC-005)    |
 
 Les transitions d'état sont réalisées conformément à la **SPEC-005**.
 
@@ -130,6 +130,16 @@ Le système de diagnostic applique les règles suivantes :
 * un diagnostic ne possède qu'une seule stratégie de réarmement ;
 * plusieurs diagnostics peuvent être actifs simultanément ;
 * la machine à états applique toujours la conséquence correspondant au niveau de gravité le plus élevé.
+
+Les diagnostics ne modifient jamais le mode de fonctionnement.
+
+Ils déterminent uniquement :
+
+- le niveau de fonctionnement ;
+
+ou
+
+- une demande de transition vers DÉFAUT BLOQUANT.
 
 ---
 

@@ -4,7 +4,7 @@
 
 **Projet :** Pool Controller HA
 
-**Version :** V1.0.0
+**Version :** V1.0
 
 **Statut :** GELÉE (Frozen Specification)
 
@@ -95,7 +95,9 @@ Automatique.
 
 Le calcul du temps de filtration journalier n'est plus possible.
 
-Le contrôleur applique le comportement dégradé défini dans la **SPEC-003**.
+Le diagnostic place le contrôleur au niveau de fonctionnement DÉGRADÉ.
+
+Le comportement associé est défini dans la SPEC-003.
 
 ---
 
@@ -161,7 +163,9 @@ Le temps de validation est configurable.
 
 Les diagnostics utilisant cette mesure ne sont plus évalués.
 
-Le contrôleur applique les règles de fonctionnement dégradé définies dans les annexes COH et PRO.
+Le diagnostic place le contrôleur au niveau de fonctionnement DÉGRADÉ.
+
+Le comportement associé est défini dans la SPEC-003.
 
 ---
 
@@ -192,6 +196,10 @@ Automatique.
 Le chauffage solaire applique la stratégie de repli définie dans la **SPEC-008**.
 
 La filtration automatique reste assurée.
+
+Le diagnostic place le contrôleur au niveau de fonctionnement DÉGRADÉ.
+
+Le comportement associé est défini dans la SPEC-003.
 
 ---
 

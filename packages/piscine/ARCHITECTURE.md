@@ -31,16 +31,20 @@ config/
 └── pool-controller-ha/
     │
     ├── docs/
-    │   ├── SPEC-000.md
-    │   ├── SPEC-001.md
-    │   ├── SPEC-002.md
-    │   ├── SPEC-003.md
-    │   ├── SPEC-004.md
-    │   ├── SPEC-005.md
-    │   ├── SPEC-006.md
-    │   ├── SPEC-007.md
-    │   ├── SPEC-008.md
-    │   └── SPEC-009.md
+    │   ├── SPEC-000 — Principes généraux.md
+    │   ├── SPEC-001 — Inventaire matériel.md
+    │   ├── SPEC-002 — Interface utilisateur.md
+    │   ├── SPEC-003 — Gestion de la filtration.md
+    │   ├── SPEC-004 — Couche d'abstraction et configuration.md
+    │   ├── SPEC-005 — Machine à états.md
+    │   ├── SPEC-006 — Modes de fonctionnement.md
+    │   ├── SPEC-007 — Diagnostics et sécurités Partie 1 — Architecture des diagnostics.md
+    │   ├── SPEC-007 — Diagnostics et sécurités Partie 2 — Gestion des diagnostics.md
+    │   ├── SPEC-007 — Annexe A Diagnostics MES (Mesures).md
+    │   ├── SPEC-007 — Annexe B Diagnostics COH (Cohérence).md
+    │   ├── SPEC-007 — Annexe C Diagnostics PRO (Procédé).md
+    │   ├── SPEC-008 — Chauffage solaire.md
+    │   └── SPEC-009 — Journalisation et notifications.md
     │
     └── packages/
         └── piscine/
@@ -76,7 +80,9 @@ config/
             ├── timers/
             │   └── timers.yaml
             │
-            └── ARCHITECTURE.md
+            ├── ARCHITECTURE.md
+            └── CONVENTIONS.md
+
 ```
 
 Les dossiers et les fichiers sont classés par ordre alphabétique.
@@ -134,26 +140,26 @@ Toutes les couches supérieures utilisent exclusivement :
 
 Les équipements physiques peuvent être remplacés sans modifier la logique métier.
 
----
 
-# 5. Organisation des Templates
+# 5. Architecture
 
-Les Templates sont organisés en deux niveaux.
+La couche d'abstraction est composée de deux niveaux.
 
 ## Niveau 1 — Abstraction
 
 Transformation des équipements physiques en entités PCHA.
 
+Aucune logique métier.
+
 Exemple :
 
 ```text
-sensor.jardin_esp32_jardin_debit_filtration_piscine
+sensor.jardin_esp32_jardin_temperature_piscine
         │
         ▼
-sensor.pcha_debit
+sensor.pcha_temperature_piscine
 ```
-
-Aucun calcul métier.
+Elle est réalisé uniquement dans la SPEC-004.
 
 ---
 
@@ -167,12 +173,12 @@ Exemple :
 sensor.pcha_debit
         │
         ▼
-binary_sensor.pcha_debit_nominal
+binary_sensor.pcha_debit_ok
 
-binary_sensor.pcha_debit_critique
+binary_sensor.pcha_filtration_active
 ```
 
-Les scripts et automatisations utilisent exclusivement ces états métier.
+Les scripts et automatisations utilisent exclusivement ces états.
 
 ---
 

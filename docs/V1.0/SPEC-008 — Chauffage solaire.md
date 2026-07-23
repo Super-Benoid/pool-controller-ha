@@ -1,6 +1,6 @@
 # SPEC-008 — Chauffage solaire
 
-Version : 1.1
+Version : 1.0
 Statut : Figée
 
 ---
@@ -31,31 +31,6 @@ Le serpentin solaire est intégré au circuit de filtration.
 
 Toute circulation d'eau traverse donc naturellement le serpentin.
 
----
-
-# 3. Fonctionnement hydraulique
-
-Le chauffage utilise exactement le même circuit que la filtration.
-
-```text
-Aspiration piscine
-        │
-        ▼
-Pompe de filtration
-        │
-        ▼
-Débitmètre
-        │
-        ▼
-Thermomètre
-        │
-        ▼
-Serpentin solaire
-        │
-        ▼
-Refoulement piscine
-```
-
 Aucune vanne n'est utilisée.
 
 Aucun basculement hydraulique n'est réalisé.
@@ -74,6 +49,8 @@ Le chauffage solaire est autorisé uniquement lorsque :
 
 Si une seule de ces conditions n'est plus satisfaite, le chauffage solaire cesse.
 
+En niveau DÉGRADÉ, le chauffage solaire peut être désactivé suivant les diagnostics définis dans la SPEC-007.
+
 ---
 
 # 5. Détection de l'ensoleillement
@@ -88,7 +65,7 @@ Exemple :
 input_number.pcha_seuil_luminosite_chauffage
 ```
 
-Le choix du seuil dépend des caractéristiques de l'installation et est configurable par l'utilisateur.
+Le choix du seuil dépend des caractéristiques du capteur et est configurable par l'utilisateur.
 
 ---
 
@@ -118,25 +95,6 @@ Une période de chauffage se termine lorsque :
 * la filtration n'est plus autorisée ;
 * le mode de fonctionnement change ;
 * un défaut bloquant est détecté.
-
----
-
-# 8. Équipements utilisés
-
-Version V1 :
-
-| Équipement                | Utilisation |
-| ------------------------- | ----------- |
-| Pompe de filtration       | Oui         |
-| Débitmètre                | Oui         |
-| Sonde température piscine | Oui         |
-| Capteur de luminosité     | Oui         |
-| Serpentin solaire         | Oui         |
-| Vanne motorisée           | Non         |
-| Sonde serpentin           | Non         |
-| Sonde local technique     | Non         |
-
----
 
 # 9. Philosophie
 

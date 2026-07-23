@@ -1,10 +1,7 @@
 # SPEC-003 — Gestion de la filtration
 
-**Projet :** Pool Controller HA
-
-**Version :** V1.0.0
-
-**Statut :** GELÉE (Frozen Specification)
+Version : 1.0
+Statut : Figée
 
 ---
 
@@ -12,42 +9,56 @@
 
 Cette spécification définit les règles de gestion de la filtration de la piscine.
 
-Elle décrit les objectifs de filtration, le calcul du temps de filtration et les règles de fonctionnement.
+Elle décrit :
 
-L'architecture générale est définie dans la **SPEC-000**.
+* le calcul de l'objectif quotidien de filtration ;
+* les règles permettant d'autoriser la filtration ;
+* les interactions avec les autres fonctions du contrôleur.
+
+Elle ne décrit ni les modes de fonctionnement, ni la machine à états, ni les diagnostics.
 
 ---
 
-# 2. Objectifs
+# 2. Philosophie
+
+Le contrôleur pilote un unique circuit hydraulique.
+
+La filtration constitue la fonction principale du système.
+
+Le chauffage solaire n'est pas une fonction indépendante.
+
+Une période de chauffage est toujours une période de filtration réalisée lorsque les conditions d'ensoleillement sont favorables.
+
+---
+
+# 3. Objectifs
 
 La filtration doit :
 
 * maintenir la qualité de l'eau ;
 * assurer un renouvellement hydraulique suffisant ;
-* participer au chauffage solaire lorsque celui-ci est disponible ;
-* contribuer à la protection du serpentin.
+* permettre le chauffage solaire lorsque les conditions le permettent ;
+* respecter les contraintes définies par les autres SPEC.
 
-Les modes de fonctionnement sont définis dans la **SPEC-006**.
-
-Les états du contrôleur sont définis dans la **SPEC-005**.
+Les demandes de filtration peuvent être refusées par la machine à états (SPEC-005) en cas de DÉFAUT BLOQUANT.
 
 ---
 
-# 3. Principe général
+# 4. Calcul de l'objectif quotidien
 
-Chaque jour, le contrôleur calcule un **objectif quotidien de filtration**.
+Chaque jour, le contrôleur calcule un objectif quotidien de filtration.
 
-Cet objectif représente la durée minimale de fonctionnement de la pompe.
+Cet objectif représente la durée minimale de filtration à réaliser.
 
-Le calcul est réalisé automatiquement à partir de la température de l'eau.
+Le calcul est basé sur la température de l'eau.
 
 ---
 
-# 4. Calcul du temps de filtration
+# 5. Calcul du temps de filtration
 
 Le temps quotidien de filtration est déterminé selon les paliers suivants :
 
-| Température de l'eau |                 Temps de filtration |
+| Température de l'eau |                     Temps quotidien |
 | -------------------- | ----------------------------------: |
 | < 20 °C              |                                 4 h |
 | 20 °C à < 24 °C      |                                 6 h |
@@ -56,95 +67,111 @@ Le temps quotidien de filtration est déterminé selon les paliers suivants :
 
 Cette règle constitue la référence de la V1.
 
-# 4.1 Mode dégradé
+---
 
-En cas d'indisponibilité du capteur de la température de l'eau, sa valeur sera remplacé par la consigne de température d'eau désiré pour le calcul du temps de filtration.
+# 6. Mode dégradé
+
+Si la température de la piscine est indisponible, le calcul du temps de filtration est réalisé à partir de la température de consigne définie par l'utilisateur.
+
+Ce fonctionnement garantit la continuité du service.
 
 ---
 
-# 5. Objectif quotidien
+# 7. Objectif quotidien
 
-Le contrôleur maintient un compteur du temps de filtration réalisé.
+Le contrôleur maintient en permanence :
 
-À tout instant, il compare :
+* le temps de filtration réalisé ;
+* l'objectif quotidien.
 
-* le temps de filtration effectué ;
-* l'objectif quotidien calculé.
-
-La filtration est considérée comme terminée lorsque l'objectif est atteint.
+Lorsque l'objectif est atteint, la filtration quotidienne est considérée comme terminée.
 
 ---
 
-# 6. Répartition de la filtration
+# 8. Répartition de la filtration
 
-Le contrôleur répartit automatiquement les périodes de filtration au cours de la journée.
+Le contrôleur répartit automatiquement les périodes de filtration sur la journée.
 
-La stratégie de répartition est optimisée afin de :
+La stratégie de répartition est laissée à l'implémentation.
 
-* améliorer la qualité de l'eau ;
-* favoriser le chauffage solaire lorsque celui-ci est disponible ;
-* limiter les cycles inutiles.
+Elle doit cependant respecter les objectifs suivants :
 
-L'algorithme de répartition relève de l'implémentation.
-
----
-
-# 7. Interaction avec le chauffage solaire
-
-Lorsque le chauffage solaire est autorisé, la filtration peut être prolongée afin d'exploiter l'énergie disponible.
-
-Les règles de chauffage solaire sont définies dans la **SPEC-008**.
+* réaliser l'objectif quotidien de filtration une heure avant le couché du soleil ;
+* limiter les démarrages inutiles ;
+* favoriser les périodes propices au chauffage solaire.
 
 ---
 
-# 8. Interaction avec les modes utilisateur
+# 9. Chauffage solaire
 
-Le comportement de la filtration dépend du mode actif.
+Le chauffage solaire ne modifie jamais le principe de fonctionnement de la filtration.
 
-Les règles associées sont définies dans la **SPEC-006**.
+Le contrôleur continue de piloter un unique circuit hydraulique.
 
----
+Lorsque les conditions d'ensoleillement sont réunies conformément à la SPEC-008, une période de filtration peut être prolongée afin d'exploiter l'énergie solaire disponible.
 
-# 9. Interaction avec les diagnostics
-
-En présence d'un diagnostic de sécurité, le fonctionnement de la filtration est déterminé conformément à la **SPEC-007**.
-
-La présente spécification ne définit aucun comportement en cas de défaut.
+Le chauffage solaire est donc une conséquence du fonctionnement de la filtration.
 
 ---
 
-# 10. Paramètres configurables
+# 10. Interaction avec les modes
 
-Les paramètres utilisés par la gestion de la filtration sont configurables depuis Home Assistant.
+Le comportement de la filtration dépend du mode de fonctionnement actif.
 
-Le modèle des Helpers est défini dans la **SPEC-004**.
-
----
-
-# 11. Journalisation
-
-Les événements significatifs liés à la filtration sont enregistrés conformément à la **SPEC-009**.
+Les règles sont définies exclusivement dans la SPEC-006.
 
 ---
 
-# 12. Critères d'acceptation
+# 11. Interaction avec les diagnostics
+
+Les diagnostics peuvent autoriser ou interdire la filtration.
+
+Les règles associées sont définies dans la SPEC-007.
+
+Cette SPEC ne définit aucun comportement en cas de défaut.
+
+---
+
+# 12. Paramètres configurables
+
+Les paramètres suivants sont configurables :
+
+* température de consigne ;
+* seuil de luminosité ;
+* paramètres éventuels de filtration définis par la SPEC-004.
+
+Les valeurs sont fournies exclusivement par les entités PCHA.
+
+---
+
+# 13. Journalisation
+
+Les événements significatifs liés à la filtration sont enregistrés conformément à la SPEC-009.
+
+---
+
+# 14. Critères d'acceptation
 
 La gestion de la filtration est conforme lorsque :
 
-* le temps quotidien est calculé selon les paliers définis ;
-* l'objectif quotidien est respecté ;
-* les interactions avec les autres fonctions respectent les spécifications de référence ;
-* les paramètres sont configurables ;
-* les événements sont correctement journalisés.
+* l'objectif quotidien est correctement calculé ;
+* le mode dégradé fonctionne ;
+* le temps de filtration est correctement comptabilisé ;
+* la répartition respecte les objectifs définis ;
+* le chauffage solaire est considéré comme une prolongation de la filtration ;
+* les interactions avec les autres SPEC sont respectées.
 
 ---
 
-# 13. Références
+# 15. Références
 
-* SPEC-000 — Architecture générale
-* SPEC-004 — Modèle Home Assistant
+* INTRODUCTION.md
+* ARCHITECTURE.md
+* CONVENTIONS.md
+* SPEC-000 — Principes généraux
+* SPEC-004 — Couche d'abstraction et configuration
 * SPEC-005 — Machine à états
-* SPEC-006 — Modes utilisateur
+* SPEC-006 — Modes de fonctionnement
 * SPEC-007 — Diagnostics
 * SPEC-008 — Chauffage solaire
 * SPEC-009 — Journalisation

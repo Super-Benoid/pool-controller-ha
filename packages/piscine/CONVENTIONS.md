@@ -70,9 +70,37 @@ Une règle métier ne doit jamais être dupliquée.
 
 Une décision ne doit jamais être implémentée dans plusieurs fichiers.
 
+Une SPEC ne peut référencer qu'une seule SPEC comme source d'une information.
+
+Elle ne doit jamais recopier cette information.
+
 ---
 
-# 5. Une SPEC = un domaine
+# 5. Une information = une SPEC
+
+Une information fonctionnelle est décrite dans une seule SPEC.
+
+Cette SPEC devient la référence unique (Single Source of Truth).
+
+Les autres SPEC ne doivent jamais recopier cette information.
+
+Elles doivent uniquement y faire référence.
+
+Exemple :
+
+- les modes de fonctionnement sont définis uniquement dans la SPEC-006 ;
+- la machine à états est définie uniquement dans la SPEC-005 ;
+- l'algorithme de filtration est défini uniquement dans la SPEC-003 ;
+- la couche d'abstraction est définie uniquement dans la SPEC-004.
+
+Toute duplication d'une règle fonctionnelle est interdite.
+
+En cas de modification, une seule SPEC est mise à jour.
+Les autres documents continuent de faire référence à cette SPEC.
+
+---
+
+# 6. Une SPEC = un domaine
 
 Chaque SPEC décrit un seul domaine fonctionnel.
 
@@ -80,7 +108,7 @@ Le code respecte strictement cette séparation.
 
 ---
 
-# 6. Une responsabilité = un fichier
+# 7. Une responsabilité = un fichier
 
 Chaque fichier possède une responsabilité unique.
 
@@ -88,7 +116,7 @@ Un fichier ne doit jamais mélanger plusieurs domaines fonctionnels.
 
 ---
 
-# 7. Développement par couches
+# 8. Développement par couches
 
 Le projet est développé dans l'ordre suivant :
 
@@ -103,7 +131,7 @@ Une couche est entièrement validée avant de commencer la suivante.
 
 ---
 
-# 8. Couche d'abstraction
+# 9. Couche d'abstraction
 
 Les équipements physiques ne sont jamais utilisés directement par la logique métier.
 
@@ -126,7 +154,7 @@ Logique métier
 
 ---
 
-# 9. Organisation des Templates
+# 10. Organisation des Templates
 
 Les Templates sont organisés en deux niveaux.
 
@@ -142,7 +170,7 @@ Création des états logiques utilisés par le contrôleur.
 
 ---
 
-# 10. Contrat d'interface
+# 11. Contrat d'interface
 
 Chaque fichier commence par un contrat d'interface.
 
@@ -165,7 +193,7 @@ binary_sensor.pcha_debit_nominal
 
 ---
 
-# 11. Convention de nommage
+# 12. Convention de nommage
 
 Toutes les entités créées par le projet utilisent le préfixe :
 
@@ -186,7 +214,7 @@ Les préfixes suivants sont utilisés lorsque nécessaire :
 
 ---
 
-# 12. Helpers
+# 13. Helpers
 
 Les Helpers représentent uniquement des paramètres configurables.
 
@@ -200,7 +228,7 @@ Leur nombre doit rester minimal.
 
 ---
 
-# 13. Développement d'un module
+# 14. Développement d'un module
 
 Chaque nouveau module suit obligatoirement les étapes suivantes :
 
@@ -215,7 +243,7 @@ Chaque nouveau module suit obligatoirement les étapes suivantes :
 
 ---
 
-# 14. Gestion des évolutions
+# 15. Gestion des évolutions
 
 Toute évolution fonctionnelle commence par la modification de la SPEC concernée.
 
@@ -231,7 +259,7 @@ Aucun développement ne doit se poursuivre tant que cette mise à jour documenta
 
 ---
 
-# 15. Philosophie
+# 16. Philosophie
 
 Le projet privilégie :
 
@@ -245,7 +273,7 @@ Une solution simple et claire est toujours préférée à une solution complexe.
 
 ---
 
-# 16. Versionnement
+# 17. Versionnement
 
 La version V1 est considérée comme figée.
 

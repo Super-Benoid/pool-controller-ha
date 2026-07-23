@@ -4,7 +4,7 @@
 
 **Projet :** Pool Controller HA
 
-**Version :** V1.0.0
+**Version :** V1.0
 
 **Statut :** GELÉE (Frozen Specification)
 
@@ -111,7 +111,9 @@ Temporisé.
 
 ### Conséquences
 
-Le contrôleur demande un fonctionnement dégradé.
+Le diagnostic place le contrôleur au niveau de fonctionnement DÉGRADÉ.
+
+Le comportement associé est défini dans les SPEC concernées.
 
 Les protections hydrauliques restent assurées conformément à la **SPEC-008**.
 

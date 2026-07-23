@@ -1,187 +1,178 @@
 # SPEC-005 — Machine à états
 
-**Projet :** Pool Controller HA
-
-**Version :** V1.0.0
-
-**Statut :** GELÉE (Frozen Specification)
-
----
+Version : 1.0
+Statut : Figée
 
 # 1. Objet
 
-Cette spécification définit la machine à états du Pool Controller.
+Cette SPEC définit la machine à états du Pool Controller Home Assistant (PCHA).
 
 Elle décrit :
 
-* les états autorisés ;
+* les états de fonctionnement ;
 * les transitions entre états ;
-* les règles de priorité.
+* les conditions d'entrée ;
+* les conditions de sortie.
 
-Les actions exécutées dans chaque état sont définies dans les spécifications fonctionnelles correspondantes.
+Les règles métier restent définies dans les autres SPEC.
 
----
+La présente SPEC décrit uniquement les états internes du contrôleur.
 
-# 2. Principes
-
-Le Pool Controller est piloté par une unique machine à états.
-
-À tout instant :
-
-* un seul état est actif ;
-* une seule transition est autorisée ;
-* toutes les décisions transitent par cette machine.
-
-La machine à états ne manipule que des entités pcha_*.
-
-Elle ne manipule jamais des capteurs physiques.
-
-Les principes généraux sont définis dans la **SPEC-000**.
+Elle ne décrit ni les modes de fonctionnement (SPEC-006), ni les diagnostics (SPEC-007).
 
 ---
 
-# 3. États
+# 2. Philosophie
 
-La V1 comporte exclusivement les états suivants.
+La machine à états décrit uniquement le fonctionnement interne du contrôleur.
 
-| État          | Description                                                              |
-| ------------- | ------------------------------------------------------------------------ |
-| OFF           | Installation arrêtée à la demande de l'utilisateur.                      |
-| AUTO          | Fonctionnement automatique normal.                                       |
-| TRAITEMENT    | Fonctionnement imposé pour un traitement de l'eau.                       |
-| MARCHE_FORCÉE | Fonctionnement imposé par l'utilisateur.                                 |
-| SECURISATION  | Fonctionnement imposé ou dégradé permettant de protéger les équipements. |
-| DEFAUT        | Arrêt de sécurité de l'installation.                                     |
+Elle ne prend aucune décision métier.
 
-Aucun autre état n'est autorisé.
+Elle exécute les demandes de transition provenant des diagnostics définis dans la SPEC-007.
 
 ---
 
-# 4. Diagramme des transitions
+# 3. États de fonctionnement
+
+Le contrôleur possède les états suivants.
+
+## INITIALISATION
+
+Premier état après le démarrage de Home Assistant.
+
+Actions :
+
+* lecture des Helpers ;
+* lecture des entités PCHA ;
+* vérification de cohérence ;
+* calcul de l'objectif quotidien.
+
+Sortie :
+
+→ ATTENTE
+
+---
+
+## ATTENTE
+
+État de repos.
+
+La pompe est arrêtée.
+
+Le contrôleur attend une demande de fonctionnement.
+
+---
+
+## FILTRATION
+
+La Pompe est en fonctionnement.
+
+L'état FILTRATION peut être demandé par plusieurs mécanismes indépendants :
+
+- mode AUTO (SPEC-003) ;
+- mode TRAITEMENT (SPEC-006) ;
+- mode MARCHE FORCÉE (SPEC-006) ;
+- décisions des diagnostics (SPEC-007).
+
+La machine à états ne distingue pas l'origine de la demande.
+
+Elle ne fait qu'exécuter la transition vers l'état FILTRATION.
+
+---
+
+## DÉFAUT BLOQUANT
+
+État atteint lorsqu'un défaut critique interdit tout fonctionnement.
+
+Actions :
+
+* arrêt de la pompe ;
+* journalisation ;
+* attente de disparition du défaut.
+
+Le retour s'effectue par INITIALISATION.
+
+L'état DÉFAUT BLOQUANT est exclusivement déclenché par la SPEC-007.
+
+Le mode de fonctionnement n'est jamais modifié.
+
+Lorsque le défaut disparaît, la machine retourne à INITIALISATION.
+
+Le contrôleur reprend ensuite son fonctionnement en conservant le mode de fonctionnement sélectionné.
+
+---
+
+# 4. Niveau de fonctionnement
+
+Le niveau de fonctionnement n'est pas un état de la machine.
+
+Il est déterminé exclusivement par la SPEC-007.
+
+---
+
+# 5. Diagramme de principe
 
 ```text
-                    OFF
-                     │
-                     ▼
-                    AUTO
-                  ↙  │  ↘
-                 ▼   ▼   ▼
-       TRAITEMENT   MARCHE_FORCÉE
-                 ↘   │   ↙
-                     ▼
-               SECURISATION
-                     │
-                     ▼
-                  DEFAUT
-```
+                 INITIALISATION
+                        │
+                        ▼
+                    ATTENTE
+                        │
+                        ▼
+                   FILTRATION
+                        │
+                        ▼
+                    ATTENTE
 
-Toutes les transitions ne sont pas nécessairement autorisées.
-
-Les conditions sont définies ci-dessous.
-
----
-
-# 5. Transitions autorisées
-
-| Depuis        | Vers          | Condition                                        |
-| ------------- | ------------- | ------------------------------------------------ |
-| OFF           | AUTO          | Activation du fonctionnement automatique         |
-| OFF           | SECURISATION  | Activation de la securisation                    |
-| AUTO          | OFF           | Arrêt total demandé par l'utilisateur            |
-| AUTO          | TRAITEMENT    | Sélection du mode Traitement                     |
-| AUTO          | MARCHE_FORCÉE | Sélection du mode Marche forcée                  |
-| TRAITEMENT    | AUTO          | Fin ou annulation du traitement                  |
-| MARCHE_FORCÉE | AUTO          | Fin ou annulation de la marche forcée            |
-| AUTO          | SECURISATION  | Diagnostic de niveau DÉGRADÉ                     |
-| TRAITEMENT    | SECURISATION  | Diagnostic de niveau DÉGRADÉ                     |
-| MARCHE_FORCÉE | SECURISATION  | Diagnostic de niveau DÉGRADÉ                     |
-| SECURISATION  | AUTO          | Disparition du diagnostic et réarmement autorisé |
-| Tout état     | DEFAUT        | Diagnostic de niveau CRITIQUE                    |
-| DEFAUT        | AUTO          | Réarmement conforme à la SPEC-007                |
-
-Les règles de diagnostic sont définies dans la **SPEC-007**.
+Tous les états
+      │
+      ▼
+ DÉFAUT BLOQUANT
+      │
+      ▼
+ INITIALISATION
+ ```
 
 ---
 
-# 6. Priorités
+# 6. Transitions
 
-Lorsque plusieurs événements sont simultanément présents, les priorités suivantes s'appliquent.
+| État courant           | Condition                         | État suivant           |
+| ---------------------- | --------------------------------- | ---------------------- |
+| INITIALISATION         | Contrôleur prêt                   | ATTENTE                |
+| ATTENTE                | Filtration demmandée              | FILTRATION             |
+| FILTRATION             | Plus aucune demande de filtration | ATTENTE                |
+| Tous les états         | Défaut bloquant                   | DÉFAUT BLOQUANT        |
+| DÉFAUT BLOQUANT        | Défaut disparu                    | INITIALISATION         |
 
-| Priorité | État          |
-| -------: | ------------- |
-|        1 | DEFAUT        |
-|        2 | SECURISATION  |
-|        3 | MARCHE_FORCÉE |
-|        4 | TRAITEMENT    |
-|        5 | AUTO          |
-|        6 | OFF           |
+Les transitions peuvent être provoquées :
 
-L'état de priorité la plus élevée est toujours retenu.
-
----
-
-# 7. Responsabilités
-
-La machine à états :
-
-* détermine l'état courant ;
-* autorise ou refuse les transitions ;
-* applique les priorités ;
-* transmet les autorisations aux modules fonctionnels.
-
-Elle ne pilote jamais directement les équipements.
-
-Les scripts d'action sont définis dans la **SPEC-004**.
+- par les règles fonctionnelles (SPEC-003) ;
+- par le mode de fonctionnement (SPEC-006) ;
+- par les diagnostics (SPEC-007).
 
 ---
 
-# 8. Comportement des états
+# 7. Contraintes
 
-Chaque état autorise un ensemble de fonctions.
+Un seul état est actif à un instant donné.
 
-Le détail de ces fonctions est défini dans les spécifications correspondantes :
+Le mode dégradé peut coexister avec n'importe quel état de fonctionnement.
 
-* filtration : **SPEC-003** ;
-* modes utilisateur : **SPEC-006** ;
-* diagnostics : **SPEC-007** ;
-* chauffage solaire : **SPEC-008**.
+Les modes de fonctionnement (OFF, SÉCURISATION, AUTO, TRAITEMENT, MARCHE FORCÉE) ne font pas partie de la machine à états.
 
-La présente spécification ne décrit que les transitions d'état.
+Ils autorisent ou interdisent certaines transitions conformément à la SPEC-006.
 
 ---
 
-# 9. Journalisation
+# 8. Références
 
-Chaque transition d'état doit être enregistrée conformément à la **SPEC-009**.
-
-Les informations minimales sont :
-
-* état précédent ;
-* état suivant ;
-* date et heure ;
-* motif de la transition ;
-* identifiant du diagnostic ou de la commande utilisateur.
-
----
-
-# 10. Critères d'acceptation
-
-La machine à états est conforme lorsque :
-
-* un seul état est actif à tout instant ;
-* seules les transitions autorisées sont possibles ;
-* les priorités sont toujours respectées ;
-* toutes les transitions sont journalisées ;
-* aucune décision métier ne contourne la machine à états.
-
----
-
-# 11. Références
-
-* SPEC-000 — Architecture générale
+* INTRODUCTION.md
+* ARCHITECTURE.md
+* CONVENTIONS.md
+* SPEC-000 — Principes généraux
 * SPEC-003 — Gestion de la filtration
-* SPEC-004 — Modèle Home Assistant
-* SPEC-006 — Modes utilisateur
+* SPEC-004 — Couche d'abstraction et configuration
+* SPEC-006 — Modes de fonctionnement
 * SPEC-007 — Diagnostics
 * SPEC-008 — Chauffage solaire
-* SPEC-009 — Journalisation

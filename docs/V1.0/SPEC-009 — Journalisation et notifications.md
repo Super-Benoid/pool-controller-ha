@@ -2,7 +2,7 @@
 
 **Projet :** Pool Controller HA
 
-**Version :** V1.0.0
+**Version :** V1.0
 
 **Statut :** GELÉE (Frozen Specification)
 
@@ -42,7 +42,7 @@ Les événements suivants sont obligatoirement enregistrés.
 ## 3.1 Machine à états
 
 * changement d'état ;
-* changement de mode utilisateur.
+* changement de mode de fonctionnement.
 
 Références :
 
@@ -84,6 +84,14 @@ Référence :
 Référence :
 
 * **SPEC-008**
+
+---
+
+## 3.5 Niveau de fonctionnement
+
+* NORMAL
+* DÉGRADÉ
+* BLOQUÉ
 
 ---
 
@@ -156,6 +164,6 @@ Le système est conforme lorsque :
 
 * SPEC-003 — Gestion de la filtration
 * SPEC-005 — Machine à états
-* SPEC-006 — Modes utilisateur
+* SPEC-006 — Modes de fonctionnement
 * SPEC-007 — Diagnostics et sécurités
 * SPEC-008 — Chauffage solaire
