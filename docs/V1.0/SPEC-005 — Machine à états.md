@@ -112,8 +112,6 @@ Il est déterminé exclusivement par la SPEC-007.
 | INITIALISATION         | Contrôleur prêt                   | ATTENTE                |
 | ATTENTE                | Filtration demmandée              | FILTRATION             |
 | FILTRATION             | Plus aucune demande de filtration | ATTENTE                |
-| Tous les états         | Défaut bloquant                   | DÉFAUT BLOQUANT        |
-| DÉFAUT BLOQUANT        | Défaut disparu                    | INITIALISATION         |
 
 Les transitions peuvent être provoquées :
 
