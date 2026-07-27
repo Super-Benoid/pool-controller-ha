@@ -24,11 +24,14 @@ Elle ne décrit ni les modes de fonctionnement (SPEC-006), ni les diagnostics (S
 
 # 2. Philosophie
 
-La machine à états décrit uniquement le fonctionnement interne du contrôleur.
+La machine à états décrit exclusivement
+le fonctionnement interne du contrôleur.
 
-Elle ne prend aucune décision métier.
+Elle ne prend jamais en compte
+le niveau de diagnostic.
 
-Elle exécute les demandes de transition provenant des diagnostics définis dans la SPEC-007.
+Les défauts sont exclusivement
+gérés par la SPEC-007.
 
 ---
 
@@ -80,28 +83,6 @@ Elle ne fait qu'exécuter la transition vers l'état FILTRATION.
 
 ---
 
-## DÉFAUT BLOQUANT
-
-État atteint lorsqu'un défaut critique interdit tout fonctionnement.
-
-Actions :
-
-* arrêt de la pompe ;
-* journalisation ;
-* attente de disparition du défaut.
-
-Le retour s'effectue par INITIALISATION.
-
-L'état DÉFAUT BLOQUANT est exclusivement déclenché par la SPEC-007.
-
-Le mode de fonctionnement n'est jamais modifié.
-
-Lorsque le défaut disparaît, la machine retourne à INITIALISATION.
-
-Le contrôleur reprend ensuite son fonctionnement en conservant le mode de fonctionnement sélectionné.
-
----
-
 # 4. Niveau de fonctionnement
 
 Le niveau de fonctionnement n'est pas un état de la machine.
@@ -120,17 +101,6 @@ Il est déterminé exclusivement par la SPEC-007.
                         │
                         ▼
                    FILTRATION
-                        │
-                        ▼
-                    ATTENTE
-
-Tous les états
-      │
-      ▼
- DÉFAUT BLOQUANT
-      │
-      ▼
- INITIALISATION
  ```
 
 ---
@@ -165,7 +135,36 @@ Ils autorisent ou interdisent certaines transitions conformément à la SPEC-006
 
 ---
 
-# 8. Références
+# 8. Script
+
+| Evénement                 | Origine        | Script appelé              |
+| ------------------------- | -------------- | -------------------------- |
+| Démarrage HA              | Home Assistant | `pcha_machine_initialiser` |
+| Changement de mode        | input_select   | `pcha_machine_reevaluer`   |
+| Fin du traitement         | timer          | `pcha_machine_reevaluer`   |
+| Diagnostic modifié        | SPEC-007       | `pcha_machine_reevaluer`   |
+| Calcul filtration modifié | SPEC-003       | `pcha_machine_reevaluer`   |
+
+La machine est composée des scripts suivants :
+
+- pcha_machine_initialiser
+
+- pcha_machine_reevaluer
+
+- pcha_machine_attente
+
+- pcha_machine_filtration
+
+pcha_machine_reevaluer
+est l'unique script autorisé à décider
+des transitions de la machine.
+
+Les autres scripts appliquent uniquement
+le changement d'état demandé.
+
+---
+
+# 9. Références
 
 * INTRODUCTION.md
 * ARCHITECTURE.md
@@ -176,3 +175,16 @@ Ils autorisent ou interdisent certaines transitions conformément à la SPEC-006
 * SPEC-006 — Modes de fonctionnement
 * SPEC-007 — Diagnostics
 * SPEC-008 — Chauffage solaire
+
+# MACH-001
+
+La machine à états décrit uniquement
+ce que fait le contrôleur.
+
+Le niveau de fonctionnement décrit
+uniquement ce qu'il est autorisé
+à faire.
+
+Ces deux informations sont indépendantes
+et ne doivent jamais être fusionnées
+dans une même variable d'état.

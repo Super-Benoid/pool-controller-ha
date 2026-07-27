@@ -1,0 +1,41 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+#
+# SPEC-004
+#
+# Point d'entrée du package.
+#
+# Ce fichier déclare l'ensemble des composants du package "piscine".
+################################################################################
+
+###############################################################################
+# Helpers
+###############################################################################
+
+input_boolean: !include helpers/input_boolean.yaml
+
+input_number: !include helpers/input_number.yaml
+
+input_select: !include helpers/input_select.yaml
+
+input_text: !include helpers/input_text.yaml
+
+timer: !include helpers/timer.yaml
+
+###############################################################################
+# Templates
+###############################################################################
+
+template: !include_dir_merge_list templates
+
+###############################################################################
+# Scripts
+###############################################################################
+
+script: !include_dir_merge_named scripts
+
+###############################################################################
+# Automatisations
+###############################################################################
+
+automation: !include_dir_merge_list automations

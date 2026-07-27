@@ -25,9 +25,7 @@ Le contrôleur pilote un unique circuit hydraulique.
 
 La filtration constitue la fonction principale du système.
 
-Le chauffage solaire n'est pas une fonction indépendante.
-
-Une période de chauffage est toujours une période de filtration réalisée lorsque les conditions d'ensoleillement sont favorables.
+Les interactions entre la filtration et le chauffage solaire sont définies dans la SPEC-008.
 
 ---
 
@@ -71,9 +69,11 @@ Cette règle constitue la référence de la V1.
 
 # 6. Mode dégradé
 
-Si la température de la piscine est indisponible, le calcul du temps de filtration est réalisé à partir de la température de consigne définie par l'utilisateur.
+Lorsque le contrôleur fonctionne au niveau DÉGRADÉ, les règles de calcul de la filtration peuvent être adaptées.
 
-Ce fonctionnement garantit la continuité du service.
+Les conditions de passage en niveau DÉGRADÉ sont définies exclusivement dans la SPEC-007.
+
+Les adaptations applicables à la filtration sont définies dans les annexes de cette SPEC.
 
 ---
 
@@ -92,11 +92,11 @@ Lorsque l'objectif est atteint, la filtration quotidienne est considérée comme
 
 Le contrôleur répartit automatiquement les périodes de filtration sur la journée.
 
-La stratégie de répartition est laissée à l'implémentation.
+La stratégie de répartition relève de l'algorithme d'implémentation.
 
 Elle doit cependant respecter les objectifs suivants :
 
-* réaliser l'objectif quotidien de filtration une heure avant le couché du soleil ;
+* réaliser l'objectif quotidien de filtration une heure avant le coucher du soleil ;
 * limiter les démarrages inutiles ;
 * favoriser les périodes propices au chauffage solaire.
 
@@ -104,13 +104,7 @@ Elle doit cependant respecter les objectifs suivants :
 
 # 9. Chauffage solaire
 
-Le chauffage solaire ne modifie jamais le principe de fonctionnement de la filtration.
-
-Le contrôleur continue de piloter un unique circuit hydraulique.
-
-Lorsque les conditions d'ensoleillement sont réunies conformément à la SPEC-008, une période de filtration peut être prolongée afin d'exploiter l'énergie solaire disponible.
-
-Le chauffage solaire est donc une conséquence du fonctionnement de la filtration.
+Les règles permettant de prolonger une période de filtration afin d'exploiter l'énergie solaire sont définies exclusivement dans la SPEC-008.
 
 ---
 
@@ -124,11 +118,11 @@ Les règles sont définies exclusivement dans la SPEC-006.
 
 # 11. Interaction avec les diagnostics
 
-Les diagnostics peuvent autoriser ou interdire la filtration.
+Les diagnostics déterminent le niveau de fonctionnement du contrôleur.
 
-Les règles associées sont définies dans la SPEC-007.
+Les conséquences de ce niveau sur la filtration sont appliquées par la présente SPEC.
 
-Cette SPEC ne définit aucun comportement en cas de défaut.
+Les règles de diagnostic sont définies exclusivement dans la SPEC-007.
 
 ---
 
@@ -138,7 +132,7 @@ Les paramètres suivants sont configurables :
 
 * température de consigne ;
 * seuil de luminosité ;
-* paramètres éventuels de filtration définis par la SPEC-004.
+* paramètres de filtration définis dans la SPEC-004.
 
 Les valeurs sont fournies exclusivement par les entités PCHA.
 
@@ -160,6 +154,7 @@ La gestion de la filtration est conforme lorsque :
 * la répartition respecte les objectifs définis ;
 * le chauffage solaire est considéré comme une prolongation de la filtration ;
 * les interactions avec les autres SPEC sont respectées.
+* les adaptations liées au niveau de fonctionnement sont correctement appliquées.
 
 ---
 

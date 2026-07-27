@@ -195,11 +195,10 @@ binary_sensor.pcha_debit_nominal
 
 # 12. Convention de nommage
 
-Toutes les entités créées par le projet utilisent le préfixe :
-
-```text
-pcha_
-```
+Toutes les entités créées par le projet utilisent le préfixe pcha_.
+Les noms sont en minuscules, avec des underscores (_).
+Les identifiants (entity_id) n'utilisent ni accents, ni espaces, ni caractères spéciaux.
+Les valeurs internes (OFF, AUTO, MARCHE_FORCEE, etc.) sont également sans accents ni espaces.
 
 Les équipements physiques conservent leur nom d'origine.
 
@@ -280,3 +279,10 @@ La version V1 est considérée comme figée.
 Toute nouvelle fonctionnalité ou amélioration non indispensable au fonctionnement de la V1 est reportée à une version ultérieure.
 
 La stabilité de la V1 est prioritaire sur l'ajout de nouvelles fonctionnalités.
+
+---
+
+# 18. Une entité Home Assistant = une responsabilité.
+
+* une entité est calculée à un seul endroit ;
+* elle n'est jamais recalculée ailleurs.

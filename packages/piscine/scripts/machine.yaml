@@ -1,0 +1,147 @@
+```yaml
+################################################################################
+#
+# Pool Controller Home Assistant (PCHA)
+#
+# SPEC-005
+# Scripts - Machine à états
+#
+################################################################################
+
+###############################################################################
+# Initialisation de la machine
+###############################################################################
+
+pcha_machine_initialiser:
+  alias: PCHA - Machine - Initialiser
+  description: >
+    Initialise la machine à états après le démarrage de Home Assistant.
+
+  mode: single
+
+  sequence:
+
+    ###########################################################################
+    # Etat INITIALISATION
+    ###########################################################################
+
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: INITIALISATION
+
+    ###########################################################################
+    # Transition automatique vers ATTENTE
+    ###########################################################################
+
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: ATTENTE
+
+###############################################################################
+# Réévaluation de la machine
+###############################################################################
+
+pcha_machine_reevaluer:
+  alias: PCHA - Machine - Réévaluer
+  description: >
+    Réévalue l'état de la machine à partir des demandes provenant
+    des SPEC-003, SPEC-006 et SPEC-007.
+
+  mode: restart
+
+  sequence:
+
+    ###########################################################################
+    # Ce script ne contient volontairement aucune logique métier.
+    #
+    # Les décisions sont définies dans :
+    #   SPEC-003  Gestion de la filtration
+    #   SPEC-006  Modes de fonctionnement
+    #   SPEC-007  Diagnostics
+    #
+    # Ce script appellera ultérieurement pcha_machine_changer_etat.
+    ###########################################################################
+
+    - stop: "Réévaluation non implémentée."
+
+###############################################################################
+# Changement d'état
+###############################################################################
+
+pcha_machine_changer_etat:
+  alias: PCHA - Machine - Changer d'état
+  description: >
+    Applique une transition de la machine à états.
+
+  mode: queued
+
+  fields:
+
+    etat:
+      description: Etat cible
+      example: FILTRATION
+
+  sequence:
+
+    - choose:
+
+        #######################################################################
+        # INITIALISATION
+        #######################################################################
+
+        - conditions: "{{ etat == 'INITIALISATION' }}"
+          sequence:
+
+            - service: input_select.select_option
+              target:
+                entity_id: input_select.pcha_etat_machine
+              data:
+                option: INITIALISATION
+
+        #######################################################################
+        # ATTENTE
+        #######################################################################
+
+        - conditions: "{{ etat == 'ATTENTE' }}"
+          sequence:
+
+            - service: input_select.select_option
+              target:
+                entity_id: input_select.pcha_etat_machine
+              data:
+                option: ATTENTE
+
+        #######################################################################
+        # FILTRATION
+        #######################################################################
+
+        - conditions: "{{ etat == 'FILTRATION' }}"
+          sequence:
+
+            - service: input_select.select_option
+              target:
+                entity_id: input_select.pcha_etat_machine
+              data:
+                option: FILTRATION
+
+        #######################################################################
+        # DEFAUT BLOQUANT
+        #######################################################################
+
+        - conditions: "{{ etat == 'DEFAUT_BLOQUANT' }}"
+          sequence:
+
+            - service: input_select.select_option
+              target:
+                entity_id: input_select.pcha_etat_machine
+              data:
+                option: DEFAUT_BLOQUANT
+
+    default:
+
+      - stop: "Etat inconnu."
+```

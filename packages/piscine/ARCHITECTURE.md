@@ -332,3 +332,73 @@ Cette architecture garantit :
 * lisibilité du projet.
 
 Toute implémentation doit respecter intégralement ce document.
+
+---
+
+# 16. HAL
+
+La couche d'abstraction (SPEC-004) constitue le HAL du projet.
+
+---
+
+17. Architecture d'implémentation
+Home Assistant
+│
+├── helpers
+│
+├── templates
+│
+├── scripts
+│
+├── automations
+│
+└── diagnostics
+
+17.1 Dépendances
+
+Matériel
+
+↓
+
+HAL (SPEC-004)
+
+↓
+
+Machine à états (SPEC-005)
+
+↓
+
+Modes (SPEC-006)
+
+↓
+
+Fonctions
+(SPEC-003 / SPEC-008)
+
+↓
+
+Diagnostics (SPEC-007)
+
+17.2 Règles d'implémentation
+
+Les templates implémentent exclusivement la SPEC-004.
+Les scripts ne prennent aucune décision.
+Les automatisations ne contiennent aucune logique métier.
+Les diagnostics appliquent exclusivement la SPEC-007.
+Les calculs fonctionnels sont réalisés uniquement par les composants définis dans les SPEC concernées.
+Les entités pcha_* constituent l'unique interface entre le matériel et les couches fonctionnelles.
+
+17.3 Dépendances interdites
+
+Scripts
+        │
+        ├──► Templates
+        ✖
+Diagnostics
+        │
+        ├──► Scripts
+        ✖
+Fonctions
+        │
+        ├──► Capteurs physiques
+        ✖

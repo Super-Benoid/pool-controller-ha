@@ -1,0 +1,58 @@
+```yaml
+################################################################################
+#
+# Pool Controller Home Assistant (PCHA)
+#
+# SPEC-004
+# Helpers - Sélection
+#
+################################################################################
+
+###############################################################################
+# Mode de fonctionnement (SPEC-006)
+###############################################################################
+
+pcha_mode_de_fonctionnement:
+  name: Mode de fonctionnement
+  icon: mdi:pool
+
+  options:
+    - OFF
+    - SECURISATION
+    - AUTO
+    - TRAITEMENT
+    - MARCHE_FORCEE
+
+  initial: AUTO
+
+###############################################################################
+# Etat de la machine (SPEC-005)
+###############################################################################
+
+pcha_etat_machine:
+  name: Etat de la machine
+  icon: mdi:state-machine
+
+  options:
+    - INITIALISATION
+    - ATTENTE
+    - FILTRATION
+    - DEFAUT_BLOQUANT
+
+  initial: INITIALISATION
+
+###############################################################################
+# Niveau de fonctionnement (SPEC-007)
+###############################################################################
+
+pcha_niveau_fonctionnement:
+  name: Niveau de fonctionnement
+  icon: mdi:shield-check
+
+  options:
+    - NORMAL
+    - DEGRADE
+    - BLOQUE
+
+  initial: NORMAL
+```

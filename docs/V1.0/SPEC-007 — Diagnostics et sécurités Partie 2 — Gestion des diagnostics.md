@@ -137,3 +137,43 @@ Le système de diagnostic est conforme lorsque :
 * SPEC-005 — Machine à états
 * SPEC-008 — Chauffage solaire
 * SPEC-009 — Journalisation
+
+# Le niveau de fonctionnement est totalement
+indépendant de l'état de la machine.
+
+Les diagnostics n'ont jamais pour rôle
+de modifier directement
+l'état de la machine.
+
+Ils modifient uniquement :
+
+input_select.pcha_niveau_fonctionnement
+
+Exemple 1:
+Etat machine : FILTRATION
+
+Niveau : NORMAL
+
+↓
+
+Filtration normale
+
+Exemple 2: 
+Etat machine : FILTRATION
+
+Niveau : DEGRADE
+
+↓
+
+Filtration autorisée
+avec restrictions.
+
+Exemple 3:
+Etat machine : FILTRATION
+
+Niveau : BLOQUE
+
+↓
+
+La machine demande l'arrêt immédiat
+de la filtration.
