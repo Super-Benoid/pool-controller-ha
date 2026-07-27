@@ -1,4 +1,3 @@
-```yaml
 ################################################################################
 #
 # Pool Controller Home Assistant (PCHA)
@@ -55,4 +54,3 @@ pcha_niveau_fonctionnement:
     - BLOQUE
 
   initial: NORMAL
-```
