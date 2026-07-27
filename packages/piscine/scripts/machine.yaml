@@ -1,4 +1,3 @@
-```yaml
 ################################################################################
 #
 # Pool Controller Home Assistant (PCHA)
@@ -144,4 +143,3 @@ pcha_machine_changer_etat:
     default:
 
       - stop: "Etat inconnu."
-```
