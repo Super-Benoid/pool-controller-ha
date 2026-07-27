@@ -158,7 +158,57 @@ La gestion de la filtration est conforme lorsque :
 
 ---
 
-# 15. Références
+# 15. Production de la demande de filtration
+
+La SPEC-003 est l'unique producteur de la demande de filtration.
+
+Elle calcule en permanence si une filtration est requise.
+
+Le résultat est publié sous la forme :
+
+binary_sensor.pcha_filtration_requise
+
+Cette entité constitue l'interface officielle entre
+la SPEC-003 et la SPEC-005.
+
+Aucune autre SPEC n'est autorisée à produire
+une demande de filtration.
+
+---
+
+# FILT-001
+
+binary_sensor.pcha_filtration_requise
+
+ON
+    Une filtration est requise.
+
+OFF
+    Aucune filtration n'est requise.
+
+---
+
+# Responsabilités
+
+La SPEC-003 décide uniquement
+si une filtration est nécessaire.
+
+Elle ne démarre jamais directement la pompe.
+
+Elle ne modifie jamais
+l'état de la machine.
+
+Elle publie uniquement
+l'état de :
+
+binary_sensor.pcha_filtration_requise
+
+La SPEC-005 reste seule responsable
+des transitions de la machine à états.
+
+---
+
+# 16. Références
 
 * INTRODUCTION.md
 * ARCHITECTURE.md

@@ -135,13 +135,13 @@ Ils autorisent ou interdisent certaines transitions conformément à la SPEC-006
 
 # 8. Script
 
-| Evénement                 | Origine        | Script appelé              |
-| ------------------------- | -------------- | -------------------------- |
-| Démarrage HA              | Home Assistant | `pcha_machine_initialiser` |
-| Changement de mode        | input_select   | `pcha_machine_reevaluer`   |
-| Fin du traitement         | timer          | `pcha_machine_reevaluer`   |
-| Diagnostic modifié        | SPEC-007       | `pcha_machine_reevaluer`   |
-| Calcul filtration modifié | SPEC-003       | `pcha_machine_reevaluer`   |
+| Événement                                         | Origine        | Script appelé              |
+| ------------------------------------------------- | -------------- | -------------------------- |
+| Démarrage HA                                      | Home Assistant | `pcha_machine_initialiser` |
+| Changement de mode                                | input_select   | `pcha_machine_reevaluer`   |
+| Fin du traitement                                 | timer          | `pcha_machine_reevaluer`   |
+| Diagnostic modifié                                | SPEC-007       | `pcha_machine_reevaluer`   |
+| **binary_sensor.pcha_filtration_requise modifié** | **SPEC-003**   | **pcha_machine_reevaluer** |
 
 La machine est composée des scripts suivants :
 

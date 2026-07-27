@@ -141,6 +141,7 @@ Ces entités sont calculées par le projet et ne doivent jamais lire directement
 | binary_sensor.pcha_traitement_actif      | Traitement en cours         |
 | binary_sensor.pcha_marche_forcee         | Marche forcée active        |
 | binary_sensor.pcha_defaut_bloquant       | Défaut bloquant actif       |
+| binary_sensor.pcha_filtration_requise    | Filtration requise          |
 
 8. Capteurs calculés (sensor)
 
