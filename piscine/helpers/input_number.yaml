@@ -1,0 +1,118 @@
+################################################################################
+#
+# Pool Controller Home Assistant (PCHA)
+#
+# SPEC-004
+# Helpers - Paramètres configurables
+#
+################################################################################
+
+###############################################################################
+# Température
+###############################################################################
+
+pcha_temperature_de_consigne:
+  name: Température de consigne
+  icon: mdi:thermometer-water
+  min: 20
+  max: 35
+  step: 0.5
+  unit_of_measurement: "°C"
+  mode: box
+  initial: 28
+
+###############################################################################
+# Chauffage solaire
+###############################################################################
+
+pcha_seuil_luminosite_chauffage:
+  name: Seuil de luminosité chauffage
+  icon: mdi:white-balance-sunny
+  min: 0
+  max: 50000
+  step: 500
+  unit_of_measurement: "lx"
+  mode: box
+  initial: 15000
+
+###############################################################################
+# Traitement
+###############################################################################
+
+pcha_duree_traitement:
+  name: Durée du traitement
+  icon: mdi:clock-outline
+  min: 1
+  max: 24
+  step: 1
+  unit_of_measurement: "h"
+  mode: box
+  initial: 12
+
+###############################################################################
+# Protection de la pompe
+###############################################################################
+
+pcha_temps_marche_pompe_min:
+  name: Temps minimum de marche
+  icon: mdi:pump
+  min: 0
+  max: 60
+  step: 1
+  unit_of_measurement: "min"
+  mode: box
+  initial: 10
+
+pcha_temps_arret_pompe_min:
+  name: Temps minimum d'arrêt
+  icon: mdi:pump-off
+  min: 0
+  max: 60
+  step: 1
+  unit_of_measurement: "min"
+  mode: box
+  initial: 10
+
+###############################################################################
+# Validation des mesures
+###############################################################################
+
+pcha_temps_validation_temperature_piscine:
+  name: Validation température piscine
+  icon: mdi:timer-check
+  min: 0
+  max: 600
+  step: 1
+  unit_of_measurement: "s"
+  mode: box
+  initial: 30
+
+pcha_temps_validation_temperature_exterieure:
+  name: Validation température extérieure
+  icon: mdi:timer-check
+  min: 0
+  max: 600
+  step: 1
+  unit_of_measurement: "s"
+  mode: box
+  initial: 30
+
+pcha_temps_validation_debit:
+  name: Validation débit
+  icon: mdi:timer-check
+  min: 0
+  max: 600
+  step: 1
+  unit_of_measurement: "s"
+  mode: box
+  initial: 30
+
+pcha_temps_validation_luminosite:
+  name: Validation luminosité
+  icon: mdi:timer-check
+  min: 0
+  max: 600
+  step: 1
+  unit_of_measurement: "s"
+  mode: box
+  initial: 30

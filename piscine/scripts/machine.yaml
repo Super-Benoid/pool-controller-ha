@@ -1,0 +1,76 @@
+################################################################################
+#
+# Pool Controller Home Assistant (PCHA)
+#
+# SPEC-005
+# Scripts - Machine à états
+#
+################################################################################
+
+###############################################################################
+# Initialisation
+###############################################################################
+
+pcha_machine_initialiser:
+  alias: PCHA - Machine - Initialiser
+  mode: single
+
+  sequence:
+
+    - service: script.pcha_machine_attente
+
+###############################################################################
+# Réévaluation
+###############################################################################
+
+pcha_machine_reevaluer:
+  alias: PCHA - Machine - Réévaluer
+  mode: restart
+
+  sequence:
+
+    ###########################################################################
+    # Demande de filtration ?
+    ###########################################################################
+
+    - if:
+        - condition: template
+          value_template: >
+            {{ states('sensor.pcha_demande_filtration') == 'on' }}
+      then:
+        - service: script.pcha_machine_filtration
+
+      else:
+        - service: script.pcha_machine_attente
+
+###############################################################################
+# Etat ATTENTE
+###############################################################################
+
+pcha_machine_attente:
+  alias: PCHA - Machine - Etat ATTENTE
+  mode: single
+
+  sequence:
+
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: ATTENTE
+
+###############################################################################
+# Etat FILTRATION
+###############################################################################
+
+pcha_machine_filtration:
+  alias: PCHA - Machine - Etat FILTRATION
+  mode: single
+
+  sequence:
+
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: FILTRATION
