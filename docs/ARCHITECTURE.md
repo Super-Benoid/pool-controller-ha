@@ -26,11 +26,27 @@ Les règles suivantes sont immuables :
 
 # 2. Architecture générale
 
-```text
-config/
-└── pool-controller-ha/
+/config
+│
+├── configuration.yaml
+│
+├── packages
+│   └── piscine.yaml
+│
+└── pool-controller-ha
+    │
+    ├── automations/
+    │   ├── chauffage.yaml
+    │   ├── filtration.yaml
+    │   ├── machine.yaml
+    │   └── traitement.yaml
+    │
+    ├── diagnostics/
+    │   └── diagnostics.yaml
     │
     ├── docs/
+    │   ├── ARCHITECTURE.md
+    │   ├── CONVENTIONS.md
     │   ├── SPEC-000 — Principes généraux.md
     │   ├── SPEC-001 — Inventaire matériel.md
     │   ├── SPEC-002 — Interface utilisateur.md
@@ -38,52 +54,27 @@ config/
     │   ├── SPEC-004 — Couche d'abstraction et configuration.md
     │   ├── SPEC-005 — Machine à états.md
     │   ├── SPEC-006 — Modes de fonctionnement.md
-    │   ├── SPEC-007 — Diagnostics et sécurités Partie 1 — Architecture des diagnostics.md
-    │   ├── SPEC-007 — Diagnostics et sécurités Partie 2 — Gestion des diagnostics.md
-    │   ├── SPEC-007 — Annexe A Diagnostics MES (Mesures).md
-    │   ├── SPEC-007 — Annexe B Diagnostics COH (Cohérence).md
-    │   ├── SPEC-007 — Annexe C Diagnostics PRO (Procédé).md
+    │   ├── SPEC-007 — Diagnostics.md
     │   ├── SPEC-008 — Chauffage solaire.md
     │   └── SPEC-009 — Journalisation et notifications.md
     │
-    └── packages/
-        └── piscine/
-            │
-            ├── automations/
-            │   ├── chauffage_solaire.yaml
-            │   ├── filtration.yaml
-            │   └── machine_etats.yaml
-            │
-            ├── diagnostics/
-            │   ├── coh.yaml
-            │   ├── mes.yaml
-            │   └── pro.yaml
-            │
-            ├── helpers/
-            │   ├── chauffage_solaire.yaml
-            │   ├── filtration.yaml
-            │   ├── hydraulique.yaml
-            │   └── utilisateur.yaml
-            │
-            ├── scripts/
-            │   ├── chauffage_solaire.yaml
-            │   ├── filtration.yaml
-            │   └── machine_etats.yaml
-            │
-            ├── templates/
-            │   ├── chauffage_solaire.yaml
-            │   ├── diagnostics.yaml
-            │   ├── filtration.yaml
-            │   ├── hydraulique.yaml
-            │   └── machine_etats.yaml
-            │
-            ├── timers/
-            │   └── timers.yaml
-            │
-            ├── ARCHITECTURE.md
-            └── CONVENTIONS.md
-
-```
+    ├── helpers/
+    │   ├── input_boolean.yaml
+    │   ├── input_number.yaml
+    │   ├── input_select.yaml
+    │   ├── input_text.yaml
+    │   └── timer.yaml
+    │
+    ├── scripts/
+    │   ├── machine.yaml
+    │   ├── pompe.yaml
+    │   └── traitement.yaml
+    │
+    └── templates/
+        ├── actionneurs.yaml
+        ├── calculs.yaml
+        ├── capteurs.yaml
+        └── systeme.yaml
 
 Les dossiers et les fichiers sont classés par ordre alphabétique.
 
@@ -159,7 +150,7 @@ sensor.jardin_esp32_jardin_temperature_piscine
         ▼
 sensor.pcha_temperature_piscine
 ```
-Elle est réalisé uniquement dans la SPEC-004.
+Elle est réalisée uniquement dans la SPEC-004.
 
 ---
 
@@ -354,7 +345,7 @@ Home Assistant
 │
 └── diagnostics
 
-17.1 Dépendances
+# 17.1 Dépendances
 
 Matériel
 
@@ -379,7 +370,7 @@ Fonctions
 
 Diagnostics (SPEC-007)
 
-17.2 Règles d'implémentation
+# 17.2 Règles d'implémentation
 
 Les templates implémentent exclusivement la SPEC-004.
 Les scripts ne prennent aucune décision.
@@ -388,7 +379,7 @@ Les diagnostics appliquent exclusivement la SPEC-007.
 Les calculs fonctionnels sont réalisés uniquement par les composants définis dans les SPEC concernées.
 Les entités pcha_* constituent l'unique interface entre le matériel et les couches fonctionnelles.
 
-17.3 Dépendances interdites
+# 17.3 Dépendances
 
 Scripts
         │
