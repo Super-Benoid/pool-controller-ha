@@ -1,0 +1,62 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-008 — Chauffage solaire et protection du serpentin
+#
+# Entrées
+#   input_number.pcha_seuil_luminosite_chauffage
+#   input_number.pcha_temperature_de_consigne
+#   input_select.pcha_etat_machine
+#   sensor.pcha_luminosite
+#   sensor.pcha_temperature_piscine
+#
+# Sorties
+#   binary_sensor.pcha_chauffage_solaire_actif
+#   binary_sensor.pcha_chauffage_solaire_requis
+#   binary_sensor.pcha_protection_serpentin_requise
+################################################################################
+
+# Demande de chauffage solaire et état réel du chauffage.
+- binary_sensor:
+    - name: PCHA Chauffage solaire requis
+      unique_id: pcha_chauffage_solaire_requis
+      default_entity_id: binary_sensor.pcha_chauffage_solaire_requis
+      icon: mdi:solar-power
+      state: >
+        {% set temperature_disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
+        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {{
+          temperature_disponible
+          and luminosite_disponible
+          and states('sensor.pcha_temperature_piscine') | float(0)
+              < states('input_number.pcha_temperature_de_consigne') | float(0)
+          and states('sensor.pcha_luminosite') | float(0)
+              > states('input_number.pcha_seuil_luminosite_chauffage') | float(0)
+        }}
+
+    - name: PCHA Chauffage solaire actif
+      unique_id: pcha_chauffage_solaire_actif
+      default_entity_id: binary_sensor.pcha_chauffage_solaire_actif
+      icon: mdi:sun-thermometer
+      state: >
+        {{
+          is_state('binary_sensor.pcha_chauffage_solaire_requis', 'on')
+          and is_state('input_select.pcha_etat_machine', 'FILTRATION')
+        }}
+
+# Protection thermique : demande après 25 minutes sans circulation et maintien
+# pendant 5 minutes après le démarrage de la circulation.
+- binary_sensor:
+    - name: PCHA Protection serpentin requise
+      unique_id: pcha_protection_serpentin_requise
+      default_entity_id: binary_sensor.pcha_protection_serpentin_requise
+      icon: mdi:shield-sun
+      delay_on: "00:25:00"
+      delay_off: "00:05:00"
+      state: >
+        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {{
+          luminosite_disponible
+          and states('sensor.pcha_luminosite') | float(0)
+              > states('input_number.pcha_seuil_luminosite_chauffage') | float(0)
+          and not is_state('input_select.pcha_etat_machine', 'FILTRATION')
+        }}

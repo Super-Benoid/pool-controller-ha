@@ -1,0 +1,24 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# Extrait à fusionner dans /config/configuration.yaml
+#
+# Entrées
+#   /config/packages/
+#   pool-controller-ha/dashboard/piscine.yaml
+#
+# Sorties
+#   Chargement des packages PCHA
+#   Tableau de bord pcha-piscine
+################################################################################
+
+homeassistant:
+  packages: !include_dir_named packages
+
+lovelace:
+  dashboards:
+    pcha-piscine:
+      mode: yaml
+      filename: pool-controller-ha/dashboard/piscine.yaml
+      title: Piscine
+      icon: mdi:pool
+      show_in_sidebar: true

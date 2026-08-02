@@ -1,0 +1,488 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-007 — Diagnostics V1
+#
+# Ce fichier est un package Home Assistant autonome.
+#
+# Entrées
+#   binary_sensor.pcha_protection_serpentin_requise
+#   input_number.pcha_temps_arret_pompe_min
+#   input_number.pcha_temps_validation_debit
+#   input_number.pcha_temps_validation_luminosite
+#   input_number.pcha_temps_validation_temperature_piscine
+#   input_select.pcha_etat_machine
+#   input_select.pcha_mode_de_fonctionnement
+#   sensor.pcha_debit_filtration
+#   sensor.pcha_luminosite
+#   sensor.pcha_puissance_pompe_filtration
+#   sensor.pcha_temperature_piscine
+#   switch.pcha_commande_pompe_filtration
+#
+# Sorties
+#   binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+#   binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+#   binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+#   binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+#   binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+#   binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+#   binary_sensor.pcha_diagnostic_pro_001_debit_critique
+#   binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+#   binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+#   input_select.pcha_niveau_fonctionnement
+#   événement pcha_diagnostic
+################################################################################
+
+################################################################################
+# États des diagnostics
+################################################################################
+
+template:
+  - binary_sensor:
+      ##########################################################################
+      # MES — Disponibilité des mesures
+      ##########################################################################
+
+      # MES-001 — Température piscine indisponible.
+      - name: PCHA Diagnostic MES-001 Température piscine indisponible
+        unique_id: pcha_diagnostic_mes_001_temperature_piscine_indisponible
+        default_entity_id: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+        device_class: problem
+        icon: mdi:thermometer-alert
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        state: >
+          {{
+            not (state_attr('sensor.pcha_temperature_piscine', 'source_available')
+                 | bool(false))
+          }}
+        attributes:
+          diagnostic_id: MES-001
+          famille: MES
+          gravite: DEGRADE
+          rearmement: TEMPORISE
+          motif: Température de la piscine indisponible
+
+      # MES-002 — Débit filtration indisponible.
+      - name: PCHA Diagnostic MES-002 Débit indisponible
+        unique_id: pcha_diagnostic_mes_002_debit_indisponible
+        default_entity_id: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+        device_class: problem
+        icon: mdi:gauge-empty
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        state: >
+          {{
+            not (state_attr('sensor.pcha_debit_filtration', 'source_available')
+                 | bool(false))
+          }}
+        attributes:
+          diagnostic_id: MES-002
+          famille: MES
+          gravite: CRITIQUE
+          rearmement: TEMPORISE
+          motif: Débit de filtration indisponible
+
+      # MES-003 — Puissance pompe indisponible.
+      - name: PCHA Diagnostic MES-003 Puissance indisponible
+        unique_id: pcha_diagnostic_mes_003_puissance_indisponible
+        default_entity_id: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+        device_class: problem
+        icon: mdi:flash-alert
+        state: >
+          {{
+            not (state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available')
+                 | bool(false))
+          }}
+        attributes:
+          diagnostic_id: MES-003
+          famille: MES
+          gravite: DEGRADE
+          rearmement: AUTOMATIQUE
+          motif: Puissance de la pompe indisponible
+
+      # MES-004 — Luminosité indisponible.
+      - name: PCHA Diagnostic MES-004 Luminosité indisponible
+        unique_id: pcha_diagnostic_mes_004_luminosite_indisponible
+        default_entity_id: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+        device_class: problem
+        icon: mdi:white-balance-sunny-off
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+        state: >
+          {{
+            not (state_attr('sensor.pcha_luminosite', 'source_available')
+                 | bool(false))
+          }}
+        attributes:
+          diagnostic_id: MES-004
+          famille: MES
+          gravite: DEGRADE
+          rearmement: TEMPORISE
+          motif: Luminosité indisponible
+
+      ##########################################################################
+      # COH — Cohérence des mesures validées
+      ##########################################################################
+
+      # COH-001 — Incohérence entre débit, puissance et commande de pompe.
+      - name: PCHA Diagnostic COH-001 Débit puissance incohérents
+        unique_id: pcha_diagnostic_coh_001_debit_puissance_incoherents
+        default_entity_id: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+        device_class: problem
+        icon: mdi:vector-difference-ab
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        state: >
+          {% set debit_disponible =
+               state_attr('sensor.pcha_debit_filtration', 'source_available')
+               | bool(false) %}
+          {% set puissance_disponible =
+               state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available')
+               | bool(false) %}
+          {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
+          {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %}
+          {% set pompe_arretee = is_state('switch.pcha_commande_pompe_filtration', 'off') %}
+          {% set puissance_normale = 300 <= puissance <= 350 %}
+          {{
+            debit_disponible
+            and puissance_disponible
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+              'on'
+            )
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
+              'on'
+            )
+            and (
+              (debit >= 500 and puissance < 1)
+              or (pompe_arretee and puissance >= 1)
+              or (pompe_arretee and debit >= 500)
+              or (debit >= 3000 and not puissance_normale)
+            )
+          }}
+        attributes:
+          diagnostic_id: COH-001
+          famille: COH
+          gravite: DEGRADE
+          rearmement: TEMPORISE
+          motif: Débit, puissance ou commande de pompe incohérents
+
+      # COH-002 — Température hors de la plage physique stricte 10–50 °C.
+      - name: PCHA Diagnostic COH-002 Température piscine incohérente
+        unique_id: pcha_diagnostic_coh_002_temperature_piscine_incoherente
+        default_entity_id: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+        device_class: problem
+        icon: mdi:thermometer-alert
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        state: >
+          {% set temperature_disponible =
+               state_attr('sensor.pcha_temperature_piscine', 'source_available')
+               | bool(false) %}
+          {% set temperature = states('sensor.pcha_temperature_piscine') | float(0) %}
+          {{
+            temperature_disponible
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
+              'on'
+            )
+            and (temperature <= 10 or temperature >= 50)
+          }}
+        attributes:
+          diagnostic_id: COH-002
+          famille: COH
+          gravite: DEGRADE
+          rearmement: TEMPORISE
+          motif: Température piscine hors de la plage stricte 10–50 °C
+
+      ##########################################################################
+      # PRO — Anomalies du procédé
+      ##########################################################################
+
+      # PRO-001 — Débit inférieur à 500 L/h pendant la filtration.
+      - name: PCHA Diagnostic PRO-001 Débit critique
+        unique_id: pcha_diagnostic_pro_001_debit_critique
+        default_entity_id: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+        device_class: problem
+        icon: mdi:water-alert
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        state: >
+          {% set debit_disponible =
+               state_attr('sensor.pcha_debit_filtration', 'source_available')
+               | bool(false) %}
+          {{
+            debit_disponible
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+              'on'
+            )
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
+              'on'
+            )
+            and is_state('input_select.pcha_etat_machine', 'FILTRATION')
+            and states('sensor.pcha_debit_filtration') | float(0) < 500
+          }}
+        attributes:
+          diagnostic_id: PRO-001
+          famille: PRO
+          gravite: CRITIQUE
+          rearmement: TEMPORISE
+          motif: Débit de filtration inférieur à 500 L/h
+
+      # PRO-002 — Débit compris entre 500 et 3 000 L/h pendant la filtration.
+      - name: PCHA Diagnostic PRO-002 Débit insuffisant
+        unique_id: pcha_diagnostic_pro_002_debit_insuffisant
+        default_entity_id: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+        device_class: problem
+        icon: mdi:water-minus
+        delay_on:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off:
+          seconds: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        state: >
+          {% set debit_disponible =
+               state_attr('sensor.pcha_debit_filtration', 'source_available')
+               | bool(false) %}
+          {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
+          {{
+            debit_disponible
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+              'on'
+            )
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
+              'on'
+            )
+            and not is_state(
+              'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
+              'on'
+            )
+            and is_state('input_select.pcha_etat_machine', 'FILTRATION')
+            and 500 <= debit < 3000
+          }}
+        attributes:
+          diagnostic_id: PRO-002
+          famille: PRO
+          gravite: DEGRADE
+          rearmement: TEMPORISE
+          motif: Débit de filtration compris entre 500 et 3 000 L/h
+
+      # PRO-003 — Une protection solaire demandée ne peut pas être assurée.
+      #
+      # Sans mémoire supplémentaire, l'impossibilité exploitable en V1 est
+      # établie lorsque le mode interdit la circulation, que l'actionneur est
+      # indisponible ou qu'un diagnostic hydraulique critique est déjà actif.
+      - name: PCHA Diagnostic PRO-003 Protection serpentin impossible
+        unique_id: pcha_diagnostic_pro_003_protection_serpentin_impossible
+        default_entity_id: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+        device_class: problem
+        icon: mdi:shield-sun-outline
+        state: >
+          {% set protection_requise =
+               is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') %}
+          {% set mode_off =
+               is_state('input_select.pcha_mode_de_fonctionnement', 'OFF') %}
+          {% set actionneur_indisponible =
+               not has_value('switch.pcha_commande_pompe_filtration') %}
+          {% set securite_hydraulique_indisponible =
+               is_state(
+                 'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+                 'on'
+               )
+               or is_state(
+                 'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
+                 'on'
+               ) %}
+          {{
+            protection_requise
+            and (
+              mode_off
+              or actionneur_indisponible
+              or securite_hydraulique_indisponible
+            )
+          }}
+        attributes:
+          diagnostic_id: PRO-003
+          famille: PRO
+          gravite: CRITIQUE
+          rearmement: AUTOMATIQUE
+          motif: Protection du serpentin demandée mais circulation impossible
+
+################################################################################
+# Niveau global et événements
+################################################################################
+
+automation:
+  - id: pcha_diagnostics_recalculer_niveau_global
+    alias: PCHA - Diagnostics - Recalculer le niveau global
+    description: Publie la gravité la plus élevée parmi les diagnostics actifs.
+    icon: mdi:shield-alert
+    initial_state: true
+    mode: restart
+    triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id:
+          - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+          - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+          - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+          - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+          - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+          - binary_sensor.pcha_diagnostic_pro_001_debit_critique
+          - binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+          - binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+    conditions: []
+    actions:
+      - wait_template: >
+          {% set diagnostics = [
+            'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
+            'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+            'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
+            'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+            'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
+            'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
+            'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
+            'binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant',
+            'binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible'
+          ] %}
+          {% set ns = namespace(interfaces_valides=true) %}
+          {% for entity_id in diagnostics %}
+            {% if states(entity_id) in ['unknown', 'unavailable'] %}
+              {% set ns.interfaces_valides = false %}
+            {% endif %}
+          {% endfor %}
+          {{
+            states('input_select.pcha_niveau_fonctionnement')
+              not in ['unknown', 'unavailable']
+            and ns.interfaces_valides
+          }}
+        timeout: "00:01:00"
+        continue_on_timeout: false
+
+      - variables:
+          niveau_calcule: >
+            {% set critiques = [
+              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+              'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
+              'binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible'
+            ] %}
+            {% set degrades = [
+              'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
+              'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
+              'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+              'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
+              'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
+              'binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant'
+            ] %}
+            {% set ns = namespace(critique=false, degrade=false) %}
+            {% for entity_id in critiques %}
+              {% if is_state(entity_id, 'on') %}
+                {% set ns.critique = true %}
+              {% endif %}
+            {% endfor %}
+            {% for entity_id in degrades %}
+              {% if is_state(entity_id, 'on') %}
+                {% set ns.degrade = true %}
+              {% endif %}
+            {% endfor %}
+            {% if ns.critique %}
+              CRITIQUE
+            {% elif ns.degrade %}
+              DEGRADE
+            {% else %}
+              NORMAL
+            {% endif %}
+
+      - condition: template
+        value_template: >
+          {{
+            states('input_select.pcha_niveau_fonctionnement')
+              != niveau_calcule | trim
+          }}
+
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.pcha_niveau_fonctionnement
+        data:
+          option: "{{ niveau_calcule | trim }}"
+
+  - id: pcha_diagnostics_publier_evenement
+    alias: PCHA - Diagnostics - Publier les changements
+    description: Produit un événement unique à chaque activation ou disparition.
+    icon: mdi:message-alert-outline
+    initial_state: true
+    mode: queued
+    max: 20
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+          - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+          - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+          - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+          - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+          - binary_sensor.pcha_diagnostic_pro_001_debit_critique
+          - binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+          - binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+        to: "on"
+      - trigger: state
+        entity_id:
+          - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+          - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+          - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+          - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+          - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+          - binary_sensor.pcha_diagnostic_pro_001_debit_critique
+          - binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+          - binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+        from: "on"
+        to: "off"
+    conditions: []
+    actions:
+      - event: pcha_diagnostic
+        event_data:
+          diagnostic_id: >
+            {{ state_attr(trigger.entity_id, 'diagnostic_id') }}
+          famille: >
+            {{ state_attr(trigger.entity_id, 'famille') }}
+          gravite: >
+            {{ state_attr(trigger.entity_id, 'gravite') }}
+          etat: >
+            {{ 'ACTIF' if trigger.to_state.state == 'on' else 'INACTIF' }}
+          motif: >
+            {{ state_attr(trigger.entity_id, 'motif') }}
+          entity_id: "{{ trigger.entity_id }}"

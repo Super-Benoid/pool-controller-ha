@@ -1,0 +1,73 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-005 — Orchestration de la machine à états
+#
+# Entrées
+#   binary_sensor.pcha_demande_fonctionnement
+#   input_number.pcha_temps_arret_pompe_min
+#   input_number.pcha_temps_marche_pompe_min
+#   input_select.pcha_etat_machine
+#   input_select.pcha_mode_de_fonctionnement
+#   input_select.pcha_niveau_fonctionnement
+#   switch.pcha_commande_pompe_filtration
+#
+# Sorties
+#   Appel de script.pcha_machine_initialiser
+#   Appel de script.pcha_machine_reevaluer
+################################################################################
+
+- id: pcha_machine_initialiser_au_demarrage
+  alias: PCHA - Machine - Initialiser au démarrage
+  description: Initialise la machine lorsque Home Assistant démarre et que ses interfaces sont disponibles.
+  icon: mdi:restart
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: homeassistant
+      event: start
+  conditions: []
+  actions:
+    - wait_template: >
+        {{
+          states('binary_sensor.pcha_demande_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_temps_arret_pompe_min') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_temps_marche_pompe_min') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_etat_machine') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_mode_de_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_niveau_fonctionnement') not in ['unknown', 'unavailable']
+          and states('switch.pcha_commande_pompe_filtration') not in ['unknown', 'unavailable']
+        }}
+      timeout: "00:01:00"
+      continue_on_timeout: false
+    - action: script.pcha_machine_initialiser
+
+- id: pcha_machine_reevaluer_sur_changement
+  alias: PCHA - Machine - Réévaluer sur changement
+  description: Demande une réévaluation lorsque l'une des interfaces de la machine change.
+  icon: mdi:state-machine
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.pcha_demande_fonctionnement
+        - input_number.pcha_temps_arret_pompe_min
+        - input_number.pcha_temps_marche_pompe_min
+        - input_select.pcha_etat_machine
+        - input_select.pcha_mode_de_fonctionnement
+        - input_select.pcha_niveau_fonctionnement
+        - switch.pcha_commande_pompe_filtration
+  conditions:
+    - condition: template
+      value_template: >
+        {{
+          states('binary_sensor.pcha_demande_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_temps_arret_pompe_min') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_temps_marche_pompe_min') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_etat_machine') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_mode_de_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_niveau_fonctionnement') not in ['unknown', 'unavailable']
+          and states('switch.pcha_commande_pompe_filtration') not in ['unknown', 'unavailable']
+        }}
+  actions:
+    - action: script.pcha_machine_reevaluer

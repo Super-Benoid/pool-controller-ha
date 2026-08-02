@@ -1,111 +1,143 @@
 ################################################################################
-#
 # Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Abstraction des capteurs
 #
-# SPEC-004
-# Couche d'abstraction - Capteurs
+# Entrées
+#   sensor.jardin_esp32_jardin_debit_filtration_piscine
+#   sensor.jardin_esp32_jardin_luminosite
+#   sensor.jardin_esp32_jardin_temperature_piscine
+#   sensor.prises_exterieur_energy
+#   sensor.prises_exterieur_power
+#   sensor.temperature_exterieure_temperature
 #
+# Sorties
+#   sensor.pcha_debit_filtration
+#   sensor.pcha_energie_pompe_filtration
+#   sensor.pcha_luminosite
+#   sensor.pcha_puissance_pompe_filtration
+#   sensor.pcha_temperature_exterieure
+#   sensor.pcha_temperature_piscine
+#
+# Chaque sortie conserve sa dernière valeur numérique valide et expose
+# l'attribut booléen source_available défini par la SPEC-004.
 ################################################################################
 
 - sensor:
-
-###############################################################################
-# Température piscine
-###############################################################################
-
-    - name: PCHA Température piscine
-      unique_id: pcha_temperature_piscine
-      device_class: temperature
-      unit_of_measurement: "°C"
-
+    - name: PCHA Débit filtration
+      unique_id: pcha_debit_filtration
+      default_entity_id: sensor.pcha_debit_filtration
+      icon: mdi:waves-arrow-right
+      unit_of_measurement: "L/h"
+      state_class: measurement
       state: >
-        {% set value = states('sensor.jardin_esp32_jardin_temperature_piscine') %}
-        {% if value not in ['unknown','unavailable','none',''] %}
-          {{ value | float }}
+        {% set source = states('sensor.jardin_esp32_jardin_debit_filtration_piscine') %}
+        {% if is_number(source) %}
+          {{ source | float(0) | round(0) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(0) }}
         {% else %}
-          {{ this.state if this.state not in ['unknown','unavailable','none',''] else 0 }}
+          0
         {% endif %}
+      attributes:
+        source_available: >
+          {{ is_number(states('sensor.jardin_esp32_jardin_debit_filtration_piscine')) }}
 
-###############################################################################
-# Température extérieure
-###############################################################################
-
-    - name: PCHA Température extérieure
-      unique_id: pcha_temperature_exterieure
-      device_class: temperature
-      unit_of_measurement: "°C"
-
+    - name: PCHA Énergie pompe filtration
+      unique_id: pcha_energie_pompe_filtration
+      default_entity_id: sensor.pcha_energie_pompe_filtration
+      device_class: energy
+      icon: mdi:lightning-bolt
+      unit_of_measurement: "kWh"
+      state_class: total_increasing
       state: >
-        {% set value = states('sensor.temperature_exterieure_temperature') %}
-        {% if value not in ['unknown','unavailable','none',''] %}
-          {{ value | float }}
+        {% set source = states('sensor.prises_exterieur_energy') %}
+        {% if is_number(source) %}
+          {{ source | float(0) | round(3) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(3) }}
         {% else %}
-          {{ this.state if this.state not in ['unknown','unavailable','none',''] else 0 }}
+          0
         {% endif %}
-
-###############################################################################
-# Luminosité
-###############################################################################
+      attributes:
+        source_available: >
+          {{ is_number(states('sensor.prises_exterieur_energy')) }}
 
     - name: PCHA Luminosité
       unique_id: pcha_luminosite
+      default_entity_id: sensor.pcha_luminosite
       device_class: illuminance
+      icon: mdi:white-balance-sunny
       unit_of_measurement: "lx"
-
+      state_class: measurement
       state: >
-        {% set value = states('sensor.jardin_esp32_jardin_luminosite') %}
-        {% if value not in ['unknown','unavailable','none',''] %}
-          {{ value | int }}
+        {% set source = states('sensor.jardin_esp32_jardin_luminosite') %}
+        {% if is_number(source) %}
+          {{ source | float(0) | round(0) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(0) }}
         {% else %}
-          {{ this.state if this.state not in ['unknown','unavailable','none',''] else 0 }}
+          0
         {% endif %}
-
-###############################################################################
-# Débit
-###############################################################################
-
-    - name: PCHA Débit filtration
-      unique_id: pcha_debit_filtration
-      unit_of_measurement: "L/h"
-
-      state: >
-        {% set value = states('sensor.jardin_esp32_jardin_debit_filtration_piscine') %}
-        {% if value not in ['unknown','unavailable','none',''] %}
-          {{ value | int }}
-        {% else %}
-          {{ this.state if this.state not in ['unknown','unavailable','none',''] else 0 }}
-        {% endif %}
-
-###############################################################################
-# Puissance pompe
-###############################################################################
+      attributes:
+        source_available: >
+          {{ is_number(states('sensor.jardin_esp32_jardin_luminosite')) }}
 
     - name: PCHA Puissance pompe filtration
       unique_id: pcha_puissance_pompe_filtration
+      default_entity_id: sensor.pcha_puissance_pompe_filtration
       device_class: power
+      icon: mdi:flash
       unit_of_measurement: "W"
-
+      state_class: measurement
       state: >
-        {% set value = states('sensor.prises_exterieur_power') %}
-        {% if value not in ['unknown','unavailable','none',''] %}
-          {{ value | float }}
+        {% set source = states('sensor.prises_exterieur_power') %}
+        {% if is_number(source) %}
+          {{ source | float(0) | round(1) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(1) }}
         {% else %}
-          {{ this.state if this.state not in ['unknown','unavailable','none',''] else 0 }}
+          0
         {% endif %}
+      attributes:
+        source_available: >
+          {{ is_number(states('sensor.prises_exterieur_power')) }}
 
-###############################################################################
-# Energie pompe
-###############################################################################
-
-    - name: PCHA Energie pompe filtration
-      unique_id: pcha_energie_pompe_filtration
-      device_class: energy
-      unit_of_measurement: "kWh"
-
+    - name: PCHA Température extérieure
+      unique_id: pcha_temperature_exterieure
+      default_entity_id: sensor.pcha_temperature_exterieure
+      device_class: temperature
+      icon: mdi:thermometer
+      unit_of_measurement: "°C"
+      state_class: measurement
       state: >
-        {% set value = states('sensor.prises_exterieur_energy') %}
-        {% if value not in ['unknown','unavailable','none',''] %}
-          {{ value | float }}
+        {% set source = states('sensor.temperature_exterieure_temperature') %}
+        {% if is_number(source) %}
+          {{ source | float(0) | round(1) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(1) }}
         {% else %}
-          {{ this.state if this.state not in ['unknown','unavailable','none',''] else 0 }}
+          0
         {% endif %}
+      attributes:
+        source_available: >
+          {{ is_number(states('sensor.temperature_exterieure_temperature')) }}
+
+    - name: PCHA Température piscine
+      unique_id: pcha_temperature_piscine
+      default_entity_id: sensor.pcha_temperature_piscine
+      device_class: temperature
+      icon: mdi:thermometer-water
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set source = states('sensor.jardin_esp32_jardin_temperature_piscine') %}
+        {% if is_number(source) %}
+          {{ source | float(0) | round(1) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+      attributes:
+        source_available: >
+          {{ is_number(states('sensor.jardin_esp32_jardin_temperature_piscine')) }}

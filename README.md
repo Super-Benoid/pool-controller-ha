@@ -1,46 +1,47 @@
-# Pool Controller HA
+# Pool Controller Home Assistant
 
-Contrôleur intelligent de filtration et de chauffage solaire pour Home Assistant.
+Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique pour Home Assistant.
 
-## Objectifs
+## Fonctions V1
 
-- Filtration automatique basée sur la température de l'eau.
-- Chauffage solaire intelligent avec serpentin.
-- Protection du serpentin contre la surchauffe.
-- Surveillance du débit de filtration.
-- Surveillance de la consommation électrique de la pompe.
-- Tableau de bord Home Assistant.
-- Notifications en cas d'anomalie.
+- filtration quotidienne calculée selon la température de l'eau ;
+- planification visant une fin de filtration avant le coucher du soleil ;
+- chauffage solaire lorsque la luminosité est suffisante et que la consigne n'est pas atteinte ;
+- protection périodique du serpentin ;
+- modes `OFF`, `SECURISATION`, `AUTO`, `TRAITEMENT` et `MARCHE_FORCEE` ;
+- diagnostics de mesure, de cohérence et de procédé ;
+- arrêt de la filtration au niveau `CRITIQUE` ;
+- journalisation et notifications ;
+- tableau de bord Home Assistant natif, sans carte personnalisée.
 
-## Fonctionnement
+## Installation
 
-Le contrôleur prend ses décisions toutes les 5 minutes.
+Les fichiers prêts à copier sont fournis dans :
 
-Il utilise les informations suivantes :
+```text
+installation/
+├── configuration_extrait.yaml
+└── packages/
+    ├── piscine.yaml
+    └── piscine_diagnostics.yaml
+```
 
-- Température de l'eau
-- Température extérieure
-- Luminosité
-- Débit de filtration
-- Consommation électrique de la pompe
+La procédure détaillée se trouve dans :
 
-Le système choisit automatiquement le meilleur mode de fonctionnement.
+```text
+docs/V1.0/INSTALLATION.md
+```
 
-## Modes
+Après installation, exécuter la recette :
 
-- Arrêt
-- Validation température
-- Filtration
-- Chauffage solaire
-- Protection serpentin
-- Défaut
+```text
+docs/V1.0/RECETTE-V1.md
+```
 
-## Matériel utilisé
+Le mode doit rester `OFF` jusqu'à la validation des contrôles de mise en service.
 
-- Home Assistant
-- Pompe pilotée par prise Zigbee
-- ESP32
-- Sonde de température piscine
-- Débitmètre
-- Sonde de température extérieure Zigbee
-- Capteur de luminosité
+## Documentation
+
+- règles fonctionnelles : `docs/V1.0/` ;
+- organisation : `docs/ARCHITECTURE.md` ;
+- conventions : `docs/CONVENTIONS.md`.

@@ -1,25 +1,26 @@
 ################################################################################
-#
 # Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Abstraction des actionneurs
 #
-# SPEC-004
-# Couche d'abstraction - Actionneurs
+# Entrées
+#   switch.jardin_prises_exterieur_pompe_de_filtration
 #
+# Sorties
+#   switch.pcha_commande_pompe_filtration
 ################################################################################
 
 - switch:
-
     - name: PCHA Commande pompe filtration
       unique_id: pcha_commande_pompe_filtration
-
+      default_entity_id: switch.pcha_commande_pompe_filtration
+      availability: >
+        {{ has_value('switch.jardin_prises_exterieur_pompe_de_filtration') }}
       state: >
-        {{ is_state('switch.jardin_prises_exterieur_pompe_de_filtration','on') }}
-
+        {{ is_state('switch.jardin_prises_exterieur_pompe_de_filtration', 'on') }}
       turn_on:
         action: switch.turn_on
         target:
           entity_id: switch.jardin_prises_exterieur_pompe_de_filtration
-
       turn_off:
         action: switch.turn_off
         target:

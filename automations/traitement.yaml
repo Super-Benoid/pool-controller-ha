@@ -1,0 +1,127 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-006 — Orchestration du mode TRAITEMENT
+#
+# Entrées
+#   input_number.pcha_duree_traitement
+#   input_select.pcha_mode_de_fonctionnement
+#   timer.pcha_traitement
+#
+# Sorties
+#   Appel de script.pcha_traitement_demarrer
+#   Appel de script.pcha_traitement_terminer
+#   Commande de timer.pcha_traitement
+################################################################################
+
+# Un passage manuel au mode TRAITEMENT démarre le timer si aucun traitement
+# n'est déjà actif ou en pause. Lorsque le script de démarrage est utilisé,
+# le timer est démarré avant le changement de mode : cette condition évite
+# donc de le redémarrer une seconde fois.
+- id: pcha_traitement_demarrer_sur_entree_mode
+  alias: PCHA - Traitement - Démarrer sur entrée dans le mode
+  description: Démarre le traitement lorsqu'un utilisateur sélectionne le mode TRAITEMENT.
+  icon: mdi:timer-play-outline
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      to: TRAITEMENT
+  conditions:
+    - condition: template
+      value_template: >
+        {{ states('timer.pcha_traitement') not in ['active', 'paused'] }}
+    - condition: template
+      value_template: >
+        {{ states('input_number.pcha_duree_traitement') not in ['unknown', 'unavailable'] }}
+  actions:
+    - action: script.pcha_traitement_demarrer
+
+# Quitter TRAITEMENT avant l'expiration annule uniquement le timer. Le mode
+# choisi par l'utilisateur est conservé : cette automatisation ne force pas
+# le retour à AUTO.
+- id: pcha_traitement_annuler_sur_sortie_mode
+  alias: PCHA - Traitement - Annuler sur sortie du mode
+  description: Annule le timer lorsqu'un utilisateur quitte le mode TRAITEMENT avant son terme.
+  icon: mdi:timer-cancel-outline
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      from: TRAITEMENT
+  conditions:
+    - condition: template
+      value_template: >
+        {{ states('timer.pcha_traitement') in ['active', 'paused'] }}
+  actions:
+    - action: timer.cancel
+      target:
+        entity_id: timer.pcha_traitement
+
+# Un timer devenu inactif alors que le mode TRAITEMENT est encore sélectionné
+# correspond à la fin normale du traitement ou à une annulation externe.
+# Dans les deux cas, SPEC-006 impose un retour au mode AUTO.
+- id: pcha_traitement_terminer_sur_timer_inactif
+  alias: PCHA - Traitement - Terminer sur timer inactif
+  description: Termine le traitement lorsque son timer arrive à son terme ou est arrêté alors que le mode reste actif.
+  icon: mdi:timer-check-outline
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: timer.pcha_traitement
+      to: idle
+  conditions:
+    - condition: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      state: TRAITEMENT
+  actions:
+    - action: script.pcha_traitement_terminer
+
+# Le timer est restauré par Home Assistant. En revanche, aucun événement de fin
+# n'est émis au démarrage lorsqu'il a expiré pendant l'arrêt de Home Assistant.
+# Cette automatisation réconcilie donc le mode et le timer après restauration.
+- id: pcha_traitement_reconcilier_au_demarrage
+  alias: PCHA - Traitement - Réconcilier au démarrage
+  description: Rétablit une relation cohérente entre le mode TRAITEMENT et son timer après un redémarrage.
+  icon: mdi:timer-sync-outline
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: homeassistant
+      event: start
+  conditions: []
+  actions:
+    - wait_template: >
+        {{
+          states('input_select.pcha_mode_de_fonctionnement') not in ['unknown', 'unavailable']
+          and states('timer.pcha_traitement') not in ['unknown', 'unavailable']
+        }}
+      timeout: "00:01:00"
+      continue_on_timeout: false
+    - choose:
+        # Le traitement a expiré pendant l'arrêt de Home Assistant : retour AUTO.
+        - conditions:
+            - condition: state
+              entity_id: input_select.pcha_mode_de_fonctionnement
+              state: TRAITEMENT
+            - condition: state
+              entity_id: timer.pcha_traitement
+              state: idle
+          sequence:
+            - action: script.pcha_traitement_terminer
+
+        # Un timer restauré ne doit pas continuer si le mode TRAITEMENT n'est
+        # plus sélectionné.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ not is_state('input_select.pcha_mode_de_fonctionnement', 'TRAITEMENT') }}
+            - condition: template
+              value_template: >
+                {{ states('timer.pcha_traitement') in ['active', 'paused'] }}
+          sequence:
+            - action: timer.cancel
+              target:
+                entity_id: timer.pcha_traitement

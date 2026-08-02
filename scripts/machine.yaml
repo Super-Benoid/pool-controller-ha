@@ -1,76 +1,167 @@
 ################################################################################
-#
 # Pool Controller Home Assistant (PCHA)
+# SPEC-005 — Machine à états
 #
-# SPEC-005
-# Scripts - Machine à états
+# Entrées
+#   binary_sensor.pcha_demande_fonctionnement
+#   input_number.pcha_temps_arret_pompe_min
+#   input_number.pcha_temps_marche_pompe_min
+#   input_select.pcha_etat_machine
+#   input_select.pcha_niveau_fonctionnement
+#   switch.pcha_commande_pompe_filtration
 #
+# Sorties
+#   input_select.pcha_etat_machine
+#   script.pcha_machine_attente
+#   script.pcha_machine_filtration
+#   script.pcha_machine_initialiser
+#   script.pcha_machine_reevaluer
 ################################################################################
 
-###############################################################################
-# Initialisation
-###############################################################################
-
-pcha_machine_initialiser:
-  alias: PCHA - Machine - Initialiser
-  mode: single
-
-  sequence:
-
-    - service: script.pcha_machine_attente
-
-###############################################################################
-# Réévaluation
-###############################################################################
-
-pcha_machine_reevaluer:
-  alias: PCHA - Machine - Réévaluer
-  mode: restart
-
-  sequence:
-
-    ###########################################################################
-    # Demande de filtration ?
-    ###########################################################################
-
-    - if:
-        - condition: template
-          value_template: >
-            {{ states('sensor.pcha_demande_filtration') == 'on' }}
-      then:
-        - service: script.pcha_machine_filtration
-
-      else:
-        - service: script.pcha_machine_attente
-
-###############################################################################
-# Etat ATTENTE
-###############################################################################
-
 pcha_machine_attente:
-  alias: PCHA - Machine - Etat ATTENTE
+  alias: PCHA - Machine - État ATTENTE
+  description: Arrête la pompe puis positionne la machine en ATTENTE.
+  icon: mdi:pause-circle-outline
   mode: single
-
   sequence:
-
-    - service: input_select.select_option
+    - action: script.pcha_pompe_arreter
+    - condition: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      state: "off"
+    - action: input_select.select_option
       target:
         entity_id: input_select.pcha_etat_machine
       data:
         option: ATTENTE
 
-###############################################################################
-# Etat FILTRATION
-###############################################################################
-
 pcha_machine_filtration:
-  alias: PCHA - Machine - Etat FILTRATION
+  alias: PCHA - Machine - État FILTRATION
+  description: Démarre la pompe puis positionne la machine en FILTRATION.
+  icon: mdi:water-pump
   mode: single
-
   sequence:
-
-    - service: input_select.select_option
+    - action: script.pcha_pompe_demarrer
+    - condition: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      state: "on"
+    - action: input_select.select_option
       target:
         entity_id: input_select.pcha_etat_machine
       data:
         option: FILTRATION
+
+pcha_machine_initialiser:
+  alias: PCHA - Machine - Initialiser
+  description: Initialise la machine, sécurise l'arrêt puis réévalue la demande.
+  icon: mdi:restart
+  mode: single
+  sequence:
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: INITIALISATION
+    - action: script.pcha_pompe_arreter
+    - condition: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      state: "off"
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: ATTENTE
+    - action: script.pcha_machine_reevaluer
+
+pcha_machine_reevaluer:
+  alias: PCHA - Machine - Réévaluer
+  description: Point unique de décision des transitions et de la cohérence entre état machine et pompe.
+  icon: mdi:state-machine
+  mode: restart
+  sequence:
+    - variables:
+        demande_active: >
+          {{ is_state('binary_sensor.pcha_demande_fonctionnement', 'on') }}
+        niveau_critique: >
+          {{ is_state('input_select.pcha_niveau_fonctionnement', 'CRITIQUE') }}
+        etat_machine: >
+          {{ states('input_select.pcha_etat_machine') }}
+        pompe_active: >
+          {{ is_state('switch.pcha_commande_pompe_filtration', 'on') }}
+
+    - choose:
+        # Le niveau CRITIQUE est prioritaire sur toutes les temporisations.
+        - conditions:
+            - condition: template
+              value_template: "{{ niveau_critique }}"
+          sequence:
+            - action: script.pcha_machine_attente
+
+        # INITIALISATION se termine toujours par un retour sécurisé à ATTENTE.
+        - conditions:
+            - condition: template
+              value_template: "{{ etat_machine == 'INITIALISATION' }}"
+          sequence:
+            - action: script.pcha_machine_attente
+
+        # Une demande active impose FILTRATION. Cette branche corrige aussi le
+        # cas où l'état annonce FILTRATION alors que la pompe est réellement OFF.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ demande_active and (etat_machine != 'FILTRATION' or not pompe_active) }}
+          sequence:
+            - variables:
+                attente_avant_demarrage: >
+                  {% if is_state('switch.pcha_commande_pompe_filtration', 'off') %}
+                    {% set minimum = states('input_number.pcha_temps_arret_pompe_min') | float(0) * 60 %}
+                    {% set ecoule = as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed) %}
+                    {{ [minimum - ecoule, 0] | max | round(0) }}
+                  {% else %}
+                    0
+                  {% endif %}
+            - if:
+                - condition: template
+                  value_template: "{{ attente_avant_demarrage | float(0) > 0 }}"
+              then:
+                - delay:
+                    seconds: "{{ attente_avant_demarrage | int(0) }}"
+            - condition: template
+              value_template: >
+                {{
+                  is_state('binary_sensor.pcha_demande_fonctionnement', 'on')
+                  and not is_state('input_select.pcha_niveau_fonctionnement', 'CRITIQUE')
+                }}
+            - action: script.pcha_machine_filtration
+
+        # Sans demande, la machine impose ATTENTE. Cette branche corrige aussi
+        # le cas où la pompe est OFF mais où l'état indique encore FILTRATION.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  not demande_active
+                  and (etat_machine != 'ATTENTE' or pompe_active)
+                }}
+          sequence:
+            - variables:
+                attente_avant_arret: >
+                  {% if is_state('switch.pcha_commande_pompe_filtration', 'on') %}
+                    {% set minimum = states('input_number.pcha_temps_marche_pompe_min') | float(0) * 60 %}
+                    {% set ecoule = as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed) %}
+                    {{ [minimum - ecoule, 0] | max | round(0) }}
+                  {% else %}
+                    0
+                  {% endif %}
+            - if:
+                - condition: template
+                  value_template: "{{ attente_avant_arret | float(0) > 0 }}"
+              then:
+                - delay:
+                    seconds: "{{ attente_avant_arret | int(0) }}"
+            - condition: template
+              value_template: >
+                {{
+                  not is_state('binary_sensor.pcha_demande_fonctionnement', 'on')
+                  or is_state('input_select.pcha_niveau_fonctionnement', 'CRITIQUE')
+                }}
+            - action: script.pcha_machine_attente

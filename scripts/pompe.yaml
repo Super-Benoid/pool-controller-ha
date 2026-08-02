@@ -1,0 +1,50 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-005 — Actions de la pompe
+#
+# Entrées
+#   switch.pcha_commande_pompe_filtration
+#
+# Sorties
+#   Commande de switch.pcha_commande_pompe_filtration
+#   script.pcha_pompe_arreter
+#   script.pcha_pompe_demarrer
+################################################################################
+
+pcha_pompe_arreter:
+  alias: PCHA - Pompe - Arrêter
+  description: Arrête la pompe par l'actionneur abstrait PCHA.
+  icon: mdi:pump-off
+  mode: single
+  sequence:
+    - if:
+        - condition: state
+          entity_id: switch.pcha_commande_pompe_filtration
+          state: "on"
+      then:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.pcha_commande_pompe_filtration
+        - wait_template: >
+            {{ is_state('switch.pcha_commande_pompe_filtration', 'off') }}
+          timeout: "00:00:15"
+          continue_on_timeout: false
+
+pcha_pompe_demarrer:
+  alias: PCHA - Pompe - Démarrer
+  description: Démarre la pompe par l'actionneur abstrait PCHA.
+  icon: mdi:pump
+  mode: single
+  sequence:
+    - if:
+        - condition: state
+          entity_id: switch.pcha_commande_pompe_filtration
+          state: "off"
+      then:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.pcha_commande_pompe_filtration
+        - wait_template: >
+            {{ is_state('switch.pcha_commande_pompe_filtration', 'on') }}
+          timeout: "00:00:15"
+          continue_on_timeout: false

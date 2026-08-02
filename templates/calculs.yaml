@@ -1,0 +1,179 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-003 — Calculs de filtration
+#
+# Entrées
+#   input_select.pcha_etat_machine
+#   sensor.pcha_temperature_piscine
+#   sun.sun
+#
+# Sorties
+#   binary_sensor.pcha_filtration_requise
+#   sensor.pcha_objectif_filtration_quotidien
+#   sensor.pcha_temperature_piscine_max_jour
+#   sensor.pcha_temperature_piscine_min_jour
+#   sensor.pcha_temps_filtration_realise
+#   sensor.pcha_temps_filtration_restant
+################################################################################
+
+# Objectif quotidien et demande automatique.
+- sensor:
+    - name: PCHA Objectif filtration quotidien
+      unique_id: pcha_objectif_filtration_quotidien
+      default_entity_id: sensor.pcha_objectif_filtration_quotidien
+      icon: mdi:target
+      unit_of_measurement: "h"
+      state_class: measurement
+      state: >
+        {% set disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
+        {% set temperature = states('sensor.pcha_temperature_piscine') %}
+        {% if disponible and is_number(temperature) %}
+          {% set t = temperature | float(0) %}
+          {% if t < 20 %}
+            4
+          {% elif t < 24 %}
+            6
+          {% elif t < 27 %}
+            8
+          {% else %}
+            {{ (10 + 2 * (t - 27)) | round(1) }}
+          {% endif %}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+
+    - name: PCHA Temps filtration restant
+      unique_id: pcha_temps_filtration_restant
+      default_entity_id: sensor.pcha_temps_filtration_restant
+      icon: mdi:timer-sand
+      unit_of_measurement: "min"
+      state_class: measurement
+      state: >
+        {% set objectif = states('sensor.pcha_objectif_filtration_quotidien') %}
+        {% set realise = states('sensor.pcha_temps_filtration_realise') %}
+        {% if is_number(objectif) and is_number(realise) %}
+          {{ [((objectif | float(0)) * 60 - (realise | float(0))), 0] | max | round(0) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+
+- binary_sensor:
+    - name: PCHA Filtration requise
+      unique_id: pcha_filtration_requise
+      default_entity_id: binary_sensor.pcha_filtration_requise
+      icon: mdi:water-pump
+      state: >
+        {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
+        {% if not is_number(restant_brut) or (restant_brut | float(0)) <= 0 %}
+          false
+        {% else %}
+          {% set restant = restant_brut | float(0) %}
+          {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+          {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+          {% if coucher is none %}
+            true
+          {% elif coucher.date() != now().date() %}
+            true
+          {% else %}
+            {% set echeance = coucher - timedelta(hours=1) %}
+            {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
+            {{ now() >= depart_au_plus_tard }}
+          {% endif %}
+        {% endif %}
+
+# Compteur quotidien de filtration. L'état est restauré après redémarrage.
+- triggers:
+    - trigger: homeassistant
+      event: start
+      id: demarrage
+    - trigger: time_pattern
+      minutes: "/1"
+      id: minute
+  sensor:
+    - name: PCHA Temps filtration réalisé
+      unique_id: pcha_temps_filtration_realise
+      default_entity_id: sensor.pcha_temps_filtration_realise
+      icon: mdi:timer-check
+      unit_of_measurement: "min"
+      state_class: measurement
+      state: >
+        {% set aujourd_hui = now().date() | string %}
+        {% set jour_precedent = this.attributes.jour | default('') %}
+        {% set precedent = this.state | float(0) if is_number(this.state) else 0 %}
+        {% if jour_precedent != aujourd_hui %}
+          0
+        {% elif trigger.id == 'minute' and is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
+          {{ [precedent + 1, 1440] | min }}
+        {% else %}
+          {{ precedent }}
+        {% endif %}
+      attributes:
+        jour: "{{ now().date() }}"
+
+# Minimum et maximum journaliers de la température de la piscine.
+- triggers:
+    - trigger: homeassistant
+      event: start
+      id: demarrage
+    - trigger: state
+      entity_id: sensor.pcha_temperature_piscine
+      id: temperature
+    - trigger: time
+      at: "00:00:00"
+      id: minuit
+  sensor:
+    - name: PCHA Température piscine minimum du jour
+      unique_id: pcha_temperature_piscine_min_jour
+      default_entity_id: sensor.pcha_temperature_piscine_min_jour
+      device_class: temperature
+      icon: mdi:thermometer-chevron-down
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set aujourd_hui = now().date() | string %}
+        {% set jour_precedent = this.attributes.jour | default('') %}
+        {% set disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
+        {% set courant = states('sensor.pcha_temperature_piscine') %}
+        {% if disponible and is_number(courant) %}
+          {% set valeur = courant | float(0) %}
+          {% if trigger.id == 'minuit' or jour_precedent != aujourd_hui or not is_number(this.state) %}
+            {{ valeur | round(1) }}
+          {% else %}
+            {{ [this.state | float(0), valeur] | min | round(1) }}
+          {% endif %}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(1) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+      attributes:
+        jour: "{{ now().date() }}"
+
+    - name: PCHA Température piscine maximum du jour
+      unique_id: pcha_temperature_piscine_max_jour
+      default_entity_id: sensor.pcha_temperature_piscine_max_jour
+      device_class: temperature
+      icon: mdi:thermometer-chevron-up
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set aujourd_hui = now().date() | string %}
+        {% set jour_precedent = this.attributes.jour | default('') %}
+        {% set disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
+        {% set courant = states('sensor.pcha_temperature_piscine') %}
+        {% if disponible and is_number(courant) %}
+          {% set valeur = courant | float(0) %}
+          {% if trigger.id == 'minuit' or jour_precedent != aujourd_hui or not is_number(this.state) %}
+            {{ valeur | round(1) }}
+          {% else %}
+            {{ [this.state | float(0), valeur] | max | round(1) }}
+          {% endif %}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(1) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+      attributes:
+        jour: "{{ now().date() }}"

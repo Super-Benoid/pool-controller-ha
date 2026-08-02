@@ -1,18 +1,13 @@
 ################################################################################
-#
 # Pool Controller Home Assistant (PCHA)
+# SPEC-004 / SPEC-006 — Timer de traitement
 #
-# SPEC-004
-# Helpers - Timers
+# Entrées
+#   Aucune
 #
-# Les timers sont utilisés uniquement pour les fonctions nécessitant
-# une temporisation indépendante de la logique métier.
-#
+# Sorties
+#   timer.pcha_traitement
 ################################################################################
-
-###############################################################################
-# Mode TRAITEMENT
-###############################################################################
 
 pcha_traitement:
   name: Traitement

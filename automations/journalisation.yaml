@@ -1,0 +1,221 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-009 — Journalisation
+#
+# Entrées
+#   Événement pcha_diagnostic
+#   binary_sensor.pcha_chauffage_solaire_actif
+#   binary_sensor.pcha_chauffage_solaire_requis
+#   binary_sensor.pcha_filtration_requise
+#   binary_sensor.pcha_protection_serpentin_requise
+#   input_select.pcha_etat_machine
+#   input_select.pcha_mode_de_fonctionnement
+#   input_select.pcha_niveau_fonctionnement
+#   switch.pcha_commande_pompe_filtration
+#
+# Sorties
+#   Événement pcha_journal
+#   Entrées dans l'activité Home Assistant via logbook.log
+################################################################################
+
+# Journalise les changements fonctionnels obligatoires de SPEC-009.
+- id: pcha_journaliser_changements_fonctionnels
+  alias: PCHA - Journal - Changements fonctionnels
+  description: Produit un événement PCHA et une entrée d'activité pour chaque changement fonctionnel obligatoire.
+  icon: mdi:notebook-outline
+  initial_state: true
+  mode: queued
+  max: 30
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_etat_machine
+      id: etat_machine
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      id: mode
+    - trigger: state
+      entity_id: input_select.pcha_niveau_fonctionnement
+      id: niveau_global
+    - trigger: state
+      entity_id: binary_sensor.pcha_filtration_requise
+      id: demande_filtration
+    - trigger: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      id: pompe
+    - trigger: state
+      entity_id: binary_sensor.pcha_chauffage_solaire_requis
+      id: demande_chauffage
+    - trigger: state
+      entity_id: binary_sensor.pcha_chauffage_solaire_actif
+      id: chauffage_actif
+    - trigger: state
+      entity_id: binary_sensor.pcha_protection_serpentin_requise
+      id: protection_serpentin
+  conditions:
+    - condition: template
+      value_template: >
+        {{
+          trigger.from_state is not none
+          and trigger.to_state is not none
+          and trigger.from_state.state not in ['unknown', 'unavailable']
+          and trigger.to_state.state not in ['unknown', 'unavailable']
+          and trigger.from_state.state != trigger.to_state.state
+        }}
+  variables:
+    type_evenement: >
+      {% set types = {
+        'etat_machine': 'MACHINE',
+        'mode': 'MODE',
+        'niveau_global': 'NIVEAU',
+        'demande_filtration': 'FILTRATION_DEMANDE',
+        'pompe': 'FILTRATION_REELLE',
+        'demande_chauffage': 'CHAUFFAGE_DEMANDE',
+        'chauffage_actif': 'CHAUFFAGE_ACTIF',
+        'protection_serpentin': 'PROTECTION_SERPENTIN'
+      } %}
+      {{ types.get(trigger.id, 'EVENEMENT') }}
+    niveau_journalisation: >
+      {% if trigger.id == 'niveau_global' and trigger.to_state.state == 'CRITIQUE' %}
+        ERREUR
+      {% elif trigger.id == 'niveau_global' and trigger.to_state.state == 'DEGRADE' %}
+        AVERTISSEMENT
+      {% else %}
+        INFORMATION
+      {% endif %}
+    description: >
+      {% if trigger.id == 'etat_machine' %}
+        État machine : {{ trigger.from_state.state }} → {{ trigger.to_state.state }}.
+      {% elif trigger.id == 'mode' %}
+        Mode de fonctionnement : {{ trigger.from_state.state }} → {{ trigger.to_state.state }}.
+      {% elif trigger.id == 'niveau_global' %}
+        Niveau global : {{ trigger.from_state.state }} → {{ trigger.to_state.state }}.
+      {% elif trigger.id == 'demande_filtration' %}
+        Demande automatique de filtration {{ 'activée' if trigger.to_state.state == 'on' else 'désactivée' }}.
+      {% elif trigger.id == 'pompe' %}
+        Pompe de filtration réellement {{ 'démarrée' if trigger.to_state.state == 'on' else 'arrêtée' }}.
+      {% elif trigger.id == 'demande_chauffage' %}
+        Demande de chauffage solaire {{ 'activée' if trigger.to_state.state == 'on' else 'désactivée' }}.
+      {% elif trigger.id == 'chauffage_actif' %}
+        Chauffage solaire {{ 'actif' if trigger.to_state.state == 'on' else 'inactif' }}.
+      {% elif trigger.id == 'protection_serpentin' %}
+        Protection du serpentin {{ 'démarrée' if trigger.to_state.state == 'on' else 'terminée' }}.
+      {% else %}
+        Changement de {{ trigger.entity_id }} : {{ trigger.from_state.state }} → {{ trigger.to_state.state }}.
+      {% endif %}
+  actions:
+    - event: pcha_journal
+      event_data:
+        horodatage: "{{ now().isoformat() }}"
+        type: "{{ type_evenement | trim }}"
+        source: "{{ trigger.entity_id }}"
+        description: "{{ description | trim }}"
+        niveau: "{{ niveau_journalisation | trim }}"
+    - action: logbook.log
+      data:
+        name: "PCHA - {{ type_evenement | trim }}"
+        message: "[{{ niveau_journalisation | trim }}] {{ description | trim }}"
+        entity_id: "{{ trigger.entity_id }}"
+
+# Le début et la fin d'un traitement sont des événements distincts du simple
+# changement de mode, conformément à SPEC-009.
+- id: pcha_journaliser_traitement
+  alias: PCHA - Journal - Traitement
+  description: Journalise le début et la fin du mode TRAITEMENT.
+  icon: mdi:flask-outline
+  initial_state: true
+  mode: queued
+  max: 5
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      to: TRAITEMENT
+      id: debut
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      from: TRAITEMENT
+      id: fin
+  conditions:
+    - condition: template
+      value_template: >
+        {{
+          trigger.from_state is not none
+          and trigger.to_state is not none
+          and trigger.from_state.state not in ['unknown', 'unavailable']
+          and trigger.to_state.state not in ['unknown', 'unavailable']
+        }}
+  variables:
+    type_evenement: "{{ 'TRAITEMENT_DEBUT' if trigger.id == 'debut' else 'TRAITEMENT_FIN' }}"
+    description: >
+      {% if trigger.id == 'debut' %}
+        Traitement démarré pour une durée configurée de {{ states('input_number.pcha_duree_traitement') | int(0) }} heure(s).
+      {% else %}
+        Traitement terminé ou interrompu ; nouveau mode : {{ trigger.to_state.state }}.
+      {% endif %}
+  actions:
+    - event: pcha_journal
+      event_data:
+        horodatage: "{{ now().isoformat() }}"
+        type: "{{ type_evenement }}"
+        source: input_select.pcha_mode_de_fonctionnement
+        description: "{{ description | trim }}"
+        niveau: INFORMATION
+    - action: logbook.log
+      data:
+        name: "PCHA - {{ type_evenement }}"
+        message: "[INFORMATION] {{ description | trim }}"
+        entity_id: input_select.pcha_mode_de_fonctionnement
+
+# Transforme l'événement structuré de SPEC-007 en événement de journal PCHA,
+# puis l'enregistre une seule fois dans l'activité Home Assistant.
+- id: pcha_journaliser_diagnostics
+  alias: PCHA - Journal - Diagnostics
+  description: Journalise chaque activation et disparition produite par SPEC-007.
+  icon: mdi:shield-alert-outline
+  initial_state: true
+  mode: queued
+  max: 30
+  triggers:
+    - trigger: event
+      event_type: pcha_diagnostic
+  conditions:
+    - condition: template
+      value_template: >
+        {{
+          trigger.event.data.diagnostic_id is defined
+          and trigger.event.data.gravite is defined
+          and trigger.event.data.etat is defined
+        }}
+  variables:
+    diagnostic_id: "{{ trigger.event.data.diagnostic_id }}"
+    famille: "{{ trigger.event.data.famille }}"
+    gravite: "{{ trigger.event.data.gravite }}"
+    etat_diagnostic: "{{ trigger.event.data.etat }}"
+    motif: "{{ trigger.event.data.motif }}"
+    source_diagnostic: "{{ trigger.event.data.entity_id }}"
+    niveau_journalisation: >
+      {% if gravite == 'CRITIQUE' %}
+        ERREUR
+      {% elif gravite == 'DEGRADE' %}
+        AVERTISSEMENT
+      {% else %}
+        INFORMATION
+      {% endif %}
+    description: >
+      Diagnostic {{ diagnostic_id }} ({{ famille }}, {{ gravite }}) {{ 'activé' if etat_diagnostic == 'ACTIF' else 'résolu' }} : {{ motif }}.
+  actions:
+    - event: pcha_journal
+      event_data:
+        horodatage: "{{ now().isoformat() }}"
+        type: DIAGNOSTIC
+        source: "{{ source_diagnostic }}"
+        description: "{{ description | trim }}"
+        niveau: "{{ niveau_journalisation | trim }}"
+        diagnostic_id: "{{ diagnostic_id }}"
+        famille: "{{ famille }}"
+        gravite: "{{ gravite }}"
+        etat: "{{ etat_diagnostic }}"
+    - action: logbook.log
+      data:
+        name: "PCHA - Diagnostic {{ diagnostic_id }}"
+        message: "[{{ niveau_journalisation | trim }}] {{ description | trim }}"
+        entity_id: "{{ source_diagnostic }}"

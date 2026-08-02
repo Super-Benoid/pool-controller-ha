@@ -1,29 +1,13 @@
 ################################################################################
-#
 # Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Commandes utilisateur
 #
-# SPEC-004
-# Helpers - Commandes utilisateur
+# Entrées
+#   Aucune
 #
-# Les input_boolean représentent uniquement des demandes d'action
-# émises par l'utilisateur.
-#
-# Ils ne doivent jamais représenter un état du contrôleur.
-#
+# Sorties
+#   input_boolean.pcha_acquitter_alarmes
 ################################################################################
-
-###############################################################################
-# Réinitialisation des défauts
-###############################################################################
-
-pcha_reinitialiser_defauts:
-  name: Réinitialiser les défauts
-  icon: mdi:restart-alert
-  initial: false
-
-###############################################################################
-# Acquittement des alarmes
-###############################################################################
 
 pcha_acquitter_alarmes:
   name: Acquitter les alarmes

@@ -184,11 +184,11 @@ Exemple :
 ```text
 Entrées
 
-sensor.pcha_debit
+sensor.pcha_debit_filtration
 
 Sorties
 
-binary_sensor.pcha_debit_nominal
+binary_sensor.pcha_filtration_requise
 ```
 
 ---

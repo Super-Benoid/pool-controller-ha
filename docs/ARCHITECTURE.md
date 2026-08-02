@@ -26,55 +26,54 @@ Les règles suivantes sont immuables :
 
 # 2. Architecture générale
 
-/config
-│
+```text
+/config/
 ├── configuration.yaml
-│
-├── packages
-│   └── piscine.yaml
-│
-└── pool-controller-ha
-    │
+├── packages/
+│   ├── piscine.yaml
+│   └── piscine_diagnostics.yaml
+└── pool-controller-ha/
     ├── automations/
     │   ├── chauffage.yaml
     │   ├── filtration.yaml
+    │   ├── journalisation.yaml
     │   ├── machine.yaml
+    │   ├── notifications.yaml
     │   └── traitement.yaml
-    │
+    ├── dashboard/
+    │   └── piscine.yaml
     ├── diagnostics/
     │   └── diagnostics.yaml
-    │
     ├── docs/
     │   ├── ARCHITECTURE.md
     │   ├── CONVENTIONS.md
-    │   ├── SPEC-000 — Principes généraux.md
-    │   ├── SPEC-001 — Inventaire matériel.md
-    │   ├── SPEC-002 — Interface utilisateur.md
-    │   ├── SPEC-003 — Gestion de la filtration.md
-    │   ├── SPEC-004 — Couche d'abstraction et configuration.md
-    │   ├── SPEC-005 — Machine à états.md
-    │   ├── SPEC-006 — Modes de fonctionnement.md
-    │   ├── SPEC-007 — Diagnostics.md
-    │   ├── SPEC-008 — Chauffage solaire.md
-    │   └── SPEC-009 — Journalisation et notifications.md
-    │
+    │   └── V1.0/
+    │       ├── 00-Introduction.md
+    │       ├── INSTALLATION.md
+    │       ├── RECETTE-V1.md
+    │       └── SPEC-000 à SPEC-009
     ├── helpers/
     │   ├── input_boolean.yaml
     │   ├── input_number.yaml
     │   ├── input_select.yaml
     │   ├── input_text.yaml
     │   └── timer.yaml
-    │
+    ├── installation/
+    │   ├── configuration_extrait.yaml
+    │   └── packages/
+    │       ├── piscine.yaml
+    │       └── piscine_diagnostics.yaml
     ├── scripts/
     │   ├── machine.yaml
     │   ├── pompe.yaml
     │   └── traitement.yaml
-    │
     └── templates/
         ├── actionneurs.yaml
         ├── calculs.yaml
         ├── capteurs.yaml
+        ├── chauffage.yaml
         └── systeme.yaml
+```
 
 Les dossiers et les fichiers sont classés par ordre alphabétique.
 
@@ -121,7 +120,7 @@ Exemple :
 sensor.jardin_esp32_jardin_debit_filtration_piscine
                 │
                 ▼
-sensor.pcha_debit
+sensor.pcha_debit_filtration
 ```
 
 Toutes les couches supérieures utilisent exclusivement :
@@ -161,12 +160,12 @@ Création des états logiques utilisés par le contrôleur.
 Exemple :
 
 ```text
-sensor.pcha_debit
+sensor.pcha_debit_filtration
         │
         ▼
-binary_sensor.pcha_debit_ok
+binary_sensor.pcha_filtration_requise
 
-binary_sensor.pcha_filtration_active
+binary_sensor.pcha_chauffage_solaire_actif
 ```
 
 Les scripts et automatisations utilisent exclusivement ces états.
@@ -182,11 +181,11 @@ Exemple :
 ```text
 Entrées
 
-    sensor.pcha_debit
+    sensor.pcha_debit_filtration
 
 Sorties
 
-    binary_sensor.pcha_debit_nominal
+    binary_sensor.pcha_filtration_requise
 ```
 
 Le contrat décrit uniquement :
@@ -207,15 +206,15 @@ pcha_
 Exemples :
 
 ```text
-sensor.pcha_debit
+sensor.pcha_debit_filtration
 
-sensor.pcha_puissance_filtration
+sensor.pcha_puissance_pompe_filtration
 
-sensor.pcha_energie_filtration
+sensor.pcha_energie_pompe_filtration
 
-binary_sensor.pcha_filtration_active
+binary_sensor.pcha_chauffage_solaire_actif
 
-script.pcha_demarrer_filtration
+script.pcha_pompe_demarrer
 ```
 
 Les équipements physiques conservent leur nom d'origine.
@@ -372,7 +371,8 @@ Diagnostics (SPEC-007)
 
 # 17.2 Règles d'implémentation
 
-Les templates implémentent exclusivement la SPEC-004.
+Les templates d'abstraction implémentent exclusivement la SPEC-004.
+Les templates métier implémentent la SPEC fonctionnelle indiquée dans leur contrat d'interface.
 Les scripts ne prennent aucune décision.
 Les automatisations ne contiennent aucune logique métier.
 Les diagnostics appliquent exclusivement la SPEC-007.

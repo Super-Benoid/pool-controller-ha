@@ -1,10 +1,14 @@
 ################################################################################
-#
 # Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Input text
 #
-# SPEC-004
-# Helpers - Input Text
+# Entrées
+#   Aucune
 #
-# Aucun input_text n'est utilisé dans le projet.
+# Sorties
+#   Aucune
 #
+# Aucun input_text n'est utilisé dans la V1.
 ################################################################################
+
+{}

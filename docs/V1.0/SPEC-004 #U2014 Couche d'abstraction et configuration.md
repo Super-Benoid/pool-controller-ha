@@ -56,6 +56,7 @@ La couche d'abstraction transmet l'état et les commandes. Elle ne décide jamai
 ## 5.1 Commandes utilisateur
 
 ```text
+input_boolean.pcha_reinitialiser_defauts
 input_boolean.pcha_acquitter_alarmes
 ```
 

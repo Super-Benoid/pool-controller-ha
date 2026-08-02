@@ -1,0 +1,12 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# Package diagnostics à copier dans /config/packages/piscine_diagnostics.yaml
+#
+# Entrées
+#   pool-controller-ha/diagnostics/diagnostics.yaml
+#
+# Sorties
+#   Diagnostics et orchestration du niveau de fonctionnement
+################################################################################
+
+!include ../pool-controller-ha/diagnostics/diagnostics.yaml

@@ -1,0 +1,138 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-009 — Notifications et acquittement
+#
+# Entrées
+#   Événement pcha_diagnostic
+#   input_boolean.pcha_acquitter_alarmes
+#
+# Sorties
+#   Notifications persistantes Home Assistant
+#   Notifications mobiles notify.mobile_app_oppo_ben
+#   Réinitialisation de input_boolean.pcha_acquitter_alarmes
+################################################################################
+
+# Notifie l'activation et la disparition des diagnostics DEGRADE et CRITIQUE.
+- id: pcha_notifier_diagnostics
+  alias: PCHA - Notifications - Diagnostics
+  description: Crée une alerte persistante et informe le téléphone lors d'un diagnostic dégradé ou critique.
+  icon: mdi:bell-alert-outline
+  initial_state: true
+  mode: queued
+  max: 30
+  triggers:
+    - trigger: event
+      event_type: pcha_diagnostic
+  conditions:
+    - condition: template
+      value_template: >
+        {{
+          trigger.event.data.gravite in ['DEGRADE', 'CRITIQUE']
+          and trigger.event.data.etat in ['ACTIF', 'INACTIF']
+        }}
+  variables:
+    diagnostic_id: "{{ trigger.event.data.diagnostic_id }}"
+    gravite: "{{ trigger.event.data.gravite }}"
+    etat_diagnostic: "{{ trigger.event.data.etat }}"
+    motif: "{{ trigger.event.data.motif }}"
+    notification_id: >
+      pcha_{{ diagnostic_id | lower | replace('-', '_') }}
+    niveau: >
+      {{ 'ERREUR' if gravite == 'CRITIQUE' else 'AVERTISSEMENT' }}
+    recommandation: >
+      {% if diagnostic_id == 'MES-001' %}
+        Vérifier la sonde de température piscine et son raccordement.
+      {% elif diagnostic_id == 'MES-002' %}
+        Vérifier immédiatement le débitmètre et son raccordement. La filtration est interdite tant que le diagnostic reste critique.
+      {% elif diagnostic_id == 'MES-003' %}
+        Vérifier la mesure de puissance de la prise de filtration.
+      {% elif diagnostic_id == 'MES-004' %}
+        Vérifier le capteur de luminosité et son raccordement.
+      {% elif diagnostic_id == 'COH-001' %}
+        Vérifier la pompe, la prise, le débitmètre et la cohérence entre débit et puissance.
+      {% elif diagnostic_id == 'COH-002' %}
+        Vérifier la sonde de température piscine ; la mesure est hors de la plage physique V1.
+      {% elif diagnostic_id == 'PRO-001' %}
+        Vérifier immédiatement le niveau d'eau, le filtre, les tuyaux, la pompe et les éventuelles obstructions.
+      {% elif diagnostic_id == 'PRO-002' %}
+        Contrôler le filtre, les tuyaux et la pompe ; le débit est insuffisant.
+      {% elif diagnostic_id == 'PRO-003' %}
+        Vérifier le mode, l'actionneur de pompe et le débit afin de rétablir la protection du serpentin.
+      {% else %}
+        Consulter les diagnostics PCHA dans Home Assistant.
+      {% endif %}
+    message_activation: >
+      {{ motif }}
+
+      Niveau : {{ niveau | trim }}
+      Date : {{ now().strftime('%d/%m/%Y %H:%M:%S') }}
+      Recommandation : {{ recommandation | trim }}
+    message_resolution: >
+      Le diagnostic {{ diagnostic_id }} est résolu.
+
+      Motif surveillé : {{ motif }}
+      Date : {{ now().strftime('%d/%m/%Y %H:%M:%S') }}
+  actions:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ etat_diagnostic == 'ACTIF' }}"
+          sequence:
+            - action: persistent_notification.create
+              data:
+                title: "PCHA — {{ gravite }} — {{ diagnostic_id }}"
+                message: "{{ message_activation | trim }}"
+                notification_id: "{{ notification_id | trim }}"
+            - action: notify.mobile_app_oppo_ben
+              data:
+                title: "PCHA — {{ gravite }} — {{ diagnostic_id }}"
+                message: "{{ message_activation | trim }}"
+                data:
+                  tag: "{{ notification_id | trim }}"
+
+        - conditions:
+            - condition: template
+              value_template: "{{ etat_diagnostic == 'INACTIF' }}"
+          sequence:
+            - action: persistent_notification.dismiss
+              data:
+                notification_id: "{{ notification_id | trim }}"
+            - action: notify.mobile_app_oppo_ben
+              data:
+                title: "PCHA — Diagnostic résolu — {{ diagnostic_id }}"
+                message: "{{ message_resolution | trim }}"
+                data:
+                  tag: "{{ notification_id | trim }}_resolu"
+
+# L'acquittement masque les alertes persistantes PCHA, sans modifier les
+# diagnostics, leur gravité, le niveau global ou la machine à états.
+- id: pcha_acquitter_alarmes
+  alias: PCHA - Notifications - Acquitter les alarmes
+  description: Ferme les notifications persistantes PCHA et réarme la commande utilisateur.
+  icon: mdi:alarm-check
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: input_boolean.pcha_acquitter_alarmes
+      to: "on"
+  conditions: []
+  actions:
+    - repeat:
+        for_each:
+          - pcha_mes_001
+          - pcha_mes_002
+          - pcha_mes_003
+          - pcha_mes_004
+          - pcha_coh_001
+          - pcha_coh_002
+          - pcha_pro_001
+          - pcha_pro_002
+          - pcha_pro_003
+        sequence:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: "{{ repeat.item }}"
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.pcha_acquitter_alarmes

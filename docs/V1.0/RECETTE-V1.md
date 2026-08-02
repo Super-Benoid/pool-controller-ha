@@ -1,0 +1,124 @@
+# Recette de mise en service — PCHA V1
+
+**Version :** 1.0  
+**Statut :** À exécuter sur l'installation réelle
+
+---
+
+# 1. Règles de sécurité
+
+* Commencer avec le mode `OFF`.
+* Ne jamais simuler un défaut hydraulique en obstruant volontairement le circuit.
+* Garder l'accès à la prise de la pompe pendant les essais.
+* Arrêter les essais si le débit ou le bruit de la pompe devient anormal.
+
+# 2. Chargement
+
+| Test | Résultat attendu |
+|---|---|
+| Vérification de configuration | Aucune erreur |
+| Redémarrage Home Assistant | Démarrage normal |
+| Tableau de bord Piscine | Accessible dans la barre latérale |
+| Entités PCHA | Aucune entité essentielle `unknown` ou `unavailable` après stabilisation |
+
+# 3. Abstraction matérielle
+
+Vérifier que les valeurs PCHA suivent les équipements réels :
+
+* `sensor.pcha_temperature_piscine` ;
+* `sensor.pcha_temperature_exterieure` ;
+* `sensor.pcha_luminosite` ;
+* `sensor.pcha_debit_filtration` ;
+* `sensor.pcha_puissance_pompe_filtration` ;
+* `switch.pcha_commande_pompe_filtration`.
+
+# 4. Mode OFF
+
+1. Sélectionner `OFF`.
+2. Vérifier que `binary_sensor.pcha_demande_fonctionnement` est `off`.
+3. Vérifier que la machine revient à `ATTENTE`.
+4. Vérifier que la pompe est arrêtée.
+
+**Critère :** aucune demande automatique ne peut démarrer la pompe en mode `OFF`.
+
+# 5. Marche forcée
+
+1. Vérifier que le niveau n'est pas `CRITIQUE`.
+2. Sélectionner `MARCHE_FORCEE`.
+3. Attendre la fin du temps minimum d'arrêt si nécessaire.
+4. Vérifier le passage à `FILTRATION` et le démarrage de la pompe.
+5. Revenir à `OFF` et vérifier l'arrêt selon les règles de la machine.
+
+# 6. Débit et puissance
+
+Pompe en fonctionnement stabilisé :
+
+* débit attendu proche de `3 800 L/h` ;
+* débit suffisant à partir de `3 000 L/h` ;
+* puissance attendue entre `300 et 350 W`.
+
+Vérifier que `PRO-001`, `PRO-002` et `COH-001` restent inactifs en fonctionnement normal.
+
+# 7. Température
+
+Vérifier que la température de piscine reste dans l'intervalle strict :
+
+```text
+10 °C < température < 50 °C
+```
+
+`COH-002` doit rester inactif pour une mesure cohérente.
+
+# 8. Mode TRAITEMENT
+
+1. Régler une courte durée d'essai adaptée au test.
+2. Sélectionner `TRAITEMENT`.
+3. Vérifier le démarrage du timer et de la demande de fonctionnement.
+4. Quitter le mode avant la fin et vérifier l'annulation du timer.
+5. Refaire le test jusqu'à expiration et vérifier le retour automatique à `AUTO`.
+6. Remettre la durée nominale après le test.
+
+# 9. Chauffage solaire
+
+Lorsque la luminosité dépasse le seuil et que la température est sous la consigne :
+
+* `binary_sensor.pcha_chauffage_solaire_requis` devient `on` ;
+* en mode `AUTO`, cette demande peut démarrer la filtration même si l'objectif quotidien est atteint ;
+* `binary_sensor.pcha_chauffage_solaire_actif` devient `on` lorsque la machine est en `FILTRATION`.
+
+# 10. Protection du serpentin
+
+En mode `SECURISATION` ou `AUTO`, avec une luminosité supérieure au seuil et sans circulation :
+
+* la demande apparaît après 25 minutes ;
+* la circulation est maintenue pendant au moins 5 minutes ;
+* aucune protection automatique ne démarre la pompe en mode `OFF`.
+
+# 11. Diagnostics et arrêt critique
+
+Vérifier sans provoquer de défaut physique dangereux :
+
+* la disparition contrôlée d'une source de mesure fait apparaître son diagnostic après le délai prévu ;
+* un diagnostic `DEGRADE` ne coupe pas la filtration à lui seul ;
+* un diagnostic `CRITIQUE` fait passer le niveau à `CRITIQUE` et arrête la pompe immédiatement ;
+* la disparition de la condition réarme le diagnostic selon son mode prévu.
+
+# 12. Notifications et journal
+
+Vérifier :
+
+* l'apparition d'une notification persistante pour un diagnostic `DEGRADE` ou `CRITIQUE` ;
+* la réception sur `notify.mobile_app_oppo_ben` ;
+* la notification de résolution ;
+* l'acquittement des notifications persistantes ;
+* les entrées PCHA dans le journal d'activité.
+
+# 13. Validation finale
+
+La V1 peut être considérée comme mise en service lorsque :
+
+* tous les tests applicables sont conformes ;
+* aucune erreur PCHA n'apparaît dans les journaux Home Assistant ;
+* les valeurs normales de débit et de puissance sont confirmées ;
+* l'arrêt `OFF` et l'arrêt `CRITIQUE` sont validés ;
+* le tableau de bord et les notifications sont opérationnels.

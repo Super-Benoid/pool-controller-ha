@@ -1,0 +1,71 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-006 — Mode TRAITEMENT
+#
+# Entrées
+#   input_number.pcha_duree_traitement
+#   input_select.pcha_mode_de_fonctionnement
+#   timer.pcha_traitement
+#
+# Sorties
+#   Commande de input_select.pcha_mode_de_fonctionnement
+#   Commande de timer.pcha_traitement
+#   script.pcha_traitement_annuler
+#   script.pcha_traitement_demarrer
+#   script.pcha_traitement_terminer
+################################################################################
+
+pcha_traitement_annuler:
+  alias: PCHA - Traitement - Annuler
+  description: Annule le traitement en cours et revient au mode AUTO.
+  icon: mdi:timer-cancel-outline
+  mode: single
+  sequence:
+    - action: timer.cancel
+      target:
+        entity_id: timer.pcha_traitement
+    - if:
+        - condition: state
+          entity_id: input_select.pcha_mode_de_fonctionnement
+          state: TRAITEMENT
+      then:
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.pcha_mode_de_fonctionnement
+          data:
+            option: AUTO
+
+pcha_traitement_demarrer:
+  alias: PCHA - Traitement - Démarrer
+  description: Démarre le timer configuré puis sélectionne le mode TRAITEMENT.
+  icon: mdi:timer-play-outline
+  mode: restart
+  sequence:
+    - action: timer.start
+      target:
+        entity_id: timer.pcha_traitement
+      data:
+        duration: >
+          {{ (states('input_number.pcha_duree_traitement') | float(1) * 3600) | int }}
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_mode_de_fonctionnement
+      data:
+        option: TRAITEMENT
+
+pcha_traitement_terminer:
+  alias: PCHA - Traitement - Terminer
+  description: Termine le mode TRAITEMENT et revient au mode AUTO.
+  icon: mdi:timer-check-outline
+  mode: single
+  sequence:
+    - if:
+        - condition: state
+          entity_id: input_select.pcha_mode_de_fonctionnement
+          state: TRAITEMENT
+      then:
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.pcha_mode_de_fonctionnement
+          data:
+            option: AUTO

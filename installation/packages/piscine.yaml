@@ -1,0 +1,20 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# Package principal à copier dans /config/packages/piscine.yaml
+#
+# Entrées
+#   helpers/, templates/, scripts/ et automations/ du projet
+#
+# Sorties
+#   Helpers, templates, scripts et automatisations PCHA chargés par Home Assistant
+################################################################################
+
+input_boolean: !include ../pool-controller-ha/helpers/input_boolean.yaml
+input_number: !include ../pool-controller-ha/helpers/input_number.yaml
+input_select: !include ../pool-controller-ha/helpers/input_select.yaml
+input_text: !include ../pool-controller-ha/helpers/input_text.yaml
+timer: !include ../pool-controller-ha/helpers/timer.yaml
+
+template: !include_dir_merge_list ../pool-controller-ha/templates
+script: !include_dir_merge_named ../pool-controller-ha/scripts
+automation: !include_dir_merge_list ../pool-controller-ha/automations

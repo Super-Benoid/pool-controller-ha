@@ -33,6 +33,7 @@ L'utilisateur peut :
 
 * sélectionner le mode défini dans la SPEC-006 ;
 * modifier les paramètres déclarés dans la SPEC-004 ;
+* demander la réinitialisation des défauts ;
 * acquitter les alarmes ;
 * consulter l'historique.
 

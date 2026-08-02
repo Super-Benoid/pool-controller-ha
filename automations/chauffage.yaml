@@ -1,0 +1,17 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-008 — Automatisations du chauffage solaire
+#
+# Entrées
+#   Aucune
+#
+# Sorties
+#   Aucune
+#
+# Les demandes de chauffage solaire et de protection du serpentin sont portées
+# par les entités template de templates/chauffage.yaml. La demande consolidée
+# se réévalue automatiquement et l'automatisation de la machine réagit à son
+# changement. Aucune automatisation supplémentaire n'est nécessaire en V1.
+################################################################################
+
+[]
