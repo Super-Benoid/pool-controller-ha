@@ -16,7 +16,6 @@
 - id: pcha_notifier_diagnostics
   alias: PCHA - Notifications - Diagnostics
   description: Crée une alerte persistante et informe le téléphone lors d'un diagnostic dégradé ou critique.
-  icon: mdi:bell-alert-outline
   initial_state: true
   mode: queued
   max: 30
@@ -109,7 +108,6 @@
 - id: pcha_acquitter_alarmes
   alias: PCHA - Notifications - Acquitter les alarmes
   description: Ferme les notifications persistantes PCHA et réarme la commande utilisateur.
-  icon: mdi:alarm-check
   initial_state: true
   mode: single
   triggers:

@@ -20,7 +20,6 @@
 - id: pcha_traitement_demarrer_sur_entree_mode
   alias: PCHA - Traitement - Démarrer sur entrée dans le mode
   description: Démarre le traitement lorsqu'un utilisateur sélectionne le mode TRAITEMENT.
-  icon: mdi:timer-play-outline
   initial_state: true
   mode: single
   triggers:
@@ -43,7 +42,6 @@
 - id: pcha_traitement_annuler_sur_sortie_mode
   alias: PCHA - Traitement - Annuler sur sortie du mode
   description: Annule le timer lorsqu'un utilisateur quitte le mode TRAITEMENT avant son terme.
-  icon: mdi:timer-cancel-outline
   initial_state: true
   mode: restart
   triggers:
@@ -65,7 +63,6 @@
 - id: pcha_traitement_terminer_sur_timer_inactif
   alias: PCHA - Traitement - Terminer sur timer inactif
   description: Termine le traitement lorsque son timer arrive à son terme ou est arrêté alors que le mode reste actif.
-  icon: mdi:timer-check-outline
   initial_state: true
   mode: single
   triggers:
@@ -85,7 +82,6 @@
 - id: pcha_traitement_reconcilier_au_demarrage
   alias: PCHA - Traitement - Réconcilier au démarrage
   description: Rétablit une relation cohérente entre le mode TRAITEMENT et son timer après un redémarrage.
-  icon: mdi:timer-sync-outline
   initial_state: true
   mode: single
   triggers:

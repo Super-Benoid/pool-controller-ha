@@ -22,7 +22,6 @@
 - id: pcha_journaliser_changements_fonctionnels
   alias: PCHA - Journal - Changements fonctionnels
   description: Produit un événement PCHA et une entrée d'activité pour chaque changement fonctionnel obligatoire.
-  icon: mdi:notebook-outline
   initial_state: true
   mode: queued
   max: 30
@@ -121,7 +120,6 @@
 - id: pcha_journaliser_traitement
   alias: PCHA - Journal - Traitement
   description: Journalise le début et la fin du mode TRAITEMENT.
-  icon: mdi:flask-outline
   initial_state: true
   mode: queued
   max: 5
@@ -170,7 +168,6 @@
 - id: pcha_journaliser_diagnostics
   alias: PCHA - Journal - Diagnostics
   description: Journalise chaque activation et disparition produite par SPEC-007.
-  icon: mdi:shield-alert-outline
   initial_state: true
   mode: queued
   max: 30

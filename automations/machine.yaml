@@ -19,7 +19,6 @@
 - id: pcha_machine_initialiser_au_demarrage
   alias: PCHA - Machine - Initialiser au démarrage
   description: Initialise la machine lorsque Home Assistant démarre et que ses interfaces sont disponibles.
-  icon: mdi:restart
   initial_state: true
   mode: single
   triggers:
@@ -44,7 +43,6 @@
 - id: pcha_machine_reevaluer_sur_changement
   alias: PCHA - Machine - Réévaluer sur changement
   description: Demande une réévaluation lorsque l'une des interfaces de la machine change.
-  icon: mdi:state-machine
   initial_state: true
   mode: restart
   triggers:

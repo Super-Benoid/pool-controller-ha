@@ -346,7 +346,6 @@ automation:
   - id: pcha_diagnostics_recalculer_niveau_global
     alias: PCHA - Diagnostics - Recalculer le niveau global
     description: Publie la gravité la plus élevée parmi les diagnostics actifs.
-    icon: mdi:shield-alert
     initial_state: true
     mode: restart
     triggers:
@@ -441,7 +440,6 @@ automation:
   - id: pcha_diagnostics_publier_evenement
     alias: PCHA - Diagnostics - Publier les changements
     description: Produit un événement unique à chaque activation ou disparition.
-    icon: mdi:message-alert-outline
     initial_state: true
     mode: queued
     max: 20
