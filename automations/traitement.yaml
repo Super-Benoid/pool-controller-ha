@@ -4,22 +4,22 @@
 #
 # Entrées
 #   input_number.pcha_duree_traitement
+#   input_select.pcha_etat_machine
 #   input_select.pcha_mode_de_fonctionnement
 #   timer.pcha_traitement
 #
 # Sorties
 #   Appel de script.pcha_traitement_demarrer
 #   Appel de script.pcha_traitement_terminer
-#   Commande de timer.pcha_traitement
+#   Commandes de timer.pcha_traitement
 ################################################################################
 
-# Un passage manuel au mode TRAITEMENT démarre le timer si aucun traitement
-# n'est déjà actif ou en pause. Lorsque le script de démarrage est utilisé,
-# le timer est démarré avant le changement de mode : cette condition évite
-# donc de le redémarrer une seconde fois.
+# Un passage manuel au mode TRAITEMENT initialise le timer si aucun traitement
+# n'est déjà actif ou en pause. Le script de démarrage initialise lui-même le
+# timer avant de sélectionner le mode, ce qui évite un second démarrage.
 - id: pcha_traitement_demarrer_sur_entree_mode
   alias: PCHA - Traitement - Démarrer sur entrée dans le mode
-  description: Démarre le traitement lorsqu'un utilisateur sélectionne le mode TRAITEMENT.
+  description: Initialise le traitement lorsqu'un utilisateur sélectionne directement le mode TRAITEMENT.
   initial_state: true
   mode: single
   triggers:
@@ -34,7 +34,153 @@
       value_template: >
         {{ states('input_number.pcha_duree_traitement') not in ['unknown', 'unavailable'] }}
   actions:
-    - action: script.pcha_traitement_demarrer
+    - action: timer.start
+      target:
+        entity_id: timer.pcha_traitement
+      data:
+        duration: >
+          {{ (states('input_number.pcha_duree_traitement') | float(5) * 60) | int }}
+    - if:
+        - condition: template
+          value_template: >
+            {{ not is_state('input_select.pcha_etat_machine', 'FILTRATION') }}
+      then:
+        - action: timer.pause
+          target:
+            entity_id: timer.pcha_traitement
+
+# Le temps de traitement correspond au temps réel passé en FILTRATION.
+# Le timer est donc mis en pause pendant ATTENTE et repris en FILTRATION.
+- id: pcha_traitement_synchroniser_avec_machine
+  alias: PCHA - Traitement - Synchroniser avec la machine
+  description: Compte le traitement uniquement lorsque la machine est réellement en FILTRATION.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_etat_machine
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+  conditions:
+    - condition: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      state: TRAITEMENT
+  actions:
+    - choose:
+        # Reprendre un traitement mis en pause lorsque la filtration commence.
+        - conditions:
+            - condition: state
+              entity_id: input_select.pcha_etat_machine
+              state: FILTRATION
+            - condition: state
+              entity_id: timer.pcha_traitement
+              state: paused
+          sequence:
+            - action: timer.start
+              target:
+                entity_id: timer.pcha_traitement
+
+        # Cas de récupération : initialiser le timer si le mode est actif et que
+        # la machine filtre alors que le timer est encore inactif.
+        - conditions:
+            - condition: state
+              entity_id: input_select.pcha_etat_machine
+              state: FILTRATION
+            - condition: state
+              entity_id: timer.pcha_traitement
+              state: idle
+          sequence:
+            - action: timer.start
+              target:
+                entity_id: timer.pcha_traitement
+              data:
+                duration: >
+                  {{ (states('input_number.pcha_duree_traitement') | float(5) * 60) | int }}
+
+        # Toute attente ou interruption de la filtration suspend le décompte.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ not is_state('input_select.pcha_etat_machine', 'FILTRATION') }}
+            - condition: state
+              entity_id: timer.pcha_traitement
+              state: active
+          sequence:
+            - action: timer.pause
+              target:
+                entity_id: timer.pcha_traitement
+
+# Modifier la durée pendant un traitement conserve le temps déjà réellement
+# écoulé. Exemple : 1 440 min configurées, 5 min réalisées, nouvelle durée 60 min :
+# le nouveau temps restant devient 55 min.
+- id: pcha_traitement_ajuster_duree
+  alias: PCHA - Traitement - Ajuster la durée
+  description: Recalcule le temps restant sans perdre le temps de traitement déjà réalisé.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_number.pcha_duree_traitement
+  conditions:
+    - condition: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      state: TRAITEMENT
+    - condition: template
+      value_template: >
+        {{
+          trigger.from_state is not none
+          and trigger.to_state is not none
+          and trigger.from_state.state not in ['unknown', 'unavailable']
+          and trigger.to_state.state not in ['unknown', 'unavailable']
+        }}
+  actions:
+    - variables:
+        ancienne_duree_secondes: >
+          {{ (trigger.from_state.state | float(5) * 60) | int }}
+        nouvelle_duree_secondes: >
+          {{ (trigger.to_state.state | float(5) * 60) | int }}
+        restant_actuel_secondes: >
+          {% if is_state('timer.pcha_traitement', 'active') %}
+            {% set fin = state_attr('timer.pcha_traitement', 'finishes_at') %}
+            {{ [as_timestamp(fin, as_timestamp(now())) - as_timestamp(now()), 0] | max | int }}
+          {% elif is_state('timer.pcha_traitement', 'paused') %}
+            {% set restant = state_attr('timer.pcha_traitement', 'remaining') | default('00:00:00', true) %}
+            {% set parties = restant.split(':') %}
+            {% if parties | count == 3 %}
+              {{ ((parties[0] | int(0)) * 3600 + (parties[1] | int(0)) * 60 + (parties[2] | int(0))) | int }}
+            {% else %}
+              {{ ancienne_duree_secondes }}
+            {% endif %}
+          {% else %}
+            {{ ancienne_duree_secondes }}
+          {% endif %}
+    - variables:
+        temps_ecoule_secondes: >
+          {{ [ancienne_duree_secondes | int - restant_actuel_secondes | int, 0] | max | int }}
+        nouveau_restant_secondes: >
+          {{ [nouvelle_duree_secondes | int - ([ancienne_duree_secondes | int - restant_actuel_secondes | int, 0] | max | int), 0] | max | int }}
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ nouveau_restant_secondes | int <= 0 }}
+          sequence:
+            - action: script.pcha_traitement_terminer
+      default:
+        - action: timer.start
+          target:
+            entity_id: timer.pcha_traitement
+          data:
+            duration: >
+              {{ nouveau_restant_secondes | int }}
+        - if:
+            - condition: template
+              value_template: >
+                {{ not is_state('input_select.pcha_etat_machine', 'FILTRATION') }}
+          then:
+            - action: timer.pause
+              target:
+                entity_id: timer.pcha_traitement
 
 # Quitter TRAITEMENT avant l'expiration annule uniquement le timer. Le mode
 # choisi par l'utilisateur est conservé : cette automatisation ne force pas
@@ -59,7 +205,6 @@
 
 # Un timer devenu inactif alors que le mode TRAITEMENT est encore sélectionné
 # correspond à la fin normale du traitement ou à une annulation externe.
-# Dans les deux cas, SPEC-006 impose un retour au mode AUTO.
 - id: pcha_traitement_terminer_sur_timer_inactif
   alias: PCHA - Traitement - Terminer sur timer inactif
   description: Termine le traitement lorsque son timer arrive à son terme ou est arrêté alors que le mode reste actif.
@@ -76,12 +221,11 @@
   actions:
     - action: script.pcha_traitement_terminer
 
-# Le timer est restauré par Home Assistant. En revanche, aucun événement de fin
-# n'est émis au démarrage lorsqu'il a expiré pendant l'arrêt de Home Assistant.
-# Cette automatisation réconcilie donc le mode et le timer après restauration.
+# Le timer est restauré par Home Assistant. Cette automatisation réconcilie le
+# mode, la machine et le timer après restauration.
 - id: pcha_traitement_reconcilier_au_demarrage
   alias: PCHA - Traitement - Réconcilier au démarrage
-  description: Rétablit une relation cohérente entre le mode TRAITEMENT et son timer après un redémarrage.
+  description: Rétablit une relation cohérente entre le mode TRAITEMENT, la machine et son timer après un redémarrage.
   initial_state: true
   mode: single
   triggers:
@@ -92,6 +236,7 @@
     - wait_template: >
         {{
           states('input_select.pcha_mode_de_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_select.pcha_etat_machine') not in ['unknown', 'unavailable']
           and states('timer.pcha_traitement') not in ['unknown', 'unavailable']
         }}
       timeout: "00:01:00"
@@ -108,8 +253,39 @@
           sequence:
             - action: script.pcha_traitement_terminer
 
-        # Un timer restauré ne doit pas continuer si le mode TRAITEMENT n'est
-        # plus sélectionné.
+        # Le traitement doit être suspendu tant que la machine ne filtre pas.
+        - conditions:
+            - condition: state
+              entity_id: input_select.pcha_mode_de_fonctionnement
+              state: TRAITEMENT
+            - condition: template
+              value_template: >
+                {{ not is_state('input_select.pcha_etat_machine', 'FILTRATION') }}
+            - condition: state
+              entity_id: timer.pcha_traitement
+              state: active
+          sequence:
+            - action: timer.pause
+              target:
+                entity_id: timer.pcha_traitement
+
+        # Reprendre le timer restauré si la filtration est réellement active.
+        - conditions:
+            - condition: state
+              entity_id: input_select.pcha_mode_de_fonctionnement
+              state: TRAITEMENT
+            - condition: state
+              entity_id: input_select.pcha_etat_machine
+              state: FILTRATION
+            - condition: state
+              entity_id: timer.pcha_traitement
+              state: paused
+          sequence:
+            - action: timer.start
+              target:
+                entity_id: timer.pcha_traitement
+
+        # Un timer ne doit pas continuer hors du mode TRAITEMENT.
         - conditions:
             - condition: template
               value_template: >

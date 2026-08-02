@@ -21,7 +21,7 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 |---|---|
 | État général | Mode, état de la machine, niveau de fonctionnement, diagnostics actifs |
 | Filtration | État de filtration, débit, objectif quotidien, temps réalisé, temps restant, puissance, énergie |
-| Piscine | Température actuelle, consigne, minimum et maximum du jour |
+| Piscine | Température brute, température validée après circulation, correction, consigne, minimum et maximum du jour |
 | Chauffage solaire | Demande solaire, chauffage actif, luminosité, seuil, protection du serpentin |
 | Environnement | Température extérieure, luminosité |
 | Traitement | Mode actif, durée configurée, temps restant |

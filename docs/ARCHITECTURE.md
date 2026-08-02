@@ -147,6 +147,9 @@ Exemple :
 sensor.jardin_esp32_jardin_temperature_piscine
         │
         ▼
+sensor.pcha_temperature_piscine_brute
+        │
+        ▼
 sensor.pcha_temperature_piscine
 ```
 Elle est réalisée uniquement dans la SPEC-004.

@@ -49,6 +49,8 @@ La condition doit rester présente pendant la durée définie par :
 
 input_number.pcha_temps_validation_debit
 
+Cette durée ne peut pas être inférieure à 30 secondes en V1. Elle filtre notamment l'inertie hydraulique et électrique observée pendant les quelques secondes qui suivent l'arrêt ou le démarrage de la pompe.
+
 COH-001 ne doit pas être activé uniquement parce que le débit est inférieur
 à 3 000 L/h lorsque la pompe est commandée en marche. Cette situation
 appartient à PRO-001 ou PRO-002.
@@ -64,7 +66,7 @@ COH-002 vérifie la cohérence physique de la température mesurée dans la pisc
 
 Il est évalué uniquement lorsque :
 
-* `sensor.pcha_temperature_piscine` est disponible ;
+* `sensor.pcha_temperature_piscine` possède une dernière mesure validée après circulation ;
 * la mesure a été validée par la famille MES.
 
 La plage de cohérence physique retenue pour la V1 est :

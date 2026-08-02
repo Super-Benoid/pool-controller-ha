@@ -62,9 +62,15 @@ Les règles internes de ces demandes restent définies uniquement dans les SPEC-
 
 # 7. Mode TRAITEMENT
 
-L'entrée dans ce mode démarre `timer.pcha_traitement` avec la durée configurée. À son expiration, le mode revient à `AUTO`.
+L'entrée dans ce mode initialise `timer.pcha_traitement` avec la durée configurée en minutes. La durée est réglable de 5 à 1 440 minutes par pas de 5 minutes.
 
-Quitter le mode avant l'expiration annule le traitement en cours.
+Le démarrage demandé par ce mode n'est pas soumis aux temporisations anti-cycles du mode `AUTO`.
+
+Le temps de traitement correspond exclusivement au temps réel pendant lequel la machine est en `FILTRATION`. Le timer est mis en pause pendant `ATTENTE` et reprend lorsque la machine revient en `FILTRATION`.
+
+Une modification de `input_number.pcha_duree_traitement` pendant le traitement conserve le temps déjà réalisé. Le nouveau temps restant est égal à la nouvelle durée configurée moins le temps de traitement déjà écoulé. Si la nouvelle durée est déjà atteinte, le traitement se termine.
+
+À l'expiration du timer, le mode revient à `AUTO`. Quitter le mode avant l'expiration annule le traitement en cours.
 
 # 8. Mode MARCHE_FORCEE
 

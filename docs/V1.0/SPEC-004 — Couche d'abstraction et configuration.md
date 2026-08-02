@@ -30,7 +30,7 @@ templates/capteurs.yaml
 
 | Entité physique | Entité PCHA |
 |---|---|
-| `sensor.jardin_esp32_jardin_temperature_piscine` | `sensor.pcha_temperature_piscine` |
+| `sensor.jardin_esp32_jardin_temperature_piscine` | `sensor.pcha_temperature_piscine_brute` puis `sensor.pcha_temperature_piscine` validée après circulation |
 | `sensor.temperature_exterieure_temperature` | `sensor.pcha_temperature_exterieure` |
 | `sensor.jardin_esp32_jardin_luminosite` | `sensor.pcha_luminosite` |
 | `sensor.jardin_esp32_jardin_debit_filtration_piscine` | `sensor.pcha_debit_filtration` |
@@ -63,6 +63,7 @@ input_boolean.pcha_acquitter_alarmes
 
 ```text
 input_number.pcha_temperature_de_consigne
+input_number.pcha_correction_temperature_piscine
 input_number.pcha_seuil_luminosite_chauffage
 input_number.pcha_duree_traitement
 input_number.pcha_temps_marche_pompe_min
@@ -74,6 +75,8 @@ input_number.pcha_temps_validation_luminosite
 
 Les bornes de configuration sont définies dans
 helpers/input_number.yaml.
+
+La correction est soustraite à la mesure brute. Une valeur de `2 °C` corrige une sonde qui affiche environ 2 °C de trop. La température métier est actualisée uniquement après une circulation continue d'au moins `input_number.pcha_temps_validation_temperature_piscine`.
 
 Les valeurs sélectionnées sont conservées par Home Assistant.
 Le comportement fonctionnel de chaque paramètre appartient à sa SPEC

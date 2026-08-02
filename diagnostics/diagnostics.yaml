@@ -71,9 +71,9 @@ template:
         device_class: problem
         icon: mdi:gauge-empty
         delay_on: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         state: >
           {{
             not (state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -137,9 +137,9 @@ template:
         device_class: problem
         icon: mdi:vector-difference-ab
         delay_on: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -190,9 +190,11 @@ template:
           {% set temperature_disponible =
                state_attr('sensor.pcha_temperature_piscine', 'source_available')
                | bool(false) %}
-          {% set temperature = states('sensor.pcha_temperature_piscine') | float(0) %}
+          {% set temperature_brute = states('sensor.pcha_temperature_piscine') %}
+          {% set temperature = temperature_brute | float(0) %}
           {{
             temperature_disponible
+            and is_number(temperature_brute)
             and not is_state(
               'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
               'on'
@@ -217,9 +219,9 @@ template:
         device_class: problem
         icon: mdi:water-alert
         delay_on: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -251,9 +253,9 @@ template:
         device_class: problem
         icon: mdi:water-minus
         delay_on: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')

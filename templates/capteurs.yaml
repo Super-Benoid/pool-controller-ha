@@ -17,6 +17,7 @@
 #   sensor.pcha_puissance_pompe_filtration
 #   sensor.pcha_temperature_exterieure
 #   sensor.pcha_temperature_piscine
+#   sensor.pcha_temperature_piscine_brute
 #
 # Chaque sortie conserve sa dernière valeur numérique valide et expose
 # l'attribut booléen source_available défini par la SPEC-004.
@@ -122,11 +123,11 @@
         source_available: >
           {{ is_number(states('sensor.temperature_exterieure_temperature')) }}
 
-    - name: PCHA Température piscine
-      unique_id: pcha_temperature_piscine
-      default_entity_id: sensor.pcha_temperature_piscine
+    - name: PCHA Température piscine brute
+      unique_id: pcha_temperature_piscine_brute
+      default_entity_id: sensor.pcha_temperature_piscine_brute
       device_class: temperature
-      icon: mdi:thermometer-water
+      icon: mdi:thermometer-lines
       unit_of_measurement: "°C"
       state_class: measurement
       state: >
@@ -136,8 +137,63 @@
         {% elif is_number(this.state) %}
           {{ this.state | float(0) | round(1) }}
         {% else %}
-          0
+          {{ none }}
         {% endif %}
       attributes:
         source_available: >
           {{ is_number(states('sensor.jardin_esp32_jardin_temperature_piscine')) }}
+
+# Température de référence utilisée par les fonctions métier. Elle n'est
+# actualisée qu'après une circulation suffisamment longue pour que la sonde,
+# placée sur la sortie de pompe, représente réellement l'eau de la piscine.
+- triggers:
+    - trigger: homeassistant
+      event: start
+    - trigger: time_pattern
+      seconds: "/5"
+    - trigger: state
+      entity_id:
+        - sensor.pcha_temperature_piscine_brute
+        - switch.pcha_commande_pompe_filtration
+        - input_number.pcha_correction_temperature_piscine
+        - input_number.pcha_temps_validation_temperature_piscine
+  sensor:
+    - name: PCHA Température piscine
+      unique_id: pcha_temperature_piscine
+      default_entity_id: sensor.pcha_temperature_piscine
+      device_class: temperature
+      icon: mdi:thermometer-water
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
+        {% set correction = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
+        {% set stabilisation = [states('input_number.pcha_temps_validation_temperature_piscine') | float(30), 5] | max %}
+        {% set pompe = states.switch.pcha_commande_pompe_filtration %}
+        {% set circulation_stable =
+             pompe is not none
+             and pompe.state == 'on'
+             and (as_timestamp(now()) - as_timestamp(pompe.last_changed)) >= stabilisation %}
+        {% if is_number(brute) and circulation_stable %}
+          {{ (brute | float(0) - correction) | round(1) }}
+        {% elif is_number(this.state) %}
+          {{ this.state | float(0) | round(1) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+      attributes:
+        source_available: >
+          {{ state_attr('sensor.pcha_temperature_piscine_brute', 'source_available') | bool(false) }}
+        measurement_valid: >
+          {% set stabilisation = [states('input_number.pcha_temps_validation_temperature_piscine') | float(30), 5] | max %}
+          {% set pompe = states.switch.pcha_commande_pompe_filtration %}
+          {{
+            state_attr('sensor.pcha_temperature_piscine_brute', 'source_available') | bool(false)
+            and pompe is not none
+            and pompe.state == 'on'
+            and (as_timestamp(now()) - as_timestamp(pompe.last_changed)) >= stabilisation
+          }}
+        correction_appliquee: >
+          {{ states('input_number.pcha_correction_temperature_piscine') | float(0) }}
+        temperature_brute: >
+          {{ states('sensor.pcha_temperature_piscine_brute') }}

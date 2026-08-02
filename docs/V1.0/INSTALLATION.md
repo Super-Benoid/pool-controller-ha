@@ -56,10 +56,11 @@ Après le premier chargement, régler les helpers suivants :
 |---|---:|
 | Température de consigne | `28 °C` |
 | Seuil de luminosité chauffage | `15 000 lx` |
-| Durée du traitement | `12 h` |
+| Correction température piscine | `2 °C` si la sonde affiche 2 °C de trop |
+| Durée du traitement | `60 min` |
 | Temps minimum de marche | `5 min` |
 | Temps minimum d'arrêt | `25 min` |
-| Validation température piscine | `30 s` |
+| Stabilisation température piscine | `30 s` |
 | Validation débit | `30 s` |
 | Validation luminosité | `30 s` |
 

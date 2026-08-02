@@ -145,7 +145,7 @@
     type_evenement: "{{ 'TRAITEMENT_DEBUT' if trigger.id == 'debut' else 'TRAITEMENT_FIN' }}"
     description: >
       {% if trigger.id == 'debut' %}
-        Traitement démarré pour une durée configurée de {{ states('input_number.pcha_duree_traitement') | int(0) }} heure(s).
+        Traitement démarré pour une durée configurée de {{ states('input_number.pcha_duree_traitement') | int(0) }} minute(s).
       {% else %}
         Traitement terminé ou interrompu ; nouveau mode : {{ trigger.to_state.state }}.
       {% endif %}

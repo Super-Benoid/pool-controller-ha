@@ -18,6 +18,7 @@ Elle ne définit ni l'origine des demandes, ni les modes, ni les diagnostics.
 ```text
 binary_sensor.pcha_demande_fonctionnement
 input_select.pcha_niveau_fonctionnement
+input_select.pcha_mode_de_fonctionnement
 input_number.pcha_temps_marche_pompe_min
 input_number.pcha_temps_arret_pompe_min
 ```
@@ -46,31 +47,9 @@ Un diagnostic ou un défaut n'est jamais un état de la machine.
 | `ATTENTE` | Demande active et niveau différent de `CRITIQUE` | `FILTRATION` |
 | `FILTRATION` | Plus aucune demande ou niveau `CRITIQUE` | `ATTENTE` |
 
-Les transitions respectent les temporisations suivantes :
+Les temps minimums de marche et d'arrêt sont des protections anti-cycles appliquées uniquement lorsqu'un changement de `binary_sensor.pcha_demande_fonctionnement` provoque une transition en mode `AUTO`. Ils évitent les changements d'état rapprochés, notamment lors des passages nuageux.
 
-- le temps minimum de marche est fourni par
-  input_number.pcha_temps_marche_pompe_min ;
-- sa valeur ne peut pas être inférieure à 5 minutes ;
-- le temps minimum d'arrêt est fourni par
-  input_number.pcha_temps_arret_pompe_min ;
-- sa valeur ne peut pas être inférieure à 25 minutes.
-
-Lorsqu'une demande apparaît pendant ATTENTE, la machine attend la fin du
-temps minimum d'arrêt avant de démarrer la pompe.
-
-À la fin de cette attente, la machine vérifie de nouveau :
-
-- que la demande est toujours active ;
-- que le niveau de fonctionnement n'est pas CRITIQUE.
-
-Si la demande a disparu, la pompe ne démarre pas.
-
-Lorsqu'une demande disparaît pendant FILTRATION, la machine attend la fin
-du temps minimum de marche avant d'arrêter la pompe.
-
-À la fin de cette attente, la machine vérifie de nouveau la demande.
-
-Si une demande est réapparue, la pompe reste en fonctionnement.
+Ils ne s'appliquent pas aux changements de mode, à l'initialisation, aux rechargements, ni aux modes `OFF`, `SECURISATION`, `TRAITEMENT` et `MARCHE_FORCEE`. Une entrée en `TRAITEMENT` ou `MARCHE_FORCEE` peut donc démarrer immédiatement. Une sélection de `OFF` arrête immédiatement.
 
 Le niveau CRITIQUE est prioritaire sur toutes les temporisations. Il
 provoque un arrêt immédiat, même si le temps minimum de marche n'est pas

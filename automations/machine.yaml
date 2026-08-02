@@ -69,3 +69,9 @@
         }}
   actions:
     - action: script.pcha_machine_reevaluer
+      data:
+        appliquer_temporisations_auto: >
+          {{
+            trigger.entity_id == 'binary_sensor.pcha_demande_fonctionnement'
+            and is_state('input_select.pcha_mode_de_fonctionnement', 'AUTO')
+          }}

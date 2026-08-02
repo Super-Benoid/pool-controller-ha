@@ -15,7 +15,7 @@ Elle ne définit ni les modes, ni les transitions de la machine, ni le chauffage
 
 **Entrées**
 
-* température d'eau fournie par la SPEC-004 ;
+* dernière température d'eau validée après circulation, fournie par la SPEC-004 ;
 * temps de filtration réalisé dans la journée ;
 * heure du prochain coucher du soleil fournie par Home Assistant.
 
@@ -27,7 +27,9 @@ binary_sensor.pcha_filtration_requise
 
 # 3. Objectif quotidien
 
-L'objectif quotidien minimal dépend de la température de l'eau :
+L'objectif quotidien minimal dépend de la dernière température d'eau validée après circulation. Une température mesurée sur la sortie de pompe lorsque la pompe est arrêtée n'est jamais utilisée pour ce calcul.
+
+
 
 | Température de l'eau | Objectif quotidien |
 |---|---:|
@@ -72,7 +74,7 @@ Elle ne commande pas la pompe, ne change pas l'état de la machine et ne consoli
 
 # 7. Critères d'acceptation
 
-* L'objectif quotidien respecte le tableau de calcul.
+* L'objectif quotidien respecte le tableau de calcul et n'utilise jamais une température de tuyauterie mesurée pompe arrêtée.
 * Le temps réalisé est comptabilisé une seule fois.
 * La demande automatique s'arrête lorsque l'objectif est atteint.
 * Une demande solaire indépendante reste possible conformément à la SPEC-008.

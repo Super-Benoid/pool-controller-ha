@@ -215,7 +215,13 @@ views:
         show_header_toggle: false
         entities:
           - entity: sensor.pcha_temperature_piscine
-            name: Température actuelle
+            name: Température validée
+          - entity: sensor.pcha_temperature_piscine_brute
+            name: Température brute sur la sortie
+          - entity: input_number.pcha_correction_temperature_piscine
+            name: Correction à soustraire
+          - entity: input_number.pcha_temps_validation_temperature_piscine
+            name: Stabilisation après démarrage
           - entity: input_number.pcha_temperature_de_consigne
             name: Consigne
           - entity: sensor.pcha_temperature_piscine_min_jour

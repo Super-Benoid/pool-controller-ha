@@ -4,6 +4,7 @@
 #
 # Entrées
 #   input_number.pcha_duree_traitement
+#   input_select.pcha_etat_machine
 #   input_select.pcha_mode_de_fonctionnement
 #   timer.pcha_traitement
 #
@@ -37,7 +38,7 @@ pcha_traitement_annuler:
 
 pcha_traitement_demarrer:
   alias: PCHA - Traitement - Démarrer
-  description: Démarre le timer configuré puis sélectionne le mode TRAITEMENT.
+  description: Initialise le temps de traitement, le suspend si la pompe ne filtre pas encore, puis sélectionne le mode TRAITEMENT.
   icon: mdi:timer-play-outline
   mode: restart
   sequence:
@@ -46,7 +47,15 @@ pcha_traitement_demarrer:
         entity_id: timer.pcha_traitement
       data:
         duration: >
-          {{ (states('input_number.pcha_duree_traitement') | float(1) * 3600) | int }}
+          {{ (states('input_number.pcha_duree_traitement') | float(5) * 60) | int }}
+    - if:
+        - condition: template
+          value_template: >
+            {{ not is_state('input_select.pcha_etat_machine', 'FILTRATION') }}
+      then:
+        - action: timer.pause
+          target:
+            entity_id: timer.pcha_traitement
     - action: input_select.select_option
       target:
         entity_id: input_select.pcha_mode_de_fonctionnement

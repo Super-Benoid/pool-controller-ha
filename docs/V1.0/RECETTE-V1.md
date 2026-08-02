@@ -25,6 +25,7 @@
 
 Vérifier que les valeurs PCHA suivent les équipements réels :
 
+* `sensor.pcha_temperature_piscine_brute` ;
 * `sensor.pcha_temperature_piscine` ;
 * `sensor.pcha_temperature_exterieure` ;
 * `sensor.pcha_luminosite` ;
@@ -45,9 +46,8 @@ Vérifier que les valeurs PCHA suivent les équipements réels :
 
 1. Vérifier que le niveau n'est pas `CRITIQUE`.
 2. Sélectionner `MARCHE_FORCEE`.
-3. Attendre la fin du temps minimum d'arrêt si nécessaire.
-4. Vérifier le passage à `FILTRATION` et le démarrage de la pompe.
-5. Revenir à `OFF` et vérifier l'arrêt selon les règles de la machine.
+3. Vérifier le passage immédiat à `FILTRATION` et le démarrage de la pompe.
+4. Revenir à `OFF` et vérifier l'arrêt selon les règles de la machine.
 
 # 6. Débit et puissance
 
@@ -60,6 +60,10 @@ Pompe en fonctionnement stabilisé :
 Vérifier que `PRO-001`, `PRO-002` et `COH-001` restent inactifs en fonctionnement normal.
 
 # 7. Température
+
+1. Pompe arrêtée, vérifier que `sensor.pcha_temperature_piscine` conserve la dernière valeur validée même si la sonde brute chauffe.
+2. Mettre la pompe en circulation et attendre le délai de stabilisation.
+3. Vérifier que la température validée devient la température brute moins la correction configurée.
 
 Vérifier que la température de piscine reste dans l'intervalle strict :
 

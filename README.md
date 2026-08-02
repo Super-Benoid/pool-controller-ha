@@ -45,3 +45,8 @@ Le mode doit rester `OFF` jusqu'à la validation des contrôles de mise en servi
 - règles fonctionnelles : `docs/V1.0/` ;
 - organisation : `docs/ARCHITECTURE.md` ;
 - conventions : `docs/CONVENTIONS.md`.
+
+
+## Température piscine
+
+La température utilisée par les calculs est corrigée en soustrayant `input_number.pcha_correction_temperature_piscine` et n'est actualisée qu'après une circulation stabilisée.
