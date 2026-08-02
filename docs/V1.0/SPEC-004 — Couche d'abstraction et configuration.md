@@ -18,7 +18,8 @@ Elle ne contient aucune règle métier.
 * Le remplacement d'un équipement ne modifie pas les SPEC fonctionnelles.
 * Une entité PCHA possède une seule définition.
 * Une mesure abstraite conserve la dernière valeur valide et expose un attribut booléen `source_available` indiquant la disponibilité de sa source.
-* L'indisponibilité est interprétée uniquement par la SPEC-007.
+* Pour la température piscine, une valeur n'est cohérente que dans l'intervalle strict `10 °C < température < 50 °C`. La couche expose également `source_coherent` sans écraser la dernière valeur cohérente.
+* L'indisponibilité et l'incohérence sont interprétées uniquement par la SPEC-007.
 
 # 3. Capteurs d'abstraction
 
@@ -78,6 +79,8 @@ helpers/input_number.yaml.
 
 La correction est soustraite à la mesure brute. Une valeur de `2 °C` corrige une sonde qui affiche environ 2 °C de trop. La température métier est actualisée uniquement après une circulation continue d'au moins `input_number.pcha_temps_validation_temperature_piscine`.
 
+Une mesure source numérique hors de l'intervalle strict `10–50 °C`, ou une température corrigée hors de ce même intervalle, n'écrase jamais la dernière température cohérente. Les attributs `source_coherent`, `corrected_value_coherent` et `measurement_valid` permettent aux diagnostics et aux statistiques de connaître la qualité de la mesure courante.
+
 Les valeurs sélectionnées sont conservées par Home Assistant.
 Le comportement fonctionnel de chaque paramètre appartient à sa SPEC
 propriétaire.
@@ -131,6 +134,7 @@ SPEC-004 ne doit jamais :
 * Les identifiants physiques sont confinés aux templates d'abstraction.
 * Toutes les couches supérieures utilisent des entités PCHA.
 * Chaque mesure expose sa disponibilité sans créer de diagnostic.
+* Une mesure de température hors plage ne remplace jamais la dernière valeur cohérente et reste visible au diagnostic par ses attributs de qualité.
 * Les helpers sont limités aux commandes et paramètres nécessaires.
 * Les valeurs des modes, états et niveaux sont conformes à leurs SPEC propriétaires.
 

@@ -40,6 +40,12 @@ L'objectif quotidien minimal dépend de la dernière température d'eau validée
 
 Toute période pendant laquelle la machine est en `FILTRATION` compte dans le temps réalisé.
 
+## 3.1 Minimum et maximum quotidiens
+
+Les minimum et maximum quotidiens ne sont actualisés qu'avec une nouvelle température dont l'attribut `measurement_valid` est vrai et dont la valeur respecte l'intervalle strict `10 °C < température < 50 °C`.
+
+Une mesure aberrante, indisponible ou simplement conservée pendant l'arrêt de la pompe ne modifie pas ces statistiques. Si une ancienne valeur restaurée est hors plage, elle est abandonnée et remplacée automatiquement lors de la prochaine mesure valide.
+
 # 4. Demande automatique
 
 `binary_sensor.pcha_filtration_requise` est actif lorsque l'algorithme journalier demande une circulation pour atteindre l'objectif quotidien.
@@ -75,6 +81,7 @@ Elle ne commande pas la pompe, ne change pas l'état de la machine et ne consoli
 # 7. Critères d'acceptation
 
 * L'objectif quotidien respecte le tableau de calcul et n'utilise jamais une température de tuyauterie mesurée pompe arrêtée.
+* Les minimum et maximum quotidiens ignorent toute mesure non validée ou hors de la plage stricte 10–50 °C et se réparent à la prochaine mesure valide après une ancienne valeur aberrante.
 * Le temps réalisé est comptabilisé une seule fois.
 * La demande automatique s'arrête lorsque l'objectif est atteint.
 * Une demande solaire indépendante reste possible conformément à la SPEC-008.

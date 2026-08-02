@@ -25,9 +25,12 @@
       unit_of_measurement: "h"
       state_class: measurement
       state: >
-        {% set disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
         {% set temperature = states('sensor.pcha_temperature_piscine') %}
-        {% if disponible and is_number(temperature) %}
+        {% set temperature_coherente =
+             is_number(temperature)
+             and (temperature | float(0)) > 10
+             and (temperature | float(0)) < 50 %}
+        {% if temperature_coherente %}
           {% set t = temperature | float(0) %}
           {% if t < 20 %}
             4
@@ -113,6 +116,9 @@
         jour: "{{ now().date() }}"
 
 # Minimum et maximum journaliers de la température de la piscine.
+# Seules les nouvelles mesures validées après circulation et strictement dans
+# l’intervalle 10–50 °C sont comptabilisées. Une ancienne valeur restaurée hors
+# plage est automatiquement abandonnée puis remplacée à la mesure valide suivante.
 - triggers:
     - trigger: homeassistant
       event: start
@@ -120,6 +126,9 @@
     - trigger: state
       entity_id: sensor.pcha_temperature_piscine
       id: temperature
+    - trigger: time_pattern
+      seconds: "/5"
+      id: verification
     - trigger: time
       at: "00:00:00"
       id: minuit
@@ -134,16 +143,32 @@
       state: >
         {% set aujourd_hui = now().date() | string %}
         {% set jour_precedent = this.attributes.jour | default('') %}
-        {% set disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
         {% set courant = states('sensor.pcha_temperature_piscine') %}
-        {% if disponible and is_number(courant) %}
-          {% set valeur = courant | float(0) %}
-          {% if trigger.id == 'minuit' or jour_precedent != aujourd_hui or not is_number(this.state) %}
-            {{ valeur | round(1) }}
+        {% set mesure_valide =
+             state_attr('sensor.pcha_temperature_piscine', 'measurement_valid')
+             | bool(false) %}
+        {% set courant_valide =
+             mesure_valide
+             and is_number(courant)
+             and (courant | float(0)) > 10
+             and (courant | float(0)) < 50 %}
+        {% set precedent_valide =
+             is_number(this.state)
+             and (this.state | float(0)) > 10
+             and (this.state | float(0)) < 50 %}
+        {% if trigger.id == 'minuit' or jour_precedent != aujourd_hui %}
+          {% if courant_valide %}
+            {{ courant | float(0) | round(1) }}
           {% else %}
-            {{ [this.state | float(0), valeur] | min | round(1) }}
+            {{ none }}
           {% endif %}
-        {% elif is_number(this.state) %}
+        {% elif courant_valide %}
+          {% if precedent_valide %}
+            {{ [this.state | float(0), courant | float(0)] | min | round(1) }}
+          {% else %}
+            {{ courant | float(0) | round(1) }}
+          {% endif %}
+        {% elif precedent_valide %}
           {{ this.state | float(0) | round(1) }}
         {% else %}
           {{ none }}
@@ -161,16 +186,32 @@
       state: >
         {% set aujourd_hui = now().date() | string %}
         {% set jour_precedent = this.attributes.jour | default('') %}
-        {% set disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
         {% set courant = states('sensor.pcha_temperature_piscine') %}
-        {% if disponible and is_number(courant) %}
-          {% set valeur = courant | float(0) %}
-          {% if trigger.id == 'minuit' or jour_precedent != aujourd_hui or not is_number(this.state) %}
-            {{ valeur | round(1) }}
+        {% set mesure_valide =
+             state_attr('sensor.pcha_temperature_piscine', 'measurement_valid')
+             | bool(false) %}
+        {% set courant_valide =
+             mesure_valide
+             and is_number(courant)
+             and (courant | float(0)) > 10
+             and (courant | float(0)) < 50 %}
+        {% set precedent_valide =
+             is_number(this.state)
+             and (this.state | float(0)) > 10
+             and (this.state | float(0)) < 50 %}
+        {% if trigger.id == 'minuit' or jour_precedent != aujourd_hui %}
+          {% if courant_valide %}
+            {{ courant | float(0) | round(1) }}
           {% else %}
-            {{ [this.state | float(0), valeur] | max | round(1) }}
+            {{ none }}
           {% endif %}
-        {% elif is_number(this.state) %}
+        {% elif courant_valide %}
+          {% if precedent_valide %}
+            {{ [this.state | float(0), courant | float(0)] | max | round(1) }}
+          {% else %}
+            {{ courant | float(0) | round(1) }}
+          {% endif %}
+        {% elif precedent_valide %}
           {{ this.state | float(0) | round(1) }}
         {% else %}
           {{ none }}

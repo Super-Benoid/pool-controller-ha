@@ -64,6 +64,8 @@ Vérifier que `PRO-001`, `PRO-002` et `COH-001` restent inactifs en fonctionneme
 1. Pompe arrêtée, vérifier que `sensor.pcha_temperature_piscine` conserve la dernière valeur validée même si la sonde brute chauffe.
 2. Mettre la pompe en circulation et attendre le délai de stabilisation.
 3. Vérifier que la température validée devient la température brute moins la correction configurée.
+4. Vérifier les attributs `source_coherent`, `corrected_value_coherent` et `measurement_valid`. Ils doivent être vrais lors d'une mesure stabilisée cohérente.
+5. Vérifier que les minimum et maximum journaliers évoluent uniquement lors d'une nouvelle mesure validée après circulation.
 
 Vérifier que la température de piscine reste dans l'intervalle strict :
 
@@ -71,7 +73,7 @@ Vérifier que la température de piscine reste dans l'intervalle strict :
 10 °C < température < 50 °C
 ```
 
-`COH-002` doit rester inactif pour une mesure cohérente.
+Une valeur numérique hors plage doit laisser inchangés `sensor.pcha_temperature_piscine`, le minimum et le maximum du jour. `COH-002` doit devenir actif si cette valeur persiste pendant le délai de validation, puis se réarmer après le retour durable d'une mesure cohérente. Une ancienne statistique restaurée hors plage doit être remplacée à la prochaine mesure valide.
 
 # 8. Mode TRAITEMENT
 

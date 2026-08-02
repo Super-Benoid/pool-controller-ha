@@ -50,4 +50,4 @@ Le mode doit rester `OFF` jusqu'à la validation des contrôles de mise en servi
 
 ## Température piscine
 
-La température utilisée par les calculs est corrigée en soustrayant `input_number.pcha_correction_temperature_piscine` et n'est actualisée qu'après une circulation stabilisée.
+La température utilisée par les calculs est corrigée en soustrayant `input_number.pcha_correction_temperature_piscine` et n'est actualisée qu'après une circulation stabilisée. Les valeurs hors de l'intervalle strict 10–50 °C sont signalées mais n'écrasent ni la dernière valeur cohérente ni les minimum/maximum quotidiens.

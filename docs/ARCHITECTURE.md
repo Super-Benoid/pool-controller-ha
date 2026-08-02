@@ -147,13 +147,18 @@ Exemple :
 ```text
 sensor.jardin_esp32_jardin_temperature_piscine
         │
+        ├── disponibilité et cohérence de la source
         ▼
 sensor.pcha_temperature_piscine_brute
         │
+        ├── correction et validation après circulation
         ▼
 sensor.pcha_temperature_piscine
 ```
-Elle est réalisée uniquement dans la SPEC-004.
+
+Une valeur hors de la plage stricte `10–50 °C` reste exposée aux diagnostics par les attributs de qualité, mais n'écrase jamais la dernière valeur métier cohérente.
+
+Cette abstraction est réalisée uniquement dans la SPEC-004.
 
 ---
 

@@ -62,12 +62,14 @@ de débit et une mesure de puissance cohérentes ne sont plus évaluées.
 
 ## COH-002 — Température piscine incohérente
 
-COH-002 vérifie la cohérence physique de la température mesurée dans la piscine.
+COH-002 vérifie la cohérence physique de la mesure source et de la température corrigée de la piscine.
 
-Il est évalué uniquement lorsque :
+Il est évalué lorsque la source physique fournit une valeur numérique, donc lorsqu'elle n'est pas déclarée indisponible par MES-001. La couche d'abstraction conserve la dernière température cohérente pour les fonctions métier, mais expose simultanément :
 
-* `sensor.pcha_temperature_piscine` possède une dernière mesure validée après circulation ;
-* la mesure a été validée par la famille MES.
+* `source_coherent`, pour la valeur physique courante ;
+* `corrected_value_coherent`, pour la valeur après application de la correction.
+
+Ainsi, une mesure aberrante reste détectable sans contaminer la température métier ni les statistiques quotidiennes.
 
 La plage de cohérence physique retenue pour la V1 est :
 
@@ -75,7 +77,7 @@ La plage de cohérence physique retenue pour la V1 est :
 10 °C < température piscine < 50 °C
 ```
 
-COH-002 devient actif lorsque :
+COH-002 devient actif lorsque la mesure source ou la température corrigée vérifie :
 
 ```text
 température piscine ≤ 10 °C
@@ -91,7 +93,7 @@ La condition doit rester présente continuellement pendant la durée définie pa
 input_number.pcha_temps_validation_temperature_piscine
 ```
 
-Lorsque COH-002 est actif, la température piscine ne doit plus être utilisée comme une mesure fiable par les fonctions qui en dépendent.
+Lorsque COH-002 est actif, la mesure courante ne doit pas être utilisée comme une mesure fiable. Elle n'écrase jamais la dernière température métier cohérente.
 
 Conformément aux règles de dégradation définies par SPEC-007, la valeur de température de consigne peut être utilisée comme valeur de remplacement fonctionnelle lorsque cela est nécessaire.
 
@@ -103,6 +105,7 @@ Son réarmement est `TEMPORISE`, conformément à la partie 2 de SPEC-007.
 # 4. Critères d'acceptation
 
 * Les mesures utilisées sont validées par MES.
+* Une valeur numérique hors plage active COH-002 sans écraser la dernière température cohérente.
 * Un diagnostic COH signale une incohérence sans identifier arbitrairement le capteur fautif.
 * Aucun diagnostic COH ne commande le système.
 

@@ -190,23 +190,26 @@ template:
           {% set temperature_disponible =
                state_attr('sensor.pcha_temperature_piscine', 'source_available')
                | bool(false) %}
-          {% set temperature_brute = states('sensor.pcha_temperature_piscine') %}
-          {% set temperature = temperature_brute | float(0) %}
+          {% set source_coherente =
+               state_attr('sensor.pcha_temperature_piscine', 'source_coherent')
+               | bool(false) %}
+          {% set corrigee_coherente =
+               state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent')
+               | bool(false) %}
           {{
             temperature_disponible
-            and is_number(temperature_brute)
             and not is_state(
               'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
               'on'
             )
-            and (temperature <= 10 or temperature >= 50)
+            and (not source_coherente or not corrigee_coherente)
           }}
         attributes:
           diagnostic_id: COH-002
           famille: COH
           gravite: DEGRADE
           rearmement: TEMPORISE
-          motif: Température piscine hors de la plage stricte 10–50 °C
+          motif: Mesure source ou température corrigée hors de la plage stricte 10–50 °C
 
       ##########################################################################
       # PRO — Anomalies du procédé
