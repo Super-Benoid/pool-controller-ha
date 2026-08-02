@@ -102,6 +102,14 @@ Il est réservé au mode `TRAITEMENT` défini dans la SPEC-006.
 
 Aucun `input_text` n'est utilisé en V1.
 
+## 5.5 Compteur quotidien d’énergie
+
+```text
+sensor.pcha_energie_pompe_quotidienne
+```
+
+Ce compteur est produit par `helpers/utility_meter.yaml` à partir de `sensor.pcha_energie_pompe_filtration` et est réinitialisé chaque jour. La mesure totale reste l’interface d’abstraction de la source physique.
+
 # 6. Templates métier
 
 Les templates métier consomment uniquement les entités PCHA. Chaque entité métier est définie par la SPEC fonctionnelle qui en est propriétaire.

@@ -1,0 +1,17 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Compteur quotidien d’énergie
+#
+# Entrées
+#   sensor.pcha_energie_pompe_filtration
+#
+# Sorties
+#   sensor.pcha_energie_pompe_quotidienne
+################################################################################
+
+pcha_energie_pompe_quotidienne:
+  source: sensor.pcha_energie_pompe_filtration
+  name: PCHA Énergie pompe quotidienne
+  unique_id: pcha_energie_pompe_quotidienne
+  cycle: daily
+  always_available: true

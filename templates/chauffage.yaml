@@ -13,6 +13,8 @@
 #   binary_sensor.pcha_chauffage_solaire_actif
 #   binary_sensor.pcha_chauffage_solaire_requis
 #   binary_sensor.pcha_protection_serpentin_requise
+#   sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+#   sensor.pcha_temps_luminosite_superieure_seuil_jour
 ################################################################################
 
 # Demande de chauffage solaire et état réel du chauffage.
@@ -60,3 +62,93 @@
               > states('input_number.pcha_seuil_luminosite_chauffage') | float(0)
           and not is_state('input_select.pcha_etat_machine', 'FILTRATION')
         }}
+
+
+# Bilan solaire quotidien. Les mesures sont échantillonnées une fois par minute
+# lorsque la luminosité est disponible et strictement supérieure au seuil.
+# Les états et attributs sont restaurés après un redémarrage de Home Assistant.
+- triggers:
+    - trigger: homeassistant
+      event: start
+      id: demarrage
+    - trigger: time_pattern
+      minutes: "/1"
+      id: minute
+    - trigger: state
+      entity_id: input_number.pcha_seuil_luminosite_chauffage
+      id: seuil
+  sensor:
+    - name: PCHA Temps luminosité supérieure au seuil du jour
+      unique_id: pcha_temps_luminosite_superieure_seuil_jour
+      default_entity_id: sensor.pcha_temps_luminosite_superieure_seuil_jour
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: "min"
+      state_class: measurement
+      state: >
+        {% set aujourd_hui = now().date() | string %}
+        {% set jour_precedent = this.attributes.jour | default('') %}
+        {% set precedent = this.state | float(0) if is_number(this.state) else 0 %}
+        {% set luminosite = states('sensor.pcha_luminosite') %}
+        {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
+        {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+                         and (luminosite | float(0)) > seuil %}
+        {% if jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+          {{ 0 }}
+        {% elif compter %}
+          {{ [precedent + 1, 1440] | min }}
+        {% else %}
+          {{ precedent }}
+        {% endif %}
+      attributes:
+        jour: "{{ now().date() }}"
+        seuil_lux: "{{ states('input_number.pcha_seuil_luminosite_chauffage') | float(0) }}"
+        pas_echantillonnage_min: 1
+
+    - name: PCHA Luminosité moyenne supérieure au seuil du jour
+      unique_id: pcha_luminosite_moyenne_superieure_seuil_jour
+      default_entity_id: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+      device_class: illuminance
+      icon: mdi:sun-compass
+      unit_of_measurement: "lx"
+      state_class: measurement
+      state: >
+        {% set aujourd_hui = now().date() | string %}
+        {% set jour_precedent = this.attributes.jour | default('') %}
+        {% set reinitialiser = jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+        {% set somme_precedente = 0 if reinitialiser else this.attributes.somme_lux | default(0) | float(0) %}
+        {% set echantillons_precedents = 0 if reinitialiser else this.attributes.echantillons | default(0) | int(0) %}
+        {% set luminosite = states('sensor.pcha_luminosite') %}
+        {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
+        {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+                         and (luminosite | float(0)) > seuil %}
+        {% set somme = somme_precedente + ((luminosite | float(0)) if compter else 0) %}
+        {% set echantillons = echantillons_precedents + (1 if compter else 0) %}
+        {{ (somme / echantillons) | round(0) if echantillons > 0 else 0 }}
+      attributes:
+        jour: "{{ now().date() }}"
+        somme_lux: >
+          {% set aujourd_hui = now().date() | string %}
+          {% set jour_precedent = this.attributes.jour | default('') %}
+          {% set reinitialiser = jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+          {% set somme_precedente = 0 if reinitialiser else this.attributes.somme_lux | default(0) | float(0) %}
+          {% set luminosite = states('sensor.pcha_luminosite') %}
+          {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+          {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
+          {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+                           and (luminosite | float(0)) > seuil %}
+          {{ somme_precedente + ((luminosite | float(0)) if compter else 0) }}
+        echantillons: >
+          {% set aujourd_hui = now().date() | string %}
+          {% set jour_precedent = this.attributes.jour | default('') %}
+          {% set reinitialiser = jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+          {% set echantillons_precedents = 0 if reinitialiser else this.attributes.echantillons | default(0) | int(0) %}
+          {% set luminosite = states('sensor.pcha_luminosite') %}
+          {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+          {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
+          {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+                           and (luminosite | float(0)) > seuil %}
+          {{ echantillons_precedents + (1 if compter else 0) }}
+        seuil_lux: "{{ states('input_number.pcha_seuil_luminosite_chauffage') | float(0) }}"
+        pas_echantillonnage_min: 1

@@ -66,6 +66,8 @@ Après le premier chargement, régler les helpers suivants :
 
 Le mode initial doit rester `OFF` pendant les contrôles de mise en service.
 
+Le compteur quotidien d’énergie est créé par `utility_meter`. Sa première journée est nécessairement partielle si le projet est activé en cours de journée.
+
 # 5. Validation de la configuration
 
 Exécuter **Vérifier la configuration** dans Home Assistant avant tout redémarrage.

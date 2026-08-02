@@ -57,7 +57,8 @@ Les règles suivantes sont immuables :
     │   ├── input_number.yaml
     │   ├── input_select.yaml
     │   ├── input_text.yaml
-    │   └── timer.yaml
+    │   ├── timer.yaml
+    │   └── utility_meter.yaml
     ├── installation/
     │   ├── configuration_extrait.yaml
     │   └── packages/
@@ -214,6 +215,8 @@ sensor.pcha_debit_filtration
 sensor.pcha_puissance_pompe_filtration
 
 sensor.pcha_energie_pompe_filtration
+
+sensor.pcha_energie_pompe_quotidienne
 
 binary_sensor.pcha_chauffage_solaire_actif
 

@@ -29,6 +29,8 @@ input_select.pcha_etat_machine
 binary_sensor.pcha_chauffage_solaire_requis
 binary_sensor.pcha_chauffage_solaire_actif
 binary_sensor.pcha_protection_serpentin_requise
+sensor.pcha_temps_luminosite_superieure_seuil_jour
+sensor.pcha_luminosite_moyenne_superieure_seuil_jour
 ```
 
 La demande de protection est consommée par le mode `SECURISATION` et par le fonctionnement normal.
@@ -79,23 +81,34 @@ Cette protection :
 
 L'impossibilité d'assurer une protection requise relève du diagnostic `PRO-003` défini dans la SPEC-007.
 
-# 6. Mesures indisponibles
+
+# 6. Bilan solaire quotidien
+
+Le système comptabilise chaque jour :
+
+* le temps pendant lequel la luminosité est strictement supérieure au seuil de chauffage ;
+* la moyenne de la luminosité pendant ces périodes.
+
+Les deux valeurs sont échantillonnées une fois par minute et remises à zéro au changement de jour ou lors d’une modification du seuil. Elles sont informatives et n’interviennent dans aucune décision de commande.
+
+# 7. Mesures indisponibles
 
 Si la température piscine ou la luminosité n'est pas exploitable, la demande de chauffage solaire est inactive. Les diagnostics correspondants sont définis dans la SPEC-007.
 
-# 7. Responsabilités
+# 8. Responsabilités
 
 SPEC-008 ne commande jamais la pompe, ne calcule pas l'objectif de filtration, ne change pas le mode et ne décide pas des transitions.
 
-# 8. Critères d'acceptation
+# 9. Critères d'acceptation
 
 * La demande solaire suit uniquement la température, la consigne, la luminosité et le seuil.
 * L'objectif quotidien atteint n'annule pas une demande solaire valide.
 * Le chauffage actif nécessite une circulation réelle.
 * `binary_sensor.pcha_protection_serpentin_requise` respecte le cycle 25 minutes / 5 minutes.
 * Aucune commande physique n'est réalisée par cette fonction.
+* Le bilan quotidien restitue le temps au-dessus du seuil et la luminosité moyenne associée.
 
-# 9. Références
+# 10. Références
 
 * SPEC-003 — Gestion de la filtration
 * SPEC-004 — Couche d'abstraction et configuration

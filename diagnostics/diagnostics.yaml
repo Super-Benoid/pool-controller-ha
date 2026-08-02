@@ -109,7 +109,7 @@ template:
         unique_id: pcha_diagnostic_mes_004_luminosite_indisponible
         default_entity_id: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
         device_class: problem
-        icon: mdi:white-balance-sunny-off
+        icon: mdi:sun-wireless
         delay_on: >
           {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
         delay_off: >

@@ -12,6 +12,7 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 - diagnostics de mesure, de cohérence et de procédé ;
 - arrêt de la filtration au niveau `CRITIQUE` ;
 - journalisation et notifications ;
+- énergie quotidienne de la pompe et bilan solaire quotidien ;
 - tableau de bord Home Assistant natif, sans carte personnalisée.
 
 ## Installation

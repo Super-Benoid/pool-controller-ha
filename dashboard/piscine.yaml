@@ -143,20 +143,26 @@ views:
             name: Débit
           - entity: sensor.pcha_puissance_pompe_filtration
             name: Puissance
-          - entity: sensor.pcha_energie_pompe_filtration
-            name: Énergie consommée
+          - entity: sensor.pcha_energie_pompe_quotidienne
+            name: Énergie du jour
 
-      - type: entities
+      - type: markdown
         title: Objectif quotidien
-        icon: mdi:target
-        show_header_toggle: false
-        entities:
-          - entity: sensor.pcha_objectif_filtration_quotidien
-            name: Objectif
-          - entity: sensor.pcha_temps_filtration_realise
-            name: Temps réalisé
-          - entity: sensor.pcha_temps_filtration_restant
-            name: Temps restant
+        card_size: 3
+        entity_id:
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_temps_filtration_restant
+        content: |
+          {% set objectif = ((states('sensor.pcha_objectif_filtration_quotidien') | float(0)) * 60) | round(0) | int %}
+          {% set realise = states('sensor.pcha_temps_filtration_realise') | float(0) | round(0) | int %}
+          {% set restant = states('sensor.pcha_temps_filtration_restant') | float(0) | round(0) | int %}
+
+          |  | Durée |
+          |:--|--:|
+          | <ha-icon icon="mdi:target"></ha-icon> Objectif | **{{ '%02dH%02d' | format(objectif // 60, objectif % 60) }}** |
+          | <ha-icon icon="mdi:timer-check"></ha-icon> Temps réalisé | **{{ '%02dH%02d' | format(realise // 60, realise % 60) }}** |
+          | <ha-icon icon="mdi:timer-sand"></ha-icon> Temps restant | **{{ '%02dH%02d' | format(restant // 60, restant % 60) }}** |
 
       - type: entities
         title: Temporisations de la pompe
@@ -178,13 +184,13 @@ views:
             name: Débit filtration
 
       - type: history-graph
-        title: Puissance et énergie — 24 heures
+        title: Puissance et énergie quotidienne — 24 heures
         hours_to_show: 24
         entities:
           - entity: sensor.pcha_puissance_pompe_filtration
             name: Puissance pompe
-          - entity: sensor.pcha_energie_pompe_filtration
-            name: Énergie pompe
+          - entity: sensor.pcha_energie_pompe_quotidienne
+            name: Énergie du jour
 
   - title: Piscine et solaire
     path: piscine-solaire
@@ -249,6 +255,23 @@ views:
             name: Seuil de luminosité
           - entity: input_number.pcha_temps_validation_luminosite
             name: Validation luminosité
+
+      - type: markdown
+        title: Bilan solaire du jour
+        card_size: 3
+        entity_id:
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - input_number.pcha_seuil_luminosite_chauffage
+        content: |
+          {% set duree = states('sensor.pcha_temps_luminosite_superieure_seuil_jour') | float(0) | round(0) | int %}
+          {% set moyenne = states('sensor.pcha_luminosite_moyenne_superieure_seuil_jour') | float(0) | round(0) | int %}
+          {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) | round(0) | int %}
+
+          |  | Valeur |
+          |:--|--:|
+          | <ha-icon icon="mdi:sun-clock-outline"></ha-icon> Temps au-dessus de {{ seuil }} lx | **{{ '%02dH%02d' | format(duree // 60, duree % 60) }}** |
+          | <ha-icon icon="mdi:sun-compass"></ha-icon> Luminosité moyenne | **{{ moyenne }} lx** |
 
       - type: history-graph
         title: Températures — 24 heures

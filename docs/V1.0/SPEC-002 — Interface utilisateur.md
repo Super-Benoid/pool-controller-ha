@@ -20,12 +20,14 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 | Zone | Informations principales |
 |---|---|
 | État général | Mode, état de la machine, niveau de fonctionnement, diagnostics actifs |
-| Filtration | État de filtration, débit, objectif quotidien, temps réalisé, temps restant, puissance, énergie |
+| Filtration | État de filtration, débit, objectif quotidien, temps réalisé, temps restant, puissance, énergie quotidienne |
 | Piscine | Température brute, température validée après circulation, correction, consigne, minimum et maximum du jour |
-| Chauffage solaire | Demande solaire, chauffage actif, luminosité, seuil, protection du serpentin |
+| Chauffage solaire | Demande solaire, chauffage actif, luminosité, seuil, protection du serpentin, temps quotidien au-dessus du seuil et luminosité moyenne associée |
 | Environnement | Température extérieure, luminosité |
 | Traitement | Mode actif, durée configurée, temps restant |
 | Historique | Événements et notifications |
+
+Les durées de l’objectif quotidien, du temps réalisé et du temps restant sont présentées dans le tableau de bord au format `03H56`.
 
 # 4. Commandes utilisateur
 

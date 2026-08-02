@@ -126,3 +126,11 @@ La V1 peut être considérée comme mise en service lorsque :
 * les valeurs normales de débit et de puissance sont confirmées ;
 * l'arrêt `OFF` et l'arrêt `CRITIQUE` sont validés ;
 * le tableau de bord et les notifications sont opérationnels.
+
+
+# Contrôles des compteurs quotidiens
+
+* Vérifier que `sensor.pcha_energie_pompe_quotidienne` augmente lorsque la pompe consomme et revient à zéro au changement de jour.
+* Vérifier que `sensor.pcha_temps_luminosite_superieure_seuil_jour` augmente d’une minute par minute au-dessus du seuil.
+* Vérifier que `sensor.pcha_luminosite_moyenne_superieure_seuil_jour` reflète uniquement les échantillons pris au-dessus du seuil.
+* Vérifier l’affichage `03H56` des trois durées de filtration dans le tableau de bord.
