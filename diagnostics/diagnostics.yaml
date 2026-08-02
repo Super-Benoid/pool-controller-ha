@@ -48,12 +48,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
         device_class: problem
         icon: mdi:thermometer-alert
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
         state: >
           {{
             not (state_attr('sensor.pcha_temperature_piscine', 'source_available')
@@ -72,12 +70,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
         device_class: problem
         icon: mdi:gauge-empty
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
         state: >
           {{
             not (state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -114,12 +110,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
         device_class: problem
         icon: mdi:white-balance-sunny-off
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
         state: >
           {{
             not (state_attr('sensor.pcha_luminosite', 'source_available')
@@ -142,12 +136,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
         device_class: problem
         icon: mdi:vector-difference-ab
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -190,12 +182,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
         device_class: problem
         icon: mdi:thermometer-alert
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
         state: >
           {% set temperature_disponible =
                state_attr('sensor.pcha_temperature_piscine', 'source_available')
@@ -226,12 +216,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_pro_001_debit_critique
         device_class: problem
         icon: mdi:water-alert
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -262,12 +250,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
         device_class: problem
         icon: mdi:water-minus
-        delay_on:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
-        delay_off:
-          seconds: >
-            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_on: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
+        delay_off: >
+          {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')
