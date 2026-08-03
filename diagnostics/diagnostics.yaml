@@ -111,9 +111,9 @@ template:
         device_class: problem
         icon: mdi:sun-wireless
         delay_on: >
-          {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+          {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+          {{ states('input_number.pcha_temps_rearmement_luminosite') | int(10) }}
         state: >
           {{
             not (state_attr('sensor.pcha_luminosite', 'source_available')

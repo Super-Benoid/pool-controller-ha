@@ -81,11 +81,20 @@ pcha_temps_validation_debit:
   mode: box
 
 pcha_temps_validation_luminosite:
-  name: Validation luminosité
+  name: Validation indisponibilité luminosité
+  icon: mdi:timer-alert
+  min: 30
+  max: 600
+  step: 10
+  unit_of_measurement: "s"
+  mode: box
+
+pcha_temps_rearmement_luminosite:
+  name: Réarmement luminosité
   icon: mdi:timer-check
   min: 0
-  max: 600
-  step: 1
+  max: 60
+  step: 5
   unit_of_measurement: "s"
   mode: box
 
