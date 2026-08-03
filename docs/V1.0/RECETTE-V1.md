@@ -75,7 +75,22 @@ Vérifier que la température de piscine reste dans l'intervalle strict :
 
 Une valeur numérique hors plage doit laisser inchangés `sensor.pcha_temperature_piscine`, le minimum et le maximum du jour. `COH-002` doit devenir actif si cette valeur persiste pendant le délai de validation, puis se réarmer après le retour durable d'une mesure cohérente. Une ancienne statistique restaurée hors plage doit être remplacée à la prochaine mesure valide.
 
-# 8. Mode TRAITEMENT
+# 8. Planification de l'objectif quotidien
+
+1. Relever l'heure du prochain coucher du soleil dans `sun.sun`.
+2. Soustraire deux heures pour obtenir l'heure cible de fin de l'objectif quotidien.
+3. Relever `sensor.pcha_temps_filtration_restant`.
+4. Vérifier que `binary_sensor.pcha_filtration_requise` devient actif au plus tard à :
+
+```text
+coucher du soleil - 2 heures - temps de filtration restant
+```
+
+5. Vérifier qu'une filtration réalisée par une autre demande réduit le temps restant et repousse d'autant le dernier départ nécessaire.
+
+**Critère :** en l'absence d'une autre contrainte, l'objectif quotidien est achevé deux heures avant le coucher du soleil.
+
+# 9. Mode TRAITEMENT
 
 1. Régler une courte durée d'essai adaptée au test.
 2. Sélectionner `TRAITEMENT`.
@@ -84,7 +99,7 @@ Une valeur numérique hors plage doit laisser inchangés `sensor.pcha_temperatur
 5. Refaire le test jusqu'à expiration et vérifier le retour automatique à `AUTO`.
 6. Remettre la durée nominale après le test.
 
-# 9. Chauffage solaire
+# 10. Chauffage solaire
 
 Lorsque la luminosité dépasse le seuil et que la température est sous la consigne :
 
@@ -92,7 +107,7 @@ Lorsque la luminosité dépasse le seuil et que la température est sous la cons
 * en mode `AUTO`, cette demande peut démarrer la filtration même si l'objectif quotidien est atteint ;
 * `binary_sensor.pcha_chauffage_solaire_actif` devient `on` lorsque la machine est en `FILTRATION`.
 
-# 10. Protection du serpentin
+# 11. Protection du serpentin
 
 En mode `SECURISATION` ou `AUTO`, avec une luminosité supérieure au seuil et sans circulation :
 
@@ -100,7 +115,7 @@ En mode `SECURISATION` ou `AUTO`, avec une luminosité supérieure au seuil et s
 * la circulation est maintenue pendant au moins 5 minutes ;
 * aucune protection automatique ne démarre la pompe en mode `OFF`.
 
-# 11. Diagnostics et arrêt critique
+# 12. Diagnostics et arrêt critique
 
 Vérifier sans provoquer de défaut physique dangereux :
 
@@ -109,7 +124,7 @@ Vérifier sans provoquer de défaut physique dangereux :
 * un diagnostic `CRITIQUE` fait passer le niveau à `CRITIQUE` et arrête la pompe immédiatement ;
 * la disparition de la condition réarme le diagnostic selon son mode prévu.
 
-# 12. Notifications et journal
+# 13. Notifications et journal
 
 Vérifier :
 
@@ -119,7 +134,7 @@ Vérifier :
 * l'acquittement des notifications persistantes ;
 * les entrées PCHA dans le journal d'activité.
 
-# 13. Validation finale
+# 14. Validation finale
 
 La V1 peut être considérée comme mise en service lorsque :
 

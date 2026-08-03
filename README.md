@@ -5,7 +5,7 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 ## Fonctions V1
 
 - filtration quotidienne calculée selon la température de l'eau ;
-- planification visant une fin de filtration avant le coucher du soleil ;
+- planification visant une fin de l'objectif quotidien deux heures avant le coucher du soleil ;
 - chauffage solaire lorsque la luminosité est suffisante et que la consigne n'est pas atteinte ;
 - protection périodique du serpentin ;
 - modes `OFF`, `SECURISATION`, `AUTO`, `TRAITEMENT` et `MARCHE_FORCEE` ;

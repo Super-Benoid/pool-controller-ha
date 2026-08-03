@@ -80,7 +80,8 @@
           {% elif coucher.date() != now().date() %}
             true
           {% else %}
-            {% set echeance = coucher - timedelta(hours=1) %}
+            {# L'objectif quotidien doit être terminé 2 h avant le coucher. #}
+            {% set echeance = coucher - timedelta(hours=2) %}
             {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
             {{ now() >= depart_au_plus_tard }}
           {% endif %}

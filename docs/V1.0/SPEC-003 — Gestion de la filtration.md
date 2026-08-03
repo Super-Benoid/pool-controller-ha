@@ -50,12 +50,12 @@ Une mesure aberrante, indisponible ou simplement conservée pendant l'arrêt de 
 
 `binary_sensor.pcha_filtration_requise` est actif lorsque l'algorithme journalier demande une circulation pour atteindre l'objectif quotidien.
 
-La répartition vise l'achèvement de l'objectif une heure avant le coucher du soleil.
+La répartition vise l'achèvement de l'objectif deux heures avant le coucher du soleil.
 
 L'heure de départ au plus tard est calculée ainsi :
 
 ```text
-coucher du soleil - 1 heure - temps de filtration restant
+coucher du soleil - 2 heures - temps de filtration restant
 ```
 
 Avant cette heure, la demande de filtration reste inactive. Une circulation produite par une autre demande compte néanmoins dans le temps réalisé et repousse automatiquement l'heure de départ calculée.
@@ -83,6 +83,7 @@ Elle ne commande pas la pompe, ne change pas l'état de la machine et ne consoli
 * L'objectif quotidien respecte le tableau de calcul et n'utilise jamais une température de tuyauterie mesurée pompe arrêtée.
 * Les minimum et maximum quotidiens ignorent toute mesure non validée ou hors de la plage stricte 10–50 °C et se réparent à la prochaine mesure valide après une ancienne valeur aberrante.
 * Le temps réalisé est comptabilisé une seule fois.
+* L'heure de départ au plus tard est calculée pour terminer l'objectif deux heures avant le coucher du soleil.
 * La demande automatique s'arrête lorsque l'objectif est atteint.
 * Une demande solaire indépendante reste possible conformément à la SPEC-008.
 * La pompe n'est jamais commandée directement par cette fonction.
