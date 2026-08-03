@@ -151,3 +151,4 @@ La V1 peut être considérée comme mise en service lorsque :
 * Vérifier que `sensor.pcha_temps_luminosite_superieure_seuil_jour` augmente d’une minute par minute au-dessus du seuil.
 * Vérifier que `sensor.pcha_luminosite_moyenne_superieure_seuil_jour` reflète uniquement les échantillons pris au-dessus du seuil.
 * Vérifier l’affichage `03H56` des trois durées de filtration dans le tableau de bord.
+* Vérifier l’affichage `Atteint à : HHhMM` et sa mise à jour : échéance planifiée en attente, puis heure actuelle + temps restant pendant la filtration.

@@ -64,6 +64,8 @@ Avant cette heure, la demande de filtration reste inactive. Une circulation prod
 
 Cette stratégie limite les démarrages inutiles et favorise les périodes utiles au chauffage solaire.
 
+Cette planification permet au tableau de bord d'afficher une heure prévisionnelle `Atteint à`. Lorsque la filtration est en cours, cette heure correspond à l'heure actuelle augmentée du temps restant. Lorsque la machine attend encore son départ planifié, elle correspond à l'échéance située deux heures avant le coucher du soleil. Si cette échéance ne peut plus être tenue, la prévision correspond à l'heure actuelle augmentée du temps restant.
+
 Lorsque l'objectif quotidien est atteint, cette demande devient inactive.
 
 L'atteinte de l'objectif n'interdit pas une demande distincte du chauffage solaire, définie uniquement dans la SPEC-008.

@@ -27,7 +27,7 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 | Traitement | Mode actif, durée configurée, temps restant |
 | Historique | Événements et notifications |
 
-Les durées de l’objectif quotidien, du temps réalisé et du temps restant sont présentées dans le tableau de bord au format `03H56`.
+Les durées de l’objectif quotidien, du temps réalisé et du temps restant sont présentées dans le tableau de bord au format `03H56`. La carte affiche également `Atteint à : HHhMM`, correspondant à l’heure prévisionnelle d’achèvement de l’objectif selon l’état courant et la planification définie par la SPEC-003.
 
 # 4. Commandes utilisateur
 

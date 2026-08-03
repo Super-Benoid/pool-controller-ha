@@ -13,7 +13,7 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 - arrêt de la filtration au niveau `CRITIQUE` ;
 - journalisation et notifications ;
 - énergie quotidienne de la pompe et bilan solaire quotidien ;
-- tableau de bord Home Assistant natif, sans carte personnalisée.
+- tableau de bord Home Assistant natif, sans carte personnalisée, avec heure prévisionnelle d’atteinte de l’objectif quotidien.
 
 ## Installation
 
