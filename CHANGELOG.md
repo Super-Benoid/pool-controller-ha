@@ -24,5 +24,8 @@
 * graphe de luminosité ajouté à Supervision.
 ### Dashboard
 
-* remplacement des graphes de luminosité, température du bassin et puissance par des cartes natives `tile` avec la fonctionnalité `trend-graph` sur 24 heures.
+* refonte du dashboard avec une organisation plus moderne ;
+* nouvelle page d'accueil de synthèse ;
+* regroupement des cartes par usage : Pilotage, Solaire, Diagnostics ;
+* conservation des cartes natives `tile` avec `trend-graph` sur 24 heures pour les mesures principales.
 

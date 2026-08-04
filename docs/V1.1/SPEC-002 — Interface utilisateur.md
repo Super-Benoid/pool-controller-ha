@@ -7,7 +7,7 @@
 
 # 1. Objet
 
-Cette SPEC définit les informations, commandes et paramètres accessibles à l'utilisateur.
+Cette SPEC définit les informations, commandes et paramètres accessibles à l'utilisateur, ainsi que l'organisation générale du dashboard.
 
 # 2. Principes
 
@@ -17,15 +17,12 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 
 # 3. Informations affichées
 
-| Zone | Informations principales |
+| Vue | Informations principales |
 |---|---|
-| État général | Mode, état de la machine, niveau de fonctionnement, diagnostics actifs |
-| Filtration | État, débit, objectif quotidien, référence thermique, objectif figé ou provisoire, temps réalisé, temps restant, heure `Atteint à`, puissance et énergie |
-| Bassin | Température brute, température calibrée, calibrage signé, consigne, minimum et maximum du jour |
-| Chauffage solaire | Demande, état actif, source de pilotage, écart extérieur/bassin, luminosité, état de la liaison distante et protection du serpentin |
-| Supervision | Tuiles de tendance sur 24 heures pour la luminosité, la température du bassin et la puissance de la pompe |
-| Traitement | Mode actif, durée configurée et temps restant |
-| Diagnostics | MES, COH, PRO et états de la chaîne de luminosité distante |
+| Accueil | État général, mesures en direct, objectif quotidien, réglages rapides et activité sur 24 h |
+| Pilotage | Filtration, performances hydrauliques, énergie, temporisations AUTO et mode traitement |
+| Solaire | Températures, chaîne solaire, luminosité distante, bilan solaire du jour et historique solaire |
+| Diagnostics | Niveau global, diagnostics MES/COH/PRO, délais de validation et historique des défauts |
 
 # 4. Affichage de l'objectif quotidien
 
@@ -38,7 +35,17 @@ Les durées sont présentées au format `03H56`. La carte affiche :
 * le temps restant ;
 * `Atteint à : HHhMM`.
 
-# 5. Graphes de tendance
+# 5. Design du dashboard
+
+Le dashboard V1.1 adopte une présentation plus moderne :
+
+* vues courtes et lisibles ;
+* priorité aux cartes `tile` ;
+* regroupement par usage plutôt que par type technique ;
+* indicateurs essentiels visibles dès la page d'accueil ;
+* graphes de tendance directement intégrés dans les tuiles.
+
+# 6. Graphes de tendance
 
 Les graphes numériques principaux utilisent la carte native `tile` avec la fonctionnalité `trend-graph`, une période de `24` heures et le détail activé.
 
@@ -50,7 +57,7 @@ Les graphes numériques principaux utilisent la carte native `tile` avec la fonc
 
 Les graphes multi-états et les historiques de diagnostics restent sur des cartes `history-graph`.
 
-# 6. Paramètres modifiables
+# 7. Paramètres modifiables
 
 Les paramètres sont exclusivement ceux déclarés dans la SPEC-004, notamment :
 
@@ -59,7 +66,7 @@ Les paramètres sont exclusivement ceux déclarés dans la SPEC-004, notamment :
 * seuil de luminosité ;
 * délais de validation.
 
-# 7. Références
+# 8. Références
 
 * SPEC-003
 * SPEC-004

@@ -2,19 +2,15 @@
 # Pool Controller Home Assistant (PCHA)
 # SPEC-002 — Interface utilisateur
 #
-# Entrées
-#   Entités PCHA définies par les SPEC-003 à SPEC-009
-#
-# Sorties
-#   Tableau de bord Home Assistant PCHA
+# Dashboard modernisé V1.1
 ################################################################################
 
 title: PCHA — Piscine
 
 views:
-  - title: Supervision
-    path: supervision
-    icon: mdi:pool
+  - title: Accueil
+    path: accueil
+    icon: mdi:view-dashboard-outline
     type: masonry
     cards:
       - type: conditional
@@ -25,8 +21,8 @@ views:
         card:
           type: markdown
           content: |
-            # ⚠️ Niveau CRITIQUE
-            La filtration est interdite. Consultez immédiatement l'onglet **Diagnostics**.
+            # ⚠️ Niveau critique
+            La filtration est interdite. Consulte immédiatement l’onglet **Diagnostics**.
 
       - type: conditional
         conditions:
@@ -37,123 +33,72 @@ views:
           type: markdown
           content: |
             ## ⚠️ Fonctionnement dégradé
-            Une ou plusieurs anomalies sont actives. Consultez l'onglet **Diagnostics**.
+            Une anomalie est active. Le système continue partiellement en mode dégradé.
 
-      - type: entities
-        title: État général
-        icon: mdi:state-machine
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: input_select.pcha_mode_de_fonctionnement
-            name: Mode de fonctionnement
-          - entity: input_select.pcha_etat_machine
-            name: État de la machine
-            type: simple-entity
-          - entity: input_select.pcha_niveau_fonctionnement
-            name: Niveau de fonctionnement
-            type: simple-entity
-          - entity: binary_sensor.pcha_demande_fonctionnement
-            name: Demande de fonctionnement
-          - entity: switch.pcha_commande_pompe_filtration
-            name: Pompe de filtration
-            type: simple-entity
+      - type: markdown
+        content: |
+          # PCHA — Cockpit
+          Vue d’ensemble du système de filtration, du chauffage solaire et des objectifs quotidiens.
 
       - type: grid
-        title: Mesures principales
+        title: État système
+        columns: 4
+        square: false
+        cards:
+          - type: tile
+            entity: input_select.pcha_mode_de_fonctionnement
+            name: Mode
+            icon: mdi:pool
+          - type: tile
+            entity: input_select.pcha_etat_machine
+            name: Machine
+            icon: mdi:state-machine
+          - type: tile
+            entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau
+            icon: mdi:shield-check
+          - type: tile
+            entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+            icon: mdi:water-pump
+
+      - type: grid
+        title: Mesures en direct
         columns: 2
         square: false
         cards:
-          - type: gauge
+          - type: tile
             entity: sensor.pcha_temperature_piscine
             name: Température bassin
-            min: 10
-            max: 50
-            needle: true
-          - type: gauge
+            icon: mdi:thermometer-water
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
+            entity: sensor.pcha_luminosite
+            name: Luminosité
+            icon: mdi:white-balance-sunny
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
             entity: sensor.pcha_debit_filtration
             name: Débit filtration
-            min: 0
-            max: 4500
-            needle: true
-            severity:
-              red: 0
-              yellow: 500
-              green: 3000
-          - type: gauge
+            icon: mdi:waves-arrow-right
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
             entity: sensor.pcha_puissance_pompe_filtration
             name: Puissance pompe
-            min: 0
-            max: 500
-            needle: true
-          - type: gauge
-            entity: sensor.pcha_luminosite
-            name: Luminosité distante
-            min: 0
-            max: 50000
-            needle: true
-
-      - type: entities
-        title: Commandes principales
-        icon: mdi:tune-variant
-        show_header_toggle: false
-        entities:
-          - entity: input_number.pcha_temperature_de_consigne
-            name: Température de consigne
-          - entity: input_number.pcha_seuil_luminosite_chauffage
-            name: Seuil chauffage solaire
-          - entity: input_boolean.pcha_acquitter_alarmes
-            name: Acquitter les alarmes
-
-      - type: tile
-        entity: sensor.pcha_luminosite
-        name: Luminosité — 24 heures
-        icon: mdi:weather-sunny
-        features:
-          - type: trend-graph
-            hours_to_show: 24
-            detail: true
-
-      - type: history-graph
-        title: Activité des dernières 24 heures
-        hours_to_show: 24
-        entities:
-          - entity: switch.pcha_commande_pompe_filtration
-            name: Pompe
-          - entity: input_select.pcha_etat_machine
-            name: Machine
-          - entity: input_select.pcha_niveau_fonctionnement
-            name: Niveau
-          - entity: binary_sensor.pcha_chauffage_solaire_actif
-            name: Chauffage solaire
-
-  - title: Filtration
-    path: filtration
-    icon: mdi:water-pump
-    type: masonry
-    cards:
-      - type: entities
-        title: État de la filtration
-        icon: mdi:water-pump
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: binary_sensor.pcha_filtration_requise
-            name: Filtration requise
-          - entity: binary_sensor.pcha_demande_fonctionnement
-            name: Demande consolidée
-          - entity: input_select.pcha_etat_machine
-            name: État de la machine
-            type: simple-entity
-          - entity: switch.pcha_commande_pompe_filtration
-            name: Pompe
-            type: simple-entity
-          - entity: sensor.pcha_debit_filtration
-            name: Débit
-          - entity: sensor.pcha_puissance_pompe_filtration
-            name: Puissance
-          - entity: sensor.pcha_energie_pompe_quotidienne
-            name: Énergie du jour
+            icon: mdi:flash
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
 
       - type: markdown
         title: Objectif quotidien
@@ -190,7 +135,7 @@ views:
             {% set atteint = fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') %}
           {% endif %}
 
-          |  | Durée |
+          | Élément | Valeur |
           |:--|--:|
           | <ha-icon icon="mdi:target"></ha-icon> Objectif | **{{ '%02dH%02d' | format(objectif // 60, objectif % 60) }}** |
           | <ha-icon icon="mdi:thermometer-check"></ha-icon> Référence ({{ statut_reference }}) | **{{ (reference | float(0) | round(1) ~ ' °C') if is_number(reference) else 'Indisponible' }}** |
@@ -198,37 +143,153 @@ views:
           | <ha-icon icon="mdi:timer-sand"></ha-icon> Temps restant | **{{ '%02dH%02d' | format(restant // 60, restant % 60) }}** |
           | <ha-icon icon="mdi:clock-check-outline"></ha-icon> Atteint à | **{{ atteint }}** |
 
-      - type: entities
-        title: Temporisations de la pompe
-        icon: mdi:timer-cog-outline
-        show_header_toggle: false
-        entities:
-          - entity: input_number.pcha_temps_marche_pompe_min
-            name: Marche minimale
-          - entity: input_number.pcha_temps_arret_pompe_min
-            name: Arrêt minimal
-          - entity: input_number.pcha_temps_validation_debit
-            name: Validation du débit
+      - type: grid
+        title: Réglages rapides
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: input_select.pcha_mode_de_fonctionnement
+            name: Mode de fonctionnement
+            icon: mdi:cog-play-outline
+          - type: tile
+            entity: input_number.pcha_temperature_de_consigne
+            name: Consigne bassin
+            icon: mdi:thermometer-plus
+          - type: tile
+            entity: input_number.pcha_seuil_luminosite_chauffage
+            name: Seuil solaire
+            icon: mdi:weather-sunny-alert
+          - type: tile
+            entity: input_boolean.pcha_acquitter_alarmes
+            name: Acquitter alarmes
+            icon: mdi:alarm-check
 
       - type: history-graph
-        title: Débit — 24 heures
+        title: Activité — 24 heures
         hours_to_show: 24
         entities:
-          - entity: sensor.pcha_debit_filtration
-            name: Débit filtration
+          - entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+          - entity: input_select.pcha_etat_machine
+            name: Machine
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau
+          - entity: binary_sensor.pcha_chauffage_solaire_actif
+            name: Chauffage solaire
 
-      - type: tile
-        entity: sensor.pcha_puissance_pompe_filtration
-        name: Puissance pompe — 24 heures
-        icon: mdi:flash
-        features:
-          - type: trend-graph
-            hours_to_show: 24
-            detail: true
+  - title: Pilotage
+    path: pilotage
+    icon: mdi:tune-variant
+    type: masonry
+    cards:
+      - type: grid
+        title: Commande filtration
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: binary_sensor.pcha_filtration_requise
+            name: Filtration requise
+            icon: mdi:water-check
+          - type: tile
+            entity: binary_sensor.pcha_demande_fonctionnement
+            name: Demande consolidée
+            icon: mdi:play-circle-outline
+          - type: tile
+            entity: input_select.pcha_etat_machine
+            name: État machine
+            icon: mdi:state-machine
+          - type: tile
+            entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+            icon: mdi:water-pump
 
-  - title: Piscine et solaire
-    path: piscine-solaire
-    icon: mdi:weather-sunny
+      - type: grid
+        title: Performances
+        columns: 3
+        square: false
+        cards:
+          - type: tile
+            entity: sensor.pcha_debit_filtration
+            name: Débit
+            icon: mdi:waves-arrow-right
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
+            entity: sensor.pcha_puissance_pompe_filtration
+            name: Puissance
+            icon: mdi:flash
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
+            entity: sensor.pcha_energie_pompe_quotidienne
+            name: Énergie du jour
+            icon: mdi:lightning-bolt
+
+      - type: grid
+        title: Temporisations AUTO
+        columns: 3
+        square: false
+        cards:
+          - type: tile
+            entity: input_number.pcha_temps_marche_pompe_min
+            name: Marche minimale
+            icon: mdi:timer-play-outline
+          - type: tile
+            entity: input_number.pcha_temps_arret_pompe_min
+            name: Arrêt minimal
+            icon: mdi:timer-stop-outline
+          - type: tile
+            entity: input_number.pcha_temps_validation_debit
+            name: Validation débit
+            icon: mdi:timer-alert-outline
+
+      - type: markdown
+        content: |
+          ## Mode traitement
+          Sélectionne le mode **TRAITEMENT** pour lancer une filtration temporisée, puis retour automatique en **AUTO** à la fin du timer.
+
+      - type: grid
+        title: Traitement
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: input_number.pcha_duree_traitement
+            name: Durée configurée
+            icon: mdi:timer-edit-outline
+          - type: tile
+            entity: timer.pcha_traitement
+            name: Timer traitement
+            icon: mdi:timer-outline
+          - type: tile
+            entity: sensor.pcha_temps_traitement_restant
+            name: Temps restant
+            icon: mdi:timer-sand
+          - type: tile
+            entity: input_select.pcha_mode_de_fonctionnement
+            name: Mode actif
+            icon: mdi:flask-outline
+
+      - type: history-graph
+        title: Filtration et traitement — 24 heures
+        hours_to_show: 24
+        entities:
+          - entity: input_select.pcha_mode_de_fonctionnement
+            name: Mode
+          - entity: timer.pcha_traitement
+            name: Traitement
+          - entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+
+  - title: Solaire
+    path: solaire
+    icon: mdi:solar-power-variant-outline
     type: masonry
     cards:
       - type: grid
@@ -236,67 +297,74 @@ views:
         columns: 2
         square: false
         cards:
-          - type: gauge
+          - type: tile
             entity: sensor.pcha_temperature_piscine
-            name: Piscine
-            min: 10
-            max: 50
-            needle: true
-          - type: gauge
+            name: Température bassin
+            icon: mdi:thermometer-water
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
             entity: sensor.pcha_temperature_exterieure
-            name: Extérieure
-            min: -10
-            max: 50
-            needle: true
-
-      - type: entities
-        title: Piscine
-        icon: mdi:thermometer-water
-        show_header_toggle: false
-        entities:
-          - entity: sensor.pcha_temperature_piscine
-            name: Température bassin calibrée
-          - entity: sensor.pcha_temperature_piscine_brute
-            name: Température brute bassin
-          - entity: input_number.pcha_correction_temperature_piscine
-            name: Calibrage signé
-          - entity: input_number.pcha_temps_validation_temperature_piscine
-            name: Validation diagnostic température
-          - entity: input_number.pcha_temperature_de_consigne
-            name: Consigne
-          - entity: sensor.pcha_temperature_piscine_min_jour
-            name: Minimum du jour
-          - entity: sensor.pcha_temperature_piscine_max_jour
-            name: Maximum du jour
-          - entity: sensor.pcha_temperature_exterieure
             name: Température extérieure
+            icon: mdi:thermometer
 
-      - type: entities
-        title: Chauffage solaire
-        icon: mdi:solar-power-variant
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: binary_sensor.pcha_chauffage_solaire_requis
+      - type: grid
+        title: Chaîne solaire
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: binary_sensor.pcha_chauffage_solaire_requis
             name: Chauffage requis
-          - entity: binary_sensor.pcha_chauffage_solaire_actif
+            icon: mdi:solar-power
+          - type: tile
+            entity: binary_sensor.pcha_chauffage_solaire_actif
             name: Chauffage actif
-          - entity: binary_sensor.pcha_protection_serpentin_requise
-            name: Protection du serpentin
-          - entity: sensor.pcha_source_chauffage_solaire
+            icon: mdi:solar-panel-large
+          - type: tile
+            entity: binary_sensor.pcha_protection_serpentin_requise
+            name: Protection serpentin
+            icon: mdi:radiator-disabled
+          - type: tile
+            entity: sensor.pcha_source_chauffage_solaire
             name: Source de pilotage
-          - entity: sensor.pcha_ecart_temperature_exterieure_bassin
-            name: Écart extérieur / bassin
-          - entity: sensor.pcha_luminosite
+            icon: mdi:source-branch
+          - type: tile
+            entity: sensor.pcha_ecart_temperature_exterieure_bassin
+            name: Écart ext./bassin
+            icon: mdi:compare-vertical
+          - type: tile
+            entity: input_number.pcha_seuil_luminosite_chauffage
+            name: Seuil luminosité
+            icon: mdi:tune
+
+      - type: grid
+        title: Luminosité distante
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: sensor.pcha_luminosite
             name: Luminosité
-          - entity: binary_sensor.pcha_liaison_luminosite_distante
+            icon: mdi:white-balance-sunny
+            features:
+              - type: trend-graph
+                hours_to_show: 24
+                detail: true
+          - type: tile
+            entity: binary_sensor.pcha_liaison_luminosite_distante
             name: Liaison D1 mini / ESP32
-          - entity: binary_sensor.pcha_capteur_luminosite_distant_ok
+            icon: mdi:access-point-network
+          - type: tile
+            entity: binary_sensor.pcha_capteur_luminosite_distant_ok
             name: BH1750 distant
-          - entity: input_number.pcha_seuil_luminosite_chauffage
-            name: Seuil de luminosité
-          - entity: input_number.pcha_temps_validation_luminosite
+            icon: mdi:sun-wireless
+          - type: tile
+            entity: input_number.pcha_temps_validation_luminosite
             name: Validation luminosité
+            icon: mdi:timer-alert-outline
 
       - type: markdown
         title: Bilan solaire du jour
@@ -310,22 +378,31 @@ views:
           {% set moyenne = states('sensor.pcha_luminosite_moyenne_superieure_seuil_jour') | float(0) | round(0) | int %}
           {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) | round(0) | int %}
 
-          |  | Valeur |
+          | Élément | Valeur |
           |:--|--:|
           | <ha-icon icon="mdi:sun-clock-outline"></ha-icon> Temps au-dessus de {{ seuil }} lx | **{{ '%02dH%02d' | format(duree // 60, duree % 60) }}** |
           | <ha-icon icon="mdi:sun-compass"></ha-icon> Luminosité moyenne | **{{ moyenne }} lx** |
 
-      - type: tile
-        entity: sensor.pcha_temperature_piscine
-        name: Température bassin — 24 heures
-        icon: mdi:thermometer-water
-        features:
-          - type: trend-graph
-            hours_to_show: 24
-            detail: true
+      - type: entities
+        title: Bassin
+        icon: mdi:pool-thermometer
+        show_header_toggle: false
+        entities:
+          - entity: sensor.pcha_temperature_piscine
+            name: Température bassin calibrée
+          - entity: sensor.pcha_temperature_piscine_brute
+            name: Température brute bassin
+          - entity: input_number.pcha_correction_temperature_piscine
+            name: Calibrage signé
+          - entity: input_number.pcha_temps_validation_temperature_piscine
+            name: Validation diagnostic température
+          - entity: sensor.pcha_temperature_piscine_min_jour
+            name: Minimum du jour
+          - entity: sensor.pcha_temperature_piscine_max_jour
+            name: Maximum du jour
 
       - type: history-graph
-        title: Chauffage solaire — 24 heures
+        title: Solaire — 24 heures
         hours_to_show: 24
         entities:
           - entity: binary_sensor.pcha_chauffage_solaire_requis
@@ -335,58 +412,24 @@ views:
           - entity: binary_sensor.pcha_protection_serpentin_requise
             name: Protection serpentin
 
-  - title: Traitement
-    path: traitement
-    icon: mdi:flask-outline
-    type: masonry
-    cards:
-      - type: markdown
-        content: |
-          ## Mode traitement
-          Sélectionnez `TRAITEMENT` dans le mode de fonctionnement. Le retour à `AUTO` est automatique à la fin du timer.
-
-      - type: entities
-        title: Commande du traitement
-        icon: mdi:flask-outline
-        show_header_toggle: false
-        entities:
-          - entity: input_select.pcha_mode_de_fonctionnement
-            name: Mode de fonctionnement
-          - entity: input_number.pcha_duree_traitement
-            name: Durée configurée
-          - entity: timer.pcha_traitement
-            name: Timer du traitement
-            type: simple-entity
-          - entity: sensor.pcha_temps_traitement_restant
-            name: Temps restant
-
-      - type: history-graph
-        title: Traitement et pompe — 24 heures
-        hours_to_show: 24
-        entities:
-          - entity: input_select.pcha_mode_de_fonctionnement
-            name: Mode
-          - entity: timer.pcha_traitement
-            name: Traitement
-          - entity: switch.pcha_commande_pompe_filtration
-            name: Pompe
-
   - title: Diagnostics
     path: diagnostics
     icon: mdi:shield-alert-outline
     type: masonry
     cards:
-      - type: entities
-        title: Niveau global
-        icon: mdi:shield-check
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: input_select.pcha_niveau_fonctionnement
-            name: Niveau de fonctionnement
-            type: simple-entity
-          - entity: input_boolean.pcha_acquitter_alarmes
-            name: Acquitter les alarmes
+      - type: grid
+        title: Synthèse
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau global
+            icon: mdi:shield-check
+          - type: tile
+            entity: input_boolean.pcha_acquitter_alarmes
+            name: Acquitter alarmes
+            icon: mdi:alarm-check
 
       - type: entities
         title: Diagnostics MES — Mesures
@@ -431,26 +474,32 @@ views:
           - entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
             name: PRO-003 — Protection serpentin impossible
 
-      - type: entities
+      - type: grid
         title: Délais de validation
-        icon: mdi:timer-alert-outline
-        show_header_toggle: false
-        entities:
-          - entity: input_number.pcha_temps_validation_temperature_piscine
+        columns: 3
+        square: false
+        cards:
+          - type: tile
+            entity: input_number.pcha_temps_validation_temperature_piscine
             name: Température bassin
-          - entity: input_number.pcha_temps_validation_debit
+            icon: mdi:timer-alert-outline
+          - type: tile
+            entity: input_number.pcha_temps_validation_debit
             name: Débit
-          - entity: input_number.pcha_temps_validation_luminosite
+            icon: mdi:timer-alert-outline
+          - type: tile
+            entity: input_number.pcha_temps_validation_luminosite
             name: Luminosité
+            icon: mdi:timer-alert-outline
 
       - type: history-graph
-        title: Niveau et diagnostics critiques — 24 heures
+        title: Historique diagnostics — 24 heures
         hours_to_show: 24
         entities:
           - entity: input_select.pcha_niveau_fonctionnement
             name: Niveau global
-          - entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
-            name: MES-002
+          - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+            name: MES-004
           - entity: binary_sensor.pcha_diagnostic_pro_001_debit_critique
             name: PRO-001
           - entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
@@ -458,6 +507,6 @@ views:
 
       - type: markdown
         content: |
-          ## Historique
-          - [Ouvrir l'activité Home Assistant](/logbook)
-          - [Ouvrir l'historique Home Assistant](/history)
+          ## Historique Home Assistant
+          - [Ouvrir l’activité](/logbook)
+          - [Ouvrir l’historique](/history)
