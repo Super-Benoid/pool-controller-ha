@@ -72,3 +72,16 @@ Les paramètres sont exclusivement ceux déclarés dans la SPEC-004, notamment :
 * SPEC-004
 * SPEC-007
 * SPEC-008
+
+
+# 9. Référence visuelle Concept D
+
+Le dashboard V1.1 utilise le thème sombre `PCHA Concept D`, avec des accents cyan et violet. La vue Accueil présente :
+
+* quatre états système sous forme de tuiles ;
+* quatre cartes `sensor` détaillées avec valeur courante, axes et historique 24 h ;
+* les minimums et maximums glissants sur 24 h ;
+* une jauge de progression de l’objectif quotidien ;
+* les réglages rapides et l’activité récente.
+
+Le visuel de référence approuvé est archivé dans `docs/V1.1/assets/concept-d-reference.png`.

@@ -16,6 +16,7 @@
 #   sensor.pcha_temperature_reference_objectif_quotidien
 #   sensor.pcha_temperature_piscine_max_jour
 #   sensor.pcha_temperature_piscine_min_jour
+#   sensor.pcha_progression_objectif_quotidien
 #   sensor.pcha_temps_filtration_realise
 #   sensor.pcha_temps_filtration_restant
 ################################################################################
@@ -283,6 +284,23 @@
           {{ [((objectif | float(0)) * 60 - (realise | float(0))), 0] | max | round(0) }}
         {% else %}
           {{ none }}
+        {% endif %}
+
+- sensor:
+    - name: PCHA Progression objectif quotidien
+      unique_id: pcha_progression_objectif_quotidien
+      default_entity_id: sensor.pcha_progression_objectif_quotidien
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state_class: measurement
+      state: >
+        {% set objectif = states('sensor.pcha_objectif_filtration_quotidien') %}
+        {% set realise = states('sensor.pcha_temps_filtration_realise') %}
+        {% if is_number(objectif) and is_number(realise) and (objectif | float(0)) > 0 %}
+          {% set total = (objectif | float(0)) * 60 %}
+          {{ [[((realise | float(0)) / total * 100), 0] | max, 100] | min | round(0) }}
+        {% else %}
+          {{ 0 }}
         {% endif %}
 
 - binary_sensor:

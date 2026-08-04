@@ -12,7 +12,7 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 * BH1750 déporté sur D1 mini et transmis à l'ESP32 Jardin par Packet Transport UDP ;
 * MES-004 étendu à la liaison distante et à l'état du BH1750 ;
 * chauffage solaire de secours lorsque la température extérieure dépasse celle du bassin de `2 °C`, avec arrêt à `1 °C` ;
-* dashboard modernisé : page d'accueil synthétique, vues dédiées Pilotage / Solaire / Diagnostics et cartes de tendance natives `tile` sur 24 heures.
+* dashboard Concept D sombre cyan/violet, avec quatre graphiques détaillés sur 24 heures, statistiques min/max, jauge de progression et vues Pilotage / Solaire / Diagnostics.
 
 ## Installation
 

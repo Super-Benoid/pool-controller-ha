@@ -50,9 +50,11 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-# 4. Tableau de bord
+# 4. Thème et tableau de bord
 
-Fusionner le bloc `lovelace:` de `installation/configuration_extrait.yaml` dans `/config/configuration.yaml`.
+Fusionner les blocs `frontend:` et `lovelace:` de `installation/configuration_extrait.yaml` dans `/config/configuration.yaml`. Le dossier `themes/` contient le thème sombre **PCHA Concept D** et ses variantes cyan, violette et alerte.
+
+Après redémarrage, le dashboard sélectionne automatiquement le thème au niveau de chaque vue. Pour l’appliquer aussi à la barre latérale et à l’en-tête Home Assistant, sélectionner **PCHA Concept D** dans le profil utilisateur.
 
 # 5. Migration du calibrage
 
@@ -93,7 +95,7 @@ Le mode initial doit rester `OFF` pendant les contrôles.
 1. Mettre PCHA en `OFF`.
 2. Vérifier la configuration Home Assistant.
 3. Redémarrer Home Assistant.
-4. Vérifier les entités `pcha_*`.
+4. Vérifier les entités `pcha_*`, notamment `sensor.pcha_progression_objectif_quotidien`.
 5. Contrôler le calibrage signé.
 6. Vérifier que les deux états de luminosité distante sont `on`.
 7. Exécuter `RECETTE-V1.1.md`.

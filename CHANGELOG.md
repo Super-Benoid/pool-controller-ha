@@ -29,3 +29,11 @@
 * regroupement des cartes par usage : Pilotage, Solaire, Diagnostics ;
 * conservation des cartes natives `tile` avec `trend-graph` sur 24 heures pour les mesures principales.
 
+
+## V1.1 — Concept D
+
+* ajout du thème sombre cyan/violet `PCHA Concept D` ;
+* remplacement des simples tuiles de tendance par quatre cartes capteur détaillées avec axes et historique 24 h ;
+* ajout des minimums et maximums glissants sur 24 h ;
+* ajout de `sensor.pcha_progression_objectif_quotidien` et d’une jauge de progression ;
+* réorganisation des vues Accueil, Pilotage, Solaire et Diagnostics.
