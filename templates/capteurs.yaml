@@ -5,12 +5,14 @@
 # Entrées
 #   sensor.jardin_esp32_jardin_debit_filtration_piscine
 #   sensor.jardin_esp32_jardin_luminosite
-#   sensor.jardin_esp32_jardin_temperature_piscine
+#   sensor.jardin_esp32_jardin_temperature_bassin
 #   sensor.prises_exterieur_energy
 #   sensor.prises_exterieur_power
 #   sensor.temperature_exterieure_temperature
 #
 # Sorties
+#   binary_sensor.pcha_capteur_luminosite_distant_ok
+#   binary_sensor.pcha_liaison_luminosite_distante
 #   sensor.pcha_debit_filtration
 #   sensor.pcha_energie_pompe_filtration
 #   sensor.pcha_luminosite
@@ -20,10 +22,37 @@
 #   sensor.pcha_temperature_piscine_brute
 #
 # Chaque sortie conserve sa dernière valeur numérique valide. Pour la
-# température piscine, une valeur n'est valide que dans l'intervalle strict
-# 10–50 °C. Les attributs source_available et source_coherent permettent aux
-# diagnostics de distinguer une source absente d'une mesure aberrante.
+# température du bassin, une valeur n'est valide que dans l'intervalle strict
+# 10–50 °C. La sonde étant immergée directement dans le bassin, aucune
+# stabilisation par circulation n'est nécessaire. Les attributs source_available
+# et source_coherent permettent aux diagnostics de distinguer une source absente d'une mesure aberrante.
 ################################################################################
+
+# État abstrait de la chaîne de luminosité distante.
+- binary_sensor:
+    - name: PCHA Liaison luminosité distante
+      unique_id: pcha_liaison_luminosite_distante
+      default_entity_id: binary_sensor.pcha_liaison_luminosite_distante
+      device_class: connectivity
+      icon: mdi:access-point-network
+      state: >
+        {{ is_state('binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite', 'on') }}
+      attributes:
+        source_entity: binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite
+        source_state: >
+          {{ states('binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite') }}
+
+    - name: PCHA Capteur luminosité distant OK
+      unique_id: pcha_capteur_luminosite_distant_ok
+      default_entity_id: binary_sensor.pcha_capteur_luminosite_distant_ok
+      device_class: connectivity
+      icon: mdi:brightness-5
+      state: >
+        {{ is_state('binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok', 'on') }}
+      attributes:
+        source_entity: binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok
+        source_state: >
+          {{ states('binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok') }}
 
 - sensor:
     - name: PCHA Débit filtration
@@ -74,16 +103,44 @@
       state_class: measurement
       state: >
         {% set source = states('sensor.jardin_esp32_jardin_luminosite') %}
-        {% if is_number(source) %}
+        {% set liaison = states('binary_sensor.pcha_liaison_luminosite_distante') %}
+        {% set capteur = states('binary_sensor.pcha_capteur_luminosite_distant_ok') %}
+        {% set mesure_coherente =
+             is_number(source)
+             and (source | float(0)) >= 0
+             and (source | float(0)) <= 100000 %}
+        {% set chaine_valide = liaison == 'on' and capteur == 'on' and mesure_coherente %}
+        {% if chaine_valide %}
           {{ source | float(0) | round(0) }}
         {% elif is_number(this.state) %}
           {{ this.state | float(0) | round(0) }}
         {% else %}
-          0
+          {{ none }}
         {% endif %}
       attributes:
         source_available: >
+          {{
+            is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on')
+            and is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on')
+            and is_number(states('sensor.jardin_esp32_jardin_luminosite'))
+            and (states('sensor.jardin_esp32_jardin_luminosite') | float(0)) >= 0
+            and (states('sensor.jardin_esp32_jardin_luminosite') | float(0)) <= 100000
+          }}
+        source_numeric: >
           {{ is_number(states('sensor.jardin_esp32_jardin_luminosite')) }}
+        source_coherent: >
+          {% set source = states('sensor.jardin_esp32_jardin_luminosite') %}
+          {{
+            is_number(source)
+            and (source | float(0)) >= 0
+            and (source | float(0)) <= 100000
+          }}
+        liaison_packet_transport: >
+          {{ states('binary_sensor.pcha_liaison_luminosite_distante') }}
+        capteur_bh1750_ok: >
+          {{ states('binary_sensor.pcha_capteur_luminosite_distant_ok') }}
+        source_value: >
+          {{ states('sensor.jardin_esp32_jardin_luminosite') }}
 
     - name: PCHA Puissance pompe filtration
       unique_id: pcha_puissance_pompe_filtration
@@ -125,7 +182,7 @@
         source_available: >
           {{ is_number(states('sensor.temperature_exterieure_temperature')) }}
 
-    - name: PCHA Température piscine brute
+    - name: PCHA Température bassin brute
       unique_id: pcha_temperature_piscine_brute
       default_entity_id: sensor.pcha_temperature_piscine_brute
       device_class: temperature
@@ -133,7 +190,7 @@
       unit_of_measurement: "°C"
       state_class: measurement
       state: >
-        {% set source = states('sensor.jardin_esp32_jardin_temperature_piscine') %}
+        {% set source = states('sensor.jardin_esp32_jardin_temperature_bassin') %}
         {% set precedent = this.state %}
         {% set source_coherente =
              is_number(source)
@@ -152,33 +209,29 @@
         {% endif %}
       attributes:
         source_available: >
-          {{ is_number(states('sensor.jardin_esp32_jardin_temperature_piscine')) }}
+          {{ is_number(states('sensor.jardin_esp32_jardin_temperature_bassin')) }}
         source_coherent: >
-          {% set source = states('sensor.jardin_esp32_jardin_temperature_piscine') %}
+          {% set source = states('sensor.jardin_esp32_jardin_temperature_bassin') %}
           {{
             is_number(source)
             and (source | float(0)) > 10
             and (source | float(0)) < 50
           }}
         source_value: >
-          {{ states('sensor.jardin_esp32_jardin_temperature_piscine') }}
+          {{ states('sensor.jardin_esp32_jardin_temperature_bassin') }}
+        source_entity: sensor.jardin_esp32_jardin_temperature_bassin
 
-# Température de référence utilisée par les fonctions métier. Elle n'est
-# actualisée qu'après une circulation suffisamment longue pour que la sonde,
-# placée sur la sortie de pompe, représente réellement l'eau de la piscine.
+# Température métier du bassin. La sonde est immergée directement dans l'eau :
+# la mesure calibrée est donc disponible immédiatement, pompe arrêtée ou en marche.
 - triggers:
     - trigger: homeassistant
       event: start
-    - trigger: time_pattern
-      seconds: "/5"
     - trigger: state
       entity_id:
         - sensor.pcha_temperature_piscine_brute
-        - switch.pcha_commande_pompe_filtration
         - input_number.pcha_correction_temperature_piscine
-        - input_number.pcha_temps_validation_temperature_piscine
   sensor:
-    - name: PCHA Température piscine
+    - name: PCHA Température bassin
       unique_id: pcha_temperature_piscine
       default_entity_id: sensor.pcha_temperature_piscine
       device_class: temperature
@@ -187,28 +240,22 @@
       state_class: measurement
       state: >
         {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-        {% set correction = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
-        {% set corrigee = (brute | float(0) - correction) if is_number(brute) else none %}
+        {% set calibrage = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
+        {% set calibree = (brute | float(0) + calibrage) if is_number(brute) else none %}
         {% set source_coherente =
              state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent')
              | bool(false) %}
-        {% set corrigee_coherente =
-             corrigee is not none
-             and corrigee > 10
-             and corrigee < 50 %}
-        {% set stabilisation = [states('input_number.pcha_temps_validation_temperature_piscine') | float(30), 5] | max %}
-        {% set pompe = states.switch.pcha_commande_pompe_filtration %}
-        {% set circulation_stable =
-             pompe is not none
-             and pompe.state == 'on'
-             and (as_timestamp(now()) - as_timestamp(pompe.last_changed)) >= stabilisation %}
+        {% set calibree_coherente =
+             calibree is not none
+             and calibree > 10
+             and calibree < 50 %}
         {% set precedent = this.state %}
         {% set precedent_coherent =
              is_number(precedent)
              and (precedent | float(0)) > 10
              and (precedent | float(0)) < 50 %}
-        {% if source_coherente and corrigee_coherente and circulation_stable %}
-          {{ corrigee | round(1) }}
+        {% if source_coherente and calibree_coherente %}
+          {{ calibree | round(1) }}
         {% elif precedent_coherent %}
           {{ precedent | float(0) | round(1) }}
         {% else %}
@@ -221,40 +268,38 @@
           {{ state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false) }}
         corrected_value_coherent: >
           {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-          {% set correction = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
-          {% set corrigee = (brute | float(0) - correction) if is_number(brute) else none %}
+          {% set calibrage = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
+          {% set calibree = (brute | float(0) + calibrage) if is_number(brute) else none %}
           {{
             state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false)
-            and corrigee is not none
-            and corrigee > 10
-            and corrigee < 50
+            and calibree is not none
+            and calibree > 10
+            and calibree < 50
           }}
         measurement_valid: >
           {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-          {% set correction = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
-          {% set corrigee = (brute | float(0) - correction) if is_number(brute) else none %}
-          {% set stabilisation = [states('input_number.pcha_temps_validation_temperature_piscine') | float(30), 5] | max %}
-          {% set pompe = states.switch.pcha_commande_pompe_filtration %}
+          {% set calibrage = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
+          {% set calibree = (brute | float(0) + calibrage) if is_number(brute) else none %}
           {{
             state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false)
-            and corrigee is not none
-            and corrigee > 10
-            and corrigee < 50
-            and pompe is not none
-            and pompe.state == 'on'
-            and (as_timestamp(now()) - as_timestamp(pompe.last_changed)) >= stabilisation
+            and calibree is not none
+            and calibree > 10
+            and calibree < 50
           }}
+        calibrage_applique: >
+          {{ states('input_number.pcha_correction_temperature_piscine') | float(0) }}
         correction_appliquee: >
           {{ states('input_number.pcha_correction_temperature_piscine') | float(0) }}
+        formule_calibrage: temperature_bassin = temperature_brute + calibrage
         temperature_brute: >
           {{ states('sensor.pcha_temperature_piscine_brute') }}
         temperature_source: >
           {{ state_attr('sensor.pcha_temperature_piscine_brute', 'source_value') }}
-        temperature_corrigee_candidate: >
+        temperature_calibree_candidate: >
           {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-          {% set correction = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
+          {% set calibrage = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
           {% if is_number(brute) %}
-            {{ (brute | float(0) - correction) | round(1) }}
+            {{ (brute | float(0) + calibrage) | round(1) }}
           {% else %}
             {{ none }}
           {% endif %}

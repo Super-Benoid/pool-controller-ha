@@ -1,0 +1,24 @@
+# Changelog
+
+## V1.1 — 2026-08-04
+
+### Température
+
+* nouvelle source `sensor.jardin_esp32_jardin_temperature_bassin` ;
+* suppression de la validation par circulation ;
+* calibrage signé `−3 à +3 °C` ;
+* minimum et maximum mis à jour pompe arrêtée ou en marche.
+
+### Objectif quotidien
+
+* candidate maximale de minuit à trente minutes après le lever du soleil ;
+* référence calibrée et objectif figé jusqu'au lendemain ;
+* affichage de la référence et de son statut dans le dashboard.
+
+### Luminosité et solaire
+
+* chaîne D1 mini / Packet Transport / ESP32 supervisée ;
+* MES-004 enrichi avec une cause ;
+* secours thermique extérieur/bassin avec hystérésis `2 °C / 1 °C` ;
+* compteurs solaires suspendus pendant MES-004 ;
+* graphe de luminosité ajouté à Supervision.

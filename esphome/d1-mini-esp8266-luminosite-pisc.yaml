@@ -1,0 +1,94 @@
+################################################################################
+# PCHA V1.1 — D1 mini ESP8266 proche du BH1750
+#
+# Ce fichier reprend la configuration validée de l'installation et ajoute
+# l'état capteur_luminosite_ok transmis à l'ESP32 Jardin.
+################################################################################
+
+esphome:
+  name: d1-mini-esp8266-luminosite-pisc
+  friendly_name: D1 Mini ESP8266 - Luminosité Piscine
+
+esp8266:
+  board: d1_mini
+
+logger:
+
+api:
+  encryption:
+    key: !secret d1_mini_esp8266_luminosite_pisc__encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret d1_mini_esp8266_luminosite_pisc__ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: D1 Mini ESP8266 Fallback Hotspot
+    password: !secret d1_mini_esp8266_luminosite_pisc__fallback_password
+
+captive_portal:
+
+i2c:
+  id: bus_bh1750
+  sda: GPIO4
+  scl: GPIO5
+  scan: true
+  frequency: 50kHz
+
+udp:
+  id: udp_luminosite
+
+packet_transport:
+  platform: udp
+  id: transport_luminosite
+  udp_id: udp_luminosite
+  update_interval: 10s
+  encryption: !secret packet_transport_key
+  rolling_code_enable: true
+  sensors:
+    - id: luminosite_locale
+      broadcast_id: luminosite_jardin
+  binary_sensors:
+    - id: capteur_luminosite_ok
+      broadcast_id: capteur_luminosite_ok
+
+globals:
+  - id: derniere_luminosite_valide_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: "0"
+
+binary_sensor:
+  - platform: template
+    id: capteur_luminosite_ok
+    name: "Capteur luminosité OK"
+    internal: true
+    device_class: connectivity
+    lambda: |-
+      const uint32_t derniere = id(derniere_luminosite_valide_ms);
+      return derniere != 0 && (millis() - derniere) <= 30000UL;
+
+sensor:
+  - platform: bh1750
+    id: luminosite_locale
+    name: "Luminosité locale"
+    address: 0x23
+    update_interval: 10s
+    internal: true
+    filters:
+      - lambda: |-
+          if (isnan(x) || x < 0.0f || x > 100000.0f) {
+            return {};
+          }
+          return x;
+    on_value:
+      then:
+        - lambda: |-
+            id(derniere_luminosite_valide_ms) = millis();
+
+  - platform: wifi_signal
+    name: "Signal Wi-Fi capteur luminosité"
+    update_interval: 60s

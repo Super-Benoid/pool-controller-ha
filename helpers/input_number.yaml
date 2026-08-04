@@ -1,6 +1,6 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# SPEC-004 — Paramètres configurables
+# SPEC-004 — Paramètres configurables V1.1
 #
 # Entrées
 #   Aucune
@@ -17,11 +17,14 @@
 #   input_number.pcha_temps_validation_temperature_piscine
 ################################################################################
 
+# L'identifiant historique est conservé pour éviter de casser les tableaux de
+# bord et automatisations. En V1.1 il s'agit d'un calibrage signé ajouté à la
+# mesure brute : température = mesure brute + calibrage.
 pcha_correction_temperature_piscine:
-  name: Correction à soustraire de la température piscine
-  icon: mdi:thermometer-minus
-  min: 0
-  max: 5
+  name: Calibrage température bassin
+  icon: mdi:tune-vertical
+  min: -3
+  max: 3
   step: 0.1
   unit_of_measurement: "°C"
   mode: box
@@ -81,7 +84,7 @@ pcha_temps_validation_debit:
   mode: box
 
 pcha_temps_validation_luminosite:
-  name: Validation luminosité
+  name: Validation luminosité distante
   icon: mdi:timer-check
   min: 0
   max: 600
@@ -89,11 +92,13 @@ pcha_temps_validation_luminosite:
   unit_of_measurement: "s"
   mode: box
 
+# L'ancien délai de stabilisation devient uniquement le délai de validation des
+# diagnostics MES-001 et COH-002. La température métier n'attend plus la pompe.
 pcha_temps_validation_temperature_piscine:
-  name: Stabilisation température piscine
+  name: Validation température bassin
   icon: mdi:timer-check
-  min: 5
+  min: 0
   max: 600
-  step: 5
+  step: 1
   unit_of_measurement: "s"
   mode: box

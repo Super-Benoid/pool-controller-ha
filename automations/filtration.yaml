@@ -10,7 +10,7 @@
 #
 # La planification quotidienne est portée par les entités template de
 # templates/calculs.yaml. Aucune automatisation supplémentaire n'est nécessaire
-# en V1 : binary_sensor.pcha_filtration_requise se réévalue chaque minute et la
+# en V1.1 : binary_sensor.pcha_filtration_requise se réévalue chaque minute et la
 # machine réagit à la demande consolidée.
 ################################################################################
 

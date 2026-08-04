@@ -1,6 +1,6 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# SPEC-007 — Diagnostics V1
+# SPEC-007 — Diagnostics V1.1
 #
 # Ce fichier est un package Home Assistant autonome.
 #
@@ -42,8 +42,8 @@ template:
       # MES — Disponibilité des mesures
       ##########################################################################
 
-      # MES-001 — Température piscine indisponible.
-      - name: PCHA Diagnostic MES-001 Température piscine indisponible
+      # MES-001 — Température bassin indisponible.
+      - name: PCHA Diagnostic MES-001 Température bassin indisponible
         unique_id: pcha_diagnostic_mes_001_temperature_piscine_indisponible
         default_entity_id: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
         device_class: problem
@@ -62,7 +62,7 @@ template:
           famille: MES
           gravite: DEGRADE
           rearmement: TEMPORISE
-          motif: Température de la piscine indisponible
+          motif: Température du bassin indisponible
 
       # MES-002 — Débit filtration indisponible.
       - name: PCHA Diagnostic MES-002 Débit indisponible
@@ -104,27 +104,48 @@ template:
           rearmement: AUTOMATIQUE
           motif: Puissance de la pompe indisponible
 
-      # MES-004 — Luminosité indisponible.
+      # MES-004 — Chaîne de luminosité distante indisponible.
+      # La mesure est produite par le BH1750 de la D1 mini, diffusée par Packet
+      # Transport et reçue par l'ESP32 Jardin. Le délai filtre les pertes brèves.
       - name: PCHA Diagnostic MES-004 Luminosité indisponible
         unique_id: pcha_diagnostic_mes_004_luminosite_indisponible
         default_entity_id: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
         device_class: problem
         icon: mdi:sun-wireless
         delay_on: >
-          {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+          {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_luminosite') | int(30) }}
+          {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
         state: >
-          {{
-            not (state_attr('sensor.pcha_luminosite', 'source_available')
-                 | bool(false))
-          }}
+          {% set liaison_ok = is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
+          {% set capteur_ok = is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') %}
+          {% set mesure_ok = state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false) %}
+          {{ not (liaison_ok and capteur_ok and mesure_ok) }}
         attributes:
           diagnostic_id: MES-004
           famille: MES
           gravite: DEGRADE
           rearmement: TEMPORISE
-          motif: Luminosité indisponible
+          motif: Chaîne de mesure de luminosité distante indisponible
+          cause: >
+            {% if not is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
+              LIAISON_PACKET_TRANSPORT
+            {% elif not is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') %}
+              CAPTEUR_BH1750
+            {% elif not state_attr('sensor.pcha_luminosite', 'source_numeric') | bool(false) %}
+              MESURE_INDISPONIBLE
+            {% elif not state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false) %}
+              MESURE_HORS_LIMITES
+            {% else %}
+              AUCUNE
+            {% endif %}
+          liaison_packet_transport: >
+            {{ states('binary_sensor.pcha_liaison_luminosite_distante') }}
+          capteur_bh1750_ok: >
+            {{ states('binary_sensor.pcha_capteur_luminosite_distant_ok') }}
+          mesure_recue: >
+            {{ state_attr('sensor.pcha_luminosite', 'source_value') }}
+          strategie_secours: TEMPERATURE_EXTERIEURE_SUPERIEURE_DE_2C_AU_BASSIN
 
       ##########################################################################
       # COH — Cohérence des mesures validées
@@ -176,8 +197,8 @@ template:
           rearmement: TEMPORISE
           motif: Débit, puissance ou commande de pompe incohérents
 
-      # COH-002 — Température hors de la plage physique stricte 10–50 °C.
-      - name: PCHA Diagnostic COH-002 Température piscine incohérente
+      # COH-002 — Température bassin hors de la plage physique stricte 10–50 °C.
+      - name: PCHA Diagnostic COH-002 Température bassin incohérente
         unique_id: pcha_diagnostic_coh_002_temperature_piscine_incoherente
         default_entity_id: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
         device_class: problem
@@ -209,7 +230,7 @@ template:
           famille: COH
           gravite: DEGRADE
           rearmement: TEMPORISE
-          motif: Mesure source ou température corrigée hors de la plage stricte 10–50 °C
+          motif: Mesure source ou température calibrée hors de la plage stricte 10–50 °C
 
       ##########################################################################
       # PRO — Anomalies du procédé
@@ -290,7 +311,7 @@ template:
 
       # PRO-003 — Une protection solaire demandée ne peut pas être assurée.
       #
-      # Sans mémoire supplémentaire, l'impossibilité exploitable en V1 est
+      # Sans mémoire supplémentaire, l'impossibilité exploitable en V1.1 est
       # établie lorsque le mode interdit la circulation, que l'actionneur est
       # indisponible ou qu'un diagnostic hydraulique critique est déjà actif.
       - name: PCHA Diagnostic PRO-003 Protection serpentin impossible

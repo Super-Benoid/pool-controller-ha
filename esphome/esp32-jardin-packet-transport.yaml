@@ -1,0 +1,64 @@
+################################################################################
+# PCHA V1.1 — Fragment à fusionner dans l'ESP32 Jardin existant
+#
+# Ne pas remplacer le fichier complet de l'ESP32 par ce fragment : il contient
+# seulement la réception Packet Transport nécessaire à PCHA V1.1.
+################################################################################
+
+udp:
+  id: udp_luminosite
+
+packet_transport:
+  platform: udp
+  id: transport_luminosite
+  udp_id: udp_luminosite
+  ping_pong_enable: true
+  ping_pong_recycle_time: 60s
+  providers:
+    - name: d1-mini-esp8266-luminosite-pisc
+      encryption: !secret packet_transport_key
+
+sensor:
+  # Conserver le nom actuel qui produit :
+  # sensor.jardin_esp32_jardin_luminosite
+  - platform: packet_transport
+    transport_id: transport_luminosite
+    provider: d1-mini-esp8266-luminosite-pisc
+    remote_id: luminosite_jardin
+    id: luminosite
+    name: "Luminosité"
+    internal: false
+    unit_of_measurement: "lx"
+    device_class: illuminance
+    state_class: measurement
+    accuracy_decimals: 1
+    icon: mdi:white-balance-sunny
+    filters:
+      - lambda: |-
+          if (isnan(x) || x < 0.0f || x > 100000.0f) {
+            return {};
+          }
+          return x;
+
+binary_sensor:
+  # État de présence du fournisseur Packet Transport.
+  - platform: packet_transport
+    transport_id: transport_luminosite
+    provider: d1-mini-esp8266-luminosite-pisc
+    type: status
+    id: liaison_capteur_luminosite
+    name: "Liaison capteur luminosité"
+    internal: false
+    device_class: connectivity
+    icon: mdi:access-point-network
+
+  # État du BH1750 calculé sur la D1 mini et transmis avec la luminosité.
+  - platform: packet_transport
+    transport_id: transport_luminosite
+    provider: d1-mini-esp8266-luminosite-pisc
+    remote_id: capteur_luminosite_ok
+    id: capteur_luminosite_ok
+    name: "Capteur luminosité OK"
+    internal: false
+    device_class: connectivity
+    icon: mdi:brightness-5

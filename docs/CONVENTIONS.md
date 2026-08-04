@@ -2,7 +2,7 @@
 
 Pool Controller Home Assistant (PCHA)
 
-Version : V1.0
+Version : V1.1
 Statut : Figé
 
 ---
@@ -274,11 +274,11 @@ Une solution simple et claire est toujours préférée à une solution complexe.
 
 # 17. Versionnement
 
-La version V1 est considérée comme figée.
+La version V1.0 reste archivée. La version V1.1 est la référence figée du code courant.
 
-Toute nouvelle fonctionnalité ou amélioration non indispensable au fonctionnement de la V1 est reportée à une version ultérieure.
+Toute nouvelle fonctionnalité non indispensable à la V1.1 est reportée à une version ultérieure.
 
-La stabilité de la V1 est prioritaire sur l'ajout de nouvelles fonctionnalités.
+La stabilité de la V1.1 est prioritaire sur l'ajout de nouvelles fonctionnalités.
 
 ---
 
@@ -286,3 +286,11 @@ La stabilité de la V1 est prioritaire sur l'ajout de nouvelles fonctionnalités
 
 * une entité est calculée à un seul endroit ;
 * elle n'est jamais recalculée ailleurs.
+
+# 18. Conventions spécifiques V1.1
+
+* Le mot **calibrage** désigne une valeur signée ajoutée à la mesure brute.
+* Les identifiants historiques `temperature_piscine` sont conservés pour compatibilité, mais les libellés parlent de **bassin**.
+* `MES-004` surveille une chaîne distante complète, pas seulement une valeur numérique.
+* Les sources ESPHome de la luminosité sont abstraites avant toute utilisation métier.
+* Les documents V1.0 ne sont jamais modifiés : la référence courante se trouve dans `docs/V1.1/`.

@@ -1,406 +1,159 @@
-# ARCHITECTURE.md
+# Architecture — Pool Controller Home Assistant
 
-# Pool Controller Home Assistant (PCHA)
-
-Version : V1.0
-Statut : Figée
+**Version :** V1.1  
+**Statut :** Figée
 
 ---
 
-# 1. Philosophie du projet
+# 1. Principes
 
-Le Pool Controller Home Assistant (PCHA) est conçu comme un logiciel industriel.
+PCHA est organisé comme un logiciel industriel :
 
-Les **SPEC** définissent le comportement fonctionnel.
+* une SPEC par domaine fonctionnel ;
+* une responsabilité par fichier ;
+* une source unique de vérité ;
+* aucune lecture directe du matériel par les fonctions métier ;
+* aucune commande physique hors de la couche d'actionnement.
 
-Le code est uniquement une implémentation de ces SPEC.
-
-Les règles suivantes sont immuables :
-
-* une SPEC = un domaine fonctionnel ;
-* une responsabilité = un fichier ;
-* une information = une source unique de vérité ;
-* aucun accès direct aux équipements physiques par la logique métier.
-
----
-
-# 2. Architecture générale
+# 2. Arborescence
 
 ```text
-/config/
-├── configuration.yaml
-├── packages/
-│   ├── piscine.yaml
-│   └── piscine_diagnostics.yaml
-└── pool-controller-ha/
-    ├── automations/
-    │   ├── chauffage.yaml
-    │   ├── filtration.yaml
-    │   ├── journalisation.yaml
-    │   ├── machine.yaml
-    │   ├── notifications.yaml
-    │   └── traitement.yaml
-    ├── dashboard/
-    │   └── piscine.yaml
-    ├── diagnostics/
-    │   └── diagnostics.yaml
-    ├── docs/
-    │   ├── ARCHITECTURE.md
-    │   ├── CONVENTIONS.md
-    │   └── V1.0/
-    │       ├── 00-Introduction.md
-    │       ├── INSTALLATION.md
-    │       ├── RECETTE-V1.md
-    │       └── SPEC-000 à SPEC-009
-    ├── helpers/
-    │   ├── input_boolean.yaml
-    │   ├── input_number.yaml
-    │   ├── input_select.yaml
-    │   ├── input_text.yaml
-    │   ├── timer.yaml
-    │   └── utility_meter.yaml
-    ├── installation/
-    │   ├── configuration_extrait.yaml
-    │   └── packages/
-    │       ├── piscine.yaml
-    │       └── piscine_diagnostics.yaml
-    ├── scripts/
-    │   ├── machine.yaml
-    │   ├── pompe.yaml
-    │   └── traitement.yaml
-    └── templates/
-        ├── actionneurs.yaml
-        ├── calculs.yaml
-        ├── capteurs.yaml
-        ├── chauffage.yaml
-        └── systeme.yaml
+pool-controller-ha/
+├── automations/
+├── dashboard/
+├── diagnostics/
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── CONVENTIONS.md
+│   ├── V1.0/              # archive
+│   └── V1.1/              # référence courante
+├── esphome/
+├── helpers/
+├── installation/
+├── scripts/
+└── templates/
 ```
 
-Les dossiers et les fichiers sont classés par ordre alphabétique.
+Les fichiers d'un même dossier sont classés par ordre alphabétique.
 
-Un fichier n'est créé que s'il possède une responsabilité réelle.
-
----
-
-# 3. Architecture logique
-
-Le contrôleur est construit par couches.
+# 3. Couches
 
 ```text
-Équipements physiques
+Équipements physiques / ESPHome
         │
         ▼
-Templates (abstraction)
+Abstraction PCHA — SPEC-004
         │
         ▼
-Entités métier PCHA
+Calculs et états métier — SPEC-003 / 005 / 006 / 008
         │
         ▼
-Machine à états
+Scripts d'actionnement
         │
         ▼
-Scripts
+Automatisations d'orchestration
         │
         ▼
-Automatisations
+Dashboard, diagnostics, notifications
 ```
 
-Chaque couche dépend uniquement de la couche située immédiatement en dessous.
-
-Aucune dépendance directe n'est autorisée entre une couche haute et les équipements physiques.
-
----
-
-# 4. Couche d'abstraction
-
-Les équipements physiques ne sont jamais utilisés directement par la logique métier.
-
-Exemple :
+# 4. Température bassin V1.1
 
 ```text
-sensor.jardin_esp32_jardin_debit_filtration_piscine
-                │
-                ▼
-sensor.pcha_debit_filtration
-```
-
-Toutes les couches supérieures utilisent exclusivement :
-
-* `sensor.pcha_*`
-* `binary_sensor.pcha_*`
-
-Les équipements physiques peuvent être remplacés sans modifier la logique métier.
-
-
-# 5. Architecture
-
-La couche d'abstraction est composée de deux niveaux.
-
-## Niveau 1 — Abstraction
-
-Transformation des équipements physiques en entités PCHA.
-
-Aucune logique métier.
-
-Exemple :
-
-```text
-sensor.jardin_esp32_jardin_temperature_piscine
+Sonde immergée — I²C local — ESP32 Jardin
         │
-        ├── disponibilité et cohérence de la source
+        ▼
+sensor.jardin_esp32_jardin_temperature_bassin
+        │
+        ├── disponibilité
+        ├── cohérence stricte 10–50 °C
         ▼
 sensor.pcha_temperature_piscine_brute
         │
-        ├── correction et validation après circulation
+        ├── calibrage signé −3 à +3 °C
+        ├── aucune attente de circulation
         ▼
 sensor.pcha_temperature_piscine
 ```
 
-Une valeur hors de la plage stricte `10–50 °C` reste exposée aux diagnostics par les attributs de qualité, mais n'écrase jamais la dernière valeur métier cohérente.
+Les identifiants historiques `temperature_piscine` sont conservés comme contrats d'interface, mais les libellés utilisateur indiquent désormais **bassin**.
 
-Cette abstraction est réalisée uniquement dans la SPEC-004.
-
----
-
-## Niveau 2 — Métier
-
-Création des états logiques utilisés par le contrôleur.
-
-Exemple :
+# 5. Référence de l'objectif quotidien
 
 ```text
-sensor.pcha_debit_filtration
+Température brute valide
+        │
+        ├── maximum de minuit à lever du soleil + 30 min
+        ├── ajout du calibrage
+        ▼
+sensor.pcha_temperature_reference_objectif_quotidien
+        │
+        ├── calcul de durée
+        └── figement jusqu'au lendemain
+        ▼
+sensor.pcha_objectif_filtration_quotidien
+```
+
+Le capteur trigger-based conserve son état et ses attributs après redémarrage.
+
+# 6. Luminosité distante
+
+```text
+BH1750
+  │ I²C court
+  ▼
+D1 mini ESP8266
+  │ Packet Transport UDP chiffré
+  ▼
+ESP32 Jardin
+  ├── luminosité
+  ├── état du fournisseur
+  └── état du BH1750
         │
         ▼
-binary_sensor.pcha_filtration_requise
-
-binary_sensor.pcha_chauffage_solaire_actif
+Abstractions PCHA
+  ├── sensor.pcha_luminosite
+  ├── binary_sensor.pcha_liaison_luminosite_distante
+  └── binary_sensor.pcha_capteur_luminosite_distant_ok
 ```
 
-Les scripts et automatisations utilisent exclusivement ces états.
+`MES-004` consomme uniquement ces abstractions.
 
----
-
-# 6. Contrat d'interface
-
-Chaque fichier commence par un contrat d'interface.
-
-Exemple :
+# 7. Chauffage solaire
 
 ```text
-Entrées
+MES-004 inactif
+→ pilotage par luminosité
 
-    sensor.pcha_debit_filtration
-
-Sorties
-
-    binary_sensor.pcha_filtration_requise
+MES-004 actif
+→ pilotage de secours par écart température extérieure / bassin
+→ activation à +2 °C
+→ arrêt à +1 °C
 ```
 
-Le contrat décrit uniquement :
+La protection du serpentin reste indépendante du chauffage de confort. Pendant MES-004, elle utilise la position du soleil comme secours.
 
-* les entités consommées ;
-* les entités produites.
+# 8. Contrats de fichiers
 
----
+Chaque fichier YAML commence par :
 
-# 7. Convention de nommage
+* ses entrées ;
+* ses sorties ;
+* la SPEC propriétaire.
 
-Toutes les entités créées par le projet utilisent le préfixe :
+Les diagnostics et automatisations ne doivent pas contourner les entités `pcha_*`.
 
-```text
-pcha_
-```
+# 9. Persistance
 
-Exemples :
+Les états quotidiens nécessitant une restauration utilisent des capteurs template déclenchés :
 
-```text
-sensor.pcha_debit_filtration
+* objectif quotidien et référence ;
+* temps de filtration réalisé ;
+* minimum et maximum de température ;
+* compteurs solaires.
 
-sensor.pcha_puissance_pompe_filtration
+# 10. Versions
 
-sensor.pcha_energie_pompe_filtration
-
-sensor.pcha_energie_pompe_quotidienne
-
-binary_sensor.pcha_chauffage_solaire_actif
-
-script.pcha_pompe_demarrer
-```
-
-Les équipements physiques conservent leur nom d'origine.
-
----
-
-# 8. Helpers
-
-Les Helpers représentent uniquement les paramètres configurables par l'utilisateur.
-
-Ils ne contiennent jamais :
-
-* une mesure ;
-* un état calculé ;
-* une information déductible.
-
-Le nombre de Helpers est volontairement limité au strict nécessaire.
-
----
-
-# 9. Scripts
-
-Les Scripts réalisent des actions.
-
-Ils :
-
-* utilisent exclusivement des entités PCHA ;
-* n'accèdent jamais directement aux équipements physiques.
-
-Les commandes des équipements passent toujours par les Scripts.
-
----
-
-# 10. Automatisations
-
-Les Automatisations orchestrent le fonctionnement global.
-
-Elles :
-
-* utilisent uniquement des entités PCHA ;
-* ne réalisent aucun calcul complexe ;
-* ne pilotent jamais directement les équipements physiques.
-
----
-
-# 11. Diagnostics
-
-Les Diagnostics utilisent uniquement :
-
-* les entités PCHA ;
-* les états métier.
-
-Ils ne lisent jamais directement les équipements physiques.
-
-Ils surveillent uniquement les informations indispensables au fonctionnement.
-
----
-
-# 12. Développement
-
-Chaque nouveau module suit obligatoirement le cycle suivant :
-
-1. Validation de la SPEC.
-2. Définition du contrat d'interface.
-3. Création du squelette.
-4. Implémentation.
-5. Tests.
-6. Validation.
-7. Module figé.
-
----
-
-# 13. Source unique de vérité
-
-Chaque information possède une seule source.
-
-Une règle métier ne doit jamais être dupliquée.
-
-Une même décision ne doit jamais être implémentée à plusieurs endroits.
-
----
-
-# 14. Évolutions
-
-Une fois une SPEC validée :
-
-* elle est considérée comme figée pour la V1 ;
-* toute évolution devient une proposition pour une version ultérieure.
-
-L'architecture suit le même principe.
-
-Elle n'évolue que si un besoin réel apparaît pendant l'implémentation.
-
----
-
-# 15. Objectif
-
-Cette architecture garantit :
-
-* indépendance vis-à-vis du matériel ;
-* forte modularité ;
-* maintenance facilitée ;
-* testabilité ;
-* évolutivité ;
-* lisibilité du projet.
-
-Toute implémentation doit respecter intégralement ce document.
-
----
-
-# 16. HAL
-
-La couche d'abstraction (SPEC-004) constitue le HAL du projet.
-
----
-
-17. Architecture d'implémentation
-Home Assistant
-│
-├── helpers
-│
-├── templates
-│
-├── scripts
-│
-├── automations
-│
-└── diagnostics
-
-# 17.1 Dépendances
-
-Matériel
-
-↓
-
-HAL (SPEC-004)
-
-↓
-
-Machine à états (SPEC-005)
-
-↓
-
-Modes (SPEC-006)
-
-↓
-
-Fonctions
-(SPEC-003 / SPEC-008)
-
-↓
-
-Diagnostics (SPEC-007)
-
-# 17.2 Règles d'implémentation
-
-Les templates d'abstraction implémentent exclusivement la SPEC-004.
-Les templates métier implémentent la SPEC fonctionnelle indiquée dans leur contrat d'interface.
-Les scripts ne prennent aucune décision.
-Les automatisations ne contiennent aucune logique métier.
-Les diagnostics appliquent exclusivement la SPEC-007.
-Les calculs fonctionnels sont réalisés uniquement par les composants définis dans les SPEC concernées.
-Les entités pcha_* constituent l'unique interface entre le matériel et les couches fonctionnelles.
-
-# 17.3 Dépendances
-
-Scripts
-        │
-        ├──► Templates
-        ✖
-Diagnostics
-        │
-        ├──► Scripts
-        ✖
-Fonctions
-        │
-        ├──► Capteurs physiques
-        ✖
+* `docs/V1.0/` est conservé comme historique figé.
+* `docs/V1.1/` décrit le code courant.
+* toute évolution ultérieure crée une nouvelle version documentaire sans réécrire l'historique.

@@ -66,7 +66,7 @@ views:
         cards:
           - type: gauge
             entity: sensor.pcha_temperature_piscine
-            name: Température piscine
+            name: Température bassin
             min: 10
             max: 50
             needle: true
@@ -88,7 +88,7 @@ views:
             needle: true
           - type: gauge
             entity: sensor.pcha_luminosite
-            name: Luminosité
+            name: Luminosité distante
             min: 0
             max: 50000
             needle: true
@@ -104,6 +104,13 @@ views:
             name: Seuil chauffage solaire
           - entity: input_boolean.pcha_acquitter_alarmes
             name: Acquitter les alarmes
+
+      - type: history-graph
+        title: Luminosité journalière — 24 heures
+        hours_to_show: 24
+        entities:
+          - entity: sensor.pcha_luminosite
+            name: Luminosité
 
       - type: history-graph
         title: Activité des dernières 24 heures
@@ -153,12 +160,16 @@ views:
           - sensor.pcha_objectif_filtration_quotidien
           - sensor.pcha_temps_filtration_realise
           - sensor.pcha_temps_filtration_restant
+          - sensor.pcha_temperature_reference_objectif_quotidien
+          - binary_sensor.pcha_objectif_filtration_fige
           - input_select.pcha_etat_machine
           - sun.sun
         content: |
           {% set objectif = ((states('sensor.pcha_objectif_filtration_quotidien') | float(0)) * 60) | round(0) | int %}
           {% set realise = states('sensor.pcha_temps_filtration_realise') | float(0) | round(0) | int %}
           {% set restant = states('sensor.pcha_temps_filtration_restant') | float(0) | round(0) | int %}
+          {% set reference = states('sensor.pcha_temperature_reference_objectif_quotidien') %}
+          {% set statut_reference = 'Figée' if is_state('binary_sensor.pcha_objectif_filtration_fige', 'on') else 'Provisoire' %}
           {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
           {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
 
@@ -180,6 +191,7 @@ views:
           |  | Durée |
           |:--|--:|
           | <ha-icon icon="mdi:target"></ha-icon> Objectif | **{{ '%02dH%02d' | format(objectif // 60, objectif % 60) }}** |
+          | <ha-icon icon="mdi:thermometer-check"></ha-icon> Référence ({{ statut_reference }}) | **{{ (reference | float(0) | round(1) ~ ' °C') if is_number(reference) else 'Indisponible' }}** |
           | <ha-icon icon="mdi:timer-check"></ha-icon> Temps réalisé | **{{ '%02dH%02d' | format(realise // 60, realise % 60) }}** |
           | <ha-icon icon="mdi:timer-sand"></ha-icon> Temps restant | **{{ '%02dH%02d' | format(restant // 60, restant % 60) }}** |
           | <ha-icon icon="mdi:clock-check-outline"></ha-icon> Atteint à | **{{ atteint }}** |
@@ -241,13 +253,13 @@ views:
         show_header_toggle: false
         entities:
           - entity: sensor.pcha_temperature_piscine
-            name: Température validée
+            name: Température bassin calibrée
           - entity: sensor.pcha_temperature_piscine_brute
-            name: Température brute sur la sortie
+            name: Température brute bassin
           - entity: input_number.pcha_correction_temperature_piscine
-            name: Correction à soustraire
+            name: Calibrage signé
           - entity: input_number.pcha_temps_validation_temperature_piscine
-            name: Stabilisation après démarrage
+            name: Validation diagnostic température
           - entity: input_number.pcha_temperature_de_consigne
             name: Consigne
           - entity: sensor.pcha_temperature_piscine_min_jour
@@ -269,8 +281,16 @@ views:
             name: Chauffage actif
           - entity: binary_sensor.pcha_protection_serpentin_requise
             name: Protection du serpentin
+          - entity: sensor.pcha_source_chauffage_solaire
+            name: Source de pilotage
+          - entity: sensor.pcha_ecart_temperature_exterieure_bassin
+            name: Écart extérieur / bassin
           - entity: sensor.pcha_luminosite
             name: Luminosité
+          - entity: binary_sensor.pcha_liaison_luminosite_distante
+            name: Liaison D1 mini / ESP32
+          - entity: binary_sensor.pcha_capteur_luminosite_distant_ok
+            name: BH1750 distant
           - entity: input_number.pcha_seuil_luminosite_chauffage
             name: Seuil de luminosité
           - entity: input_number.pcha_temps_validation_luminosite
@@ -310,8 +330,6 @@ views:
         title: Chauffage solaire — 24 heures
         hours_to_show: 24
         entities:
-          - entity: sensor.pcha_luminosite
-            name: Luminosité
           - entity: binary_sensor.pcha_chauffage_solaire_requis
             name: Chauffage requis
           - entity: binary_sensor.pcha_chauffage_solaire_actif
@@ -379,13 +397,17 @@ views:
         state_color: true
         entities:
           - entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
-            name: MES-001 — Température piscine indisponible
+            name: MES-001 — Température bassin indisponible
           - entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
             name: MES-002 — Débit indisponible
           - entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
             name: MES-003 — Puissance indisponible
           - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
-            name: MES-004 — Luminosité indisponible
+            name: MES-004 — Luminosité distante indisponible
+          - entity: binary_sensor.pcha_liaison_luminosite_distante
+            name: Liaison Packet Transport
+          - entity: binary_sensor.pcha_capteur_luminosite_distant_ok
+            name: Capteur BH1750 distant
 
       - type: entities
         title: Diagnostics COH — Cohérence
@@ -396,7 +418,7 @@ views:
           - entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
             name: COH-001 — Débit et puissance incohérents
           - entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
-            name: COH-002 — Température piscine incohérente
+            name: COH-002 — Température bassin incohérente
 
       - type: entities
         title: Diagnostics PRO — Procédé
@@ -417,7 +439,7 @@ views:
         show_header_toggle: false
         entities:
           - entity: input_number.pcha_temps_validation_temperature_piscine
-            name: Température piscine
+            name: Température bassin
           - entity: input_number.pcha_temps_validation_debit
             name: Débit
           - entity: input_number.pcha_temps_validation_luminosite

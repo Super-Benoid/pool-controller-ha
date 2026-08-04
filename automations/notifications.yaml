@@ -40,17 +40,17 @@
       {{ 'ERREUR' if gravite == 'CRITIQUE' else 'AVERTISSEMENT' }}
     recommandation: >
       {% if diagnostic_id == 'MES-001' %}
-        Vérifier la sonde de température piscine et son raccordement.
+        Vérifier la sonde immergée du bassin et son raccordement à l’ESP32 Jardin.
       {% elif diagnostic_id == 'MES-002' %}
         Vérifier immédiatement le débitmètre et son raccordement. La filtration est interdite tant que le diagnostic reste critique.
       {% elif diagnostic_id == 'MES-003' %}
         Vérifier la mesure de puissance de la prise de filtration.
       {% elif diagnostic_id == 'MES-004' %}
-        Vérifier le capteur de luminosité et son raccordement.
+        Vérifier le BH1750, la D1 mini, le Wi-Fi et la liaison Packet Transport vers l’ESP32 Jardin.
       {% elif diagnostic_id == 'COH-001' %}
         Vérifier la pompe, la prise, le débitmètre et la cohérence entre débit et puissance.
       {% elif diagnostic_id == 'COH-002' %}
-        Vérifier la sonde de température piscine ; la mesure est hors de la plage physique V1.
+        Vérifier la sonde de température bassin et le calibrage ; la mesure est hors de la plage physique V1.1.
       {% elif diagnostic_id == 'PRO-001' %}
         Vérifier immédiatement le niveau d'eau, le filtre, les tuyaux, la pompe et les éventuelles obstructions.
       {% elif diagnostic_id == 'PRO-002' %}

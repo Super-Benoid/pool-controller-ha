@@ -1,39 +1,105 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# SPEC-008 — Chauffage solaire et protection du serpentin
+# SPEC-008 — Chauffage solaire et protection du serpentin V1.1
 #
 # Entrées
+#   binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
 #   input_number.pcha_seuil_luminosite_chauffage
 #   input_number.pcha_temperature_de_consigne
 #   input_select.pcha_etat_machine
 #   sensor.pcha_luminosite
+#   sensor.pcha_temperature_exterieure
 #   sensor.pcha_temperature_piscine
+#   sun.sun
 #
 # Sorties
 #   binary_sensor.pcha_chauffage_solaire_actif
 #   binary_sensor.pcha_chauffage_solaire_requis
 #   binary_sensor.pcha_protection_serpentin_requise
+#   sensor.pcha_ecart_temperature_exterieure_bassin
+#   sensor.pcha_source_chauffage_solaire
 #   sensor.pcha_luminosite_moyenne_superieure_seuil_jour
 #   sensor.pcha_temps_luminosite_superieure_seuil_jour
 ################################################################################
 
-# Demande de chauffage solaire et état réel du chauffage.
+################################################################################
+# Source de pilotage et écart thermique
+################################################################################
+- sensor:
+    - name: PCHA Écart température extérieure bassin
+      unique_id: pcha_ecart_temperature_exterieure_bassin
+      default_entity_id: sensor.pcha_ecart_temperature_exterieure_bassin
+      icon: mdi:thermometer-lines
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set exterieure = states('sensor.pcha_temperature_exterieure') %}
+        {% set bassin = states('sensor.pcha_temperature_piscine') %}
+        {% set exterieure_valide = state_attr('sensor.pcha_temperature_exterieure', 'source_available') | bool(false) and is_number(exterieure) %}
+        {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %}
+        {% if exterieure_valide and bassin_valide %}
+          {{ ((exterieure | float(0)) - (bassin | float(0))) | round(1) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+
+    - name: PCHA Source chauffage solaire
+      unique_id: pcha_source_chauffage_solaire
+      default_entity_id: sensor.pcha_source_chauffage_solaire
+      icon: mdi:source-branch
+      state: >
+        {% if not is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+          LUMINOSITE
+        {% elif state_attr('sensor.pcha_temperature_exterieure', 'source_available') | bool(false)
+              and state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) %}
+          TEMPERATURE_EXTERIEURE_SECOURS
+        {% else %}
+          INDISPONIBLE
+        {% endif %}
+
+################################################################################
+# Demande de chauffage solaire et état réel du chauffage
+#
+# Mode normal : luminosité supérieure au seuil.
+# Mode dégradé MES-004 : température extérieure au moins 2 °C au-dessus du
+# bassin. Une hystérésis maintient la demande jusqu'à un écart <= 1 °C.
+################################################################################
 - binary_sensor:
     - name: PCHA Chauffage solaire requis
       unique_id: pcha_chauffage_solaire_requis
       default_entity_id: binary_sensor.pcha_chauffage_solaire_requis
       icon: mdi:solar-power
       state: >
-        {% set temperature_disponible = state_attr('sensor.pcha_temperature_piscine', 'source_available') | bool(false) %}
-        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
-        {{
-          temperature_disponible
-          and luminosite_disponible
-          and states('sensor.pcha_temperature_piscine') | float(0)
-              < states('input_number.pcha_temperature_de_consigne') | float(0)
-          and states('sensor.pcha_luminosite') | float(0)
-              > states('input_number.pcha_seuil_luminosite_chauffage') | float(0)
-        }}
+        {% set bassin = states('sensor.pcha_temperature_piscine') %}
+        {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %}
+        {% set sous_consigne = bassin_valide and (bassin | float(0)) < (states('input_number.pcha_temperature_de_consigne') | float(0)) %}
+        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+
+        {% if not sous_consigne %}
+          false
+        {% elif not mes004 %}
+          {% set luminosite = states('sensor.pcha_luminosite') %}
+          {{
+            state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+            and is_number(luminosite)
+            and (luminosite | float(0)) > (states('input_number.pcha_seuil_luminosite_chauffage') | float(0))
+          }}
+        {% else %}
+          {% set ecart = states('sensor.pcha_ecart_temperature_exterieure_bassin') %}
+          {% set seuil = 1.0 if this.state == 'on' else 2.0 %}
+          {{
+            state_attr('sensor.pcha_temperature_exterieure', 'source_available') | bool(false)
+            and is_number(ecart)
+            and ((ecart | float(0)) > seuil if this.state == 'on' else (ecart | float(0)) >= seuil)
+          }}
+        {% endif %}
+      attributes:
+        source_pilotage: >
+          {{ states('sensor.pcha_source_chauffage_solaire') }}
+        ecart_temperature_exterieure_bassin: >
+          {{ states('sensor.pcha_ecart_temperature_exterieure_bassin') }}
+        seuil_activation_secours: 2.0
+        seuil_arret_secours: 1.0
 
     - name: PCHA Chauffage solaire actif
       unique_id: pcha_chauffage_solaire_actif
@@ -45,8 +111,13 @@
           and is_state('input_select.pcha_etat_machine', 'FILTRATION')
         }}
 
-# Protection thermique : demande après 25 minutes sans circulation et maintien
-# pendant 5 minutes après le démarrage de la circulation.
+################################################################################
+# Protection thermique
+#
+# En fonctionnement normal, la luminosité pilote la protection. Pendant
+# MES-004, la position du soleil fournit un secours conservateur : la protection
+# reste possible lorsque le soleil est au-dessus de l'horizon.
+################################################################################
 - binary_sensor:
     - name: PCHA Protection serpentin requise
       unique_id: pcha_protection_serpentin_requise
@@ -55,18 +126,28 @@
       delay_on: "00:25:00"
       delay_off: "00:05:00"
       state: >
-        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+        {% set luminosite = states('sensor.pcha_luminosite') %}
+        {% set exposition_normale =
+             not mes004
+             and state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+             and is_number(luminosite)
+             and (luminosite | float(0)) > (states('input_number.pcha_seuil_luminosite_chauffage') | float(0)) %}
+        {% set exposition_secours = mes004 and is_state('sun.sun', 'above_horizon') %}
         {{
-          luminosite_disponible
-          and states('sensor.pcha_luminosite') | float(0)
-              > states('input_number.pcha_seuil_luminosite_chauffage') | float(0)
+          (exposition_normale or exposition_secours)
           and not is_state('input_select.pcha_etat_machine', 'FILTRATION')
         }}
+      attributes:
+        source_protection: >
+          {{ 'POSITION_SOLEIL_SECOURS' if is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') else 'LUMINOSITE' }}
 
-
-# Bilan solaire quotidien. Les mesures sont échantillonnées une fois par minute
-# lorsque la luminosité est disponible et strictement supérieure au seuil.
-# Les états et attributs sont restaurés après un redémarrage de Home Assistant.
+################################################################################
+# Bilan solaire quotidien
+#
+# Les compteurs sont suspendus pendant MES-004, car aucune luminosité fiable
+# n'est alors disponible. Les états sont restaurés après redémarrage.
+################################################################################
 - triggers:
     - trigger: homeassistant
       event: start
@@ -90,8 +171,9 @@
         {% set precedent = this.state | float(0) if is_number(this.state) else 0 %}
         {% set luminosite = states('sensor.pcha_luminosite') %}
         {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
         {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
-        {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+        {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
                          and (luminosite | float(0)) > seuil %}
         {% if jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
           {{ 0 }}
@@ -104,6 +186,7 @@
         jour: "{{ now().date() }}"
         seuil_lux: "{{ states('input_number.pcha_seuil_luminosite_chauffage') | float(0) }}"
         pas_echantillonnage_min: 1
+        suspendu_mes004: "{{ is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') }}"
 
     - name: PCHA Luminosité moyenne supérieure au seuil du jour
       unique_id: pcha_luminosite_moyenne_superieure_seuil_jour
@@ -120,8 +203,9 @@
         {% set echantillons_precedents = 0 if reinitialiser else this.attributes.echantillons | default(0) | int(0) %}
         {% set luminosite = states('sensor.pcha_luminosite') %}
         {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
         {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
-        {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+        {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
                          and (luminosite | float(0)) > seuil %}
         {% set somme = somme_precedente + ((luminosite | float(0)) if compter else 0) %}
         {% set echantillons = echantillons_precedents + (1 if compter else 0) %}
@@ -135,8 +219,9 @@
           {% set somme_precedente = 0 if reinitialiser else this.attributes.somme_lux | default(0) | float(0) %}
           {% set luminosite = states('sensor.pcha_luminosite') %}
           {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+          {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
           {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
-          {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+          {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
                            and (luminosite | float(0)) > seuil %}
           {{ somme_precedente + ((luminosite | float(0)) if compter else 0) }}
         echantillons: >
@@ -146,9 +231,11 @@
           {% set echantillons_precedents = 0 if reinitialiser else this.attributes.echantillons | default(0) | int(0) %}
           {% set luminosite = states('sensor.pcha_luminosite') %}
           {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+          {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
           {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
-          {% set compter = trigger.id == 'minute' and disponible and is_number(luminosite)
+          {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
                            and (luminosite | float(0)) > seuil %}
           {{ echantillons_precedents + (1 if compter else 0) }}
         seuil_lux: "{{ states('input_number.pcha_seuil_luminosite_chauffage') | float(0) }}"
         pas_echantillonnage_min: 1
+        suspendu_mes004: "{{ is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') }}"
