@@ -23,7 +23,7 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 | Filtration | État, débit, objectif quotidien, référence thermique, objectif figé ou provisoire, temps réalisé, temps restant, heure `Atteint à`, puissance et énergie |
 | Bassin | Température brute, température calibrée, calibrage signé, consigne, minimum et maximum du jour |
 | Chauffage solaire | Demande, état actif, source de pilotage, écart extérieur/bassin, luminosité, état de la liaison distante et protection du serpentin |
-| Supervision | Graphe dédié de la luminosité sur les dernières 24 heures |
+| Supervision | Tuiles de tendance sur 24 heures pour la luminosité, la température du bassin et la puissance de la pompe |
 | Traitement | Mode actif, durée configurée et temps restant |
 | Diagnostics | MES, COH, PRO et états de la chaîne de luminosité distante |
 
@@ -38,9 +38,17 @@ Les durées sont présentées au format `03H56`. La carte affiche :
 * le temps restant ;
 * `Atteint à : HHhMM`.
 
-# 5. Graphe de luminosité
+# 5. Graphes de tendance
 
-La vue **Supervision** contient une carte native `history-graph` intitulée `Luminosité journalière — 24 heures`, basée sur `sensor.pcha_luminosite`.
+Les graphes numériques principaux utilisent la carte native `tile` avec la fonctionnalité `trend-graph`, une période de `24` heures et le détail activé.
+
+| Mesure | Entité PCHA | Emplacement |
+|---|---|---|
+| Luminosité | `sensor.pcha_luminosite` | Supervision |
+| Température du bassin | `sensor.pcha_temperature_piscine` | Piscine et solaire |
+| Puissance de la pompe | `sensor.pcha_puissance_pompe_filtration` | Filtration |
+
+Les graphes multi-états et les historiques de diagnostics restent sur des cartes `history-graph`.
 
 # 6. Paramètres modifiables
 

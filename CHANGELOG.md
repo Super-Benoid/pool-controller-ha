@@ -22,3 +22,7 @@
 * secours thermique extérieur/bassin avec hystérésis `2 °C / 1 °C` ;
 * compteurs solaires suspendus pendant MES-004 ;
 * graphe de luminosité ajouté à Supervision.
+### Dashboard
+
+* remplacement des graphes de luminosité, température du bassin et puissance par des cartes natives `tile` avec la fonctionnalité `trend-graph` sur 24 heures.
+

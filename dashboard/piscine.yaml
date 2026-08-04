@@ -105,12 +105,14 @@ views:
           - entity: input_boolean.pcha_acquitter_alarmes
             name: Acquitter les alarmes
 
-      - type: history-graph
-        title: Luminosité journalière — 24 heures
-        hours_to_show: 24
-        entities:
-          - entity: sensor.pcha_luminosite
-            name: Luminosité
+      - type: tile
+        entity: sensor.pcha_luminosite
+        name: Luminosité — 24 heures
+        icon: mdi:weather-sunny
+        features:
+          - type: trend-graph
+            hours_to_show: 24
+            detail: true
 
       - type: history-graph
         title: Activité des dernières 24 heures
@@ -215,14 +217,14 @@ views:
           - entity: sensor.pcha_debit_filtration
             name: Débit filtration
 
-      - type: history-graph
-        title: Puissance et énergie quotidienne — 24 heures
-        hours_to_show: 24
-        entities:
-          - entity: sensor.pcha_puissance_pompe_filtration
-            name: Puissance pompe
-          - entity: sensor.pcha_energie_pompe_quotidienne
-            name: Énergie du jour
+      - type: tile
+        entity: sensor.pcha_puissance_pompe_filtration
+        name: Puissance pompe — 24 heures
+        icon: mdi:flash
+        features:
+          - type: trend-graph
+            hours_to_show: 24
+            detail: true
 
   - title: Piscine et solaire
     path: piscine-solaire
@@ -313,18 +315,14 @@ views:
           | <ha-icon icon="mdi:sun-clock-outline"></ha-icon> Temps au-dessus de {{ seuil }} lx | **{{ '%02dH%02d' | format(duree // 60, duree % 60) }}** |
           | <ha-icon icon="mdi:sun-compass"></ha-icon> Luminosité moyenne | **{{ moyenne }} lx** |
 
-      - type: history-graph
-        title: Températures — 24 heures
-        hours_to_show: 24
-        entities:
-          - entity: sensor.pcha_temperature_piscine
-            name: Piscine
-          - entity: sensor.pcha_temperature_exterieure
-            name: Extérieure
-          - entity: sensor.pcha_temperature_piscine_min_jour
-            name: Minimum du jour
-          - entity: sensor.pcha_temperature_piscine_max_jour
-            name: Maximum du jour
+      - type: tile
+        entity: sensor.pcha_temperature_piscine
+        name: Température bassin — 24 heures
+        icon: mdi:thermometer-water
+        features:
+          - type: trend-graph
+            hours_to_show: 24
+            detail: true
 
       - type: history-graph
         title: Chauffage solaire — 24 heures
