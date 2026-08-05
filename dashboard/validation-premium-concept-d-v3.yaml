@@ -345,7 +345,7 @@ views:
               func: avg
               duration: 10min
           - entity: sensor.pcha_ecart_temperature_exterieure_bassin
-            name: Écart ext. / bassin
+            name: Écart
             type: line
             color: '#818cf8'
             float_precision: 1
@@ -424,33 +424,45 @@ views:
               margin: 0;
             }
             #header__states #state__value {
+              display: flex !important;
+              align-items: baseline;
+              width: 100%;
               max-width: 100%;
+              overflow: hidden;
+              box-sizing: border-box;
             }
             #header__states #state__value > #state {
-              font-size: 1.55em;
+              font-size: 1.35em;
+              white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: .85em;
+              font-size: .78em;
+              white-space: nowrap;
             }
             #header__states #state__name {
-              min-height: 24px;
+              min-height: 14px;
               overflow: visible;
-              white-space: normal;
+              white-space: nowrap;
               text-overflow: clip;
               font-size: 10px;
               line-height: 1.15;
+            }
+            #header__states > #states__state:nth-child(1) #state__value {
+              justify-content: flex-start;
             }
             #header__states > #states__state:nth-child(2) {
               text-align: center;
             }
             #header__states > #states__state:nth-child(2) #state__value {
-              margin-inline: auto;
+              justify-content: center;
+              margin: 0;
             }
             #header__states > #states__state:nth-child(3) {
               text-align: right;
             }
             #header__states > #states__state:nth-child(3) #state__value {
-              margin-left: auto;
+              justify-content: flex-end;
+              margin: 0;
             }
             ha-card {
               background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
@@ -484,7 +496,7 @@ views:
               func: avg
               duration: 10min
           - entity: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
-            name: Moyenne > seuil
+            name: Moy. > seuil
             type: line
             color: '#e879f9'
             float_precision: 0
@@ -557,11 +569,31 @@ views:
               text-align: right;
             }
             #header__states > #states__state:nth-child(2) #state__value {
-              margin-left: auto;
+              justify-content: flex-end;
+              margin: 0;
+            }
+            #header__states #state__value {
+              display: flex !important;
+              align-items: baseline;
+              width: 100%;
+              max-width: 100%;
+              overflow: hidden;
+              box-sizing: border-box;
+            }
+            #header__states > #states__state:nth-child(1) #state__value {
+              justify-content: flex-start;
+            }
+            #header__states #state__value > #state {
+              font-size: 1.4em;
+              white-space: nowrap;
+            }
+            #header__states #state__value > #uom {
+              font-size: .8em;
+              white-space: nowrap;
             }
             #header__states #state__name {
               overflow: visible;
-              white-space: normal;
+              white-space: nowrap;
               text-overflow: clip;
               font-size: 10px;
               line-height: 1.15;
@@ -679,7 +711,7 @@ views:
               func: avg
               duration: 5min
           - entity: sensor.pcha_energie_pompe_quotidienne
-            name: Conso du jour
+            name: Conso jour
             type: line
             color: '#e879f9'
             float_precision: 2
@@ -753,11 +785,31 @@ views:
               text-align: right;
             }
             #header__states > #states__state:nth-child(2) #state__value {
-              margin-left: auto;
+              justify-content: flex-end;
+              margin: 0;
+            }
+            #header__states #state__value {
+              display: flex !important;
+              align-items: baseline;
+              width: 100%;
+              max-width: 100%;
+              overflow: hidden;
+              box-sizing: border-box;
+            }
+            #header__states > #states__state:nth-child(1) #state__value {
+              justify-content: flex-start;
+            }
+            #header__states #state__value > #state {
+              font-size: 1.4em;
+              white-space: nowrap;
+            }
+            #header__states #state__value > #uom {
+              font-size: .8em;
+              white-space: nowrap;
             }
             #header__states #state__name {
               overflow: visible;
-              white-space: normal;
+              white-space: nowrap;
               text-overflow: clip;
               font-size: 10px;
               line-height: 1.15;
@@ -813,7 +865,6 @@ views:
               const progress = Math.max(0, Math.min(100, Number(entity.state) || 0));
               return `
                 <div class="pcha-objectif-entete">
-                  <ha-icon icon="mdi:target-variant"></ha-icon>
                   <span>Objectif quotidien de filtration</span>
                 </div>
                 <div class="pcha-objectif-corps">
@@ -851,10 +902,7 @@ views:
               - text-align: left
         extra_styles: |
             .pcha-objectif-entete {
-              display: flex;
-              align-items: center;
-              justify-content: flex-start;
-              gap: 10px;
+              display: block;
               width: 100%;
               color: #f8fafc;
               font-size: 19px;
@@ -862,11 +910,11 @@ views:
               margin-bottom: 14px;
               text-align: left;
             }
-            .pcha-objectif-entete ha-icon {
-              color: #a78bfa;
-              width: 25px;
-              min-width: 25px;
-              flex: 0 0 25px;
+            .pcha-objectif-entete span {
+              display: block;
+              width: 100%;
+              margin: 0;
+              text-align: left;
             }
             .pcha-objectif-corps {
               display: grid;
