@@ -79,7 +79,7 @@ views:
         view_layout:
           grid-area: header
         custom_fields:
-          titre: PCHA — Piscine
+          titre: Pool Controller Home Assistant
           sous_titre: Synthèse décisionnelle en temps réel
           statuts: |
             [[[
@@ -345,7 +345,7 @@ views:
               func: avg
               duration: 10min
           - entity: sensor.pcha_ecart_temperature_exterieure_bassin
-            name: Écart
+            name: Δ T
             type: line
             color: '#818cf8'
             float_precision: 1
@@ -418,33 +418,38 @@ views:
               align-items: start;
               gap: 6px;
               margin: 0;
+              width: 100%;
+              padding: 0 10px;
+              box-sizing: border-box;
             }
             #header__states > #states__state {
               min-width: 0;
               margin: 0;
+              overflow: visible;
             }
             #header__states #state__value {
               display: flex !important;
               align-items: baseline;
               width: 100%;
               max-width: 100%;
-              overflow: hidden;
+              overflow: visible;
               box-sizing: border-box;
             }
             #header__states #state__value > #state {
-              font-size: 1.35em;
+              font-size: 20px;
+              line-height: 1.05;
               white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: .78em;
+              font-size: 10px;
               white-space: nowrap;
             }
             #header__states #state__name {
-              min-height: 14px;
+              min-height: 12px;
               overflow: visible;
               white-space: nowrap;
               text-overflow: clip;
-              font-size: 10px;
+              font-size: 9px;
               line-height: 1.15;
             }
             #header__states > #states__state:nth-child(1) #state__value {
@@ -484,7 +489,7 @@ views:
           colorize_states: true
         series:
           - entity: sensor.pcha_luminosite
-            name: Luminosité
+            name: Actuelle
             type: area
             color: '#a78bfa'
             stroke_width: 3
@@ -560,10 +565,14 @@ views:
               grid-template-columns: repeat(2, minmax(0, 1fr));
               gap: 10px;
               margin: 0;
+              width: 100%;
+              padding: 0 10px;
+              box-sizing: border-box;
             }
             #header__states > #states__state {
               min-width: 0;
               margin: 0;
+              overflow: visible;
             }
             #header__states > #states__state:nth-child(2) {
               text-align: right;
@@ -577,25 +586,26 @@ views:
               align-items: baseline;
               width: 100%;
               max-width: 100%;
-              overflow: hidden;
+              overflow: visible;
               box-sizing: border-box;
             }
             #header__states > #states__state:nth-child(1) #state__value {
               justify-content: flex-start;
             }
             #header__states #state__value > #state {
-              font-size: 1.4em;
+              font-size: 20px;
+              line-height: 1.05;
               white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: .8em;
+              font-size: 10px;
               white-space: nowrap;
             }
             #header__states #state__name {
               overflow: visible;
               white-space: nowrap;
               text-overflow: clip;
-              font-size: 10px;
+              font-size: 9px;
               line-height: 1.15;
             }
             ha-card {
@@ -776,10 +786,14 @@ views:
               grid-template-columns: repeat(2, minmax(0, 1fr));
               gap: 10px;
               margin: 0;
+              width: 100%;
+              padding: 0 10px;
+              box-sizing: border-box;
             }
             #header__states > #states__state {
               min-width: 0;
               margin: 0;
+              overflow: visible;
             }
             #header__states > #states__state:nth-child(2) {
               text-align: right;
@@ -793,25 +807,26 @@ views:
               align-items: baseline;
               width: 100%;
               max-width: 100%;
-              overflow: hidden;
+              overflow: visible;
               box-sizing: border-box;
             }
             #header__states > #states__state:nth-child(1) #state__value {
               justify-content: flex-start;
             }
             #header__states #state__value > #state {
-              font-size: 1.4em;
+              font-size: 20px;
+              line-height: 1.05;
               white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: .8em;
+              font-size: 10px;
               white-space: nowrap;
             }
             #header__states #state__name {
               overflow: visible;
               white-space: nowrap;
               text-overflow: clip;
-              font-size: 10px;
+              font-size: 9px;
               line-height: 1.15;
             }
             ha-card {
@@ -865,6 +880,7 @@ views:
               const progress = Math.max(0, Math.min(100, Number(entity.state) || 0));
               return `
                 <div class="pcha-objectif-entete">
+                  <ha-icon icon="mdi:target" class="pcha-objectif-icone"></ha-icon>
                   <span>Objectif quotidien de filtration</span>
                 </div>
                 <div class="pcha-objectif-corps">
@@ -902,7 +918,9 @@ views:
               - text-align: left
         extra_styles: |
             .pcha-objectif-entete {
-              display: block;
+              display: flex;
+              align-items: center;
+              gap: 10px;
               width: 100%;
               color: #f8fafc;
               font-size: 19px;
@@ -912,9 +930,14 @@ views:
             }
             .pcha-objectif-entete span {
               display: block;
-              width: 100%;
               margin: 0;
               text-align: left;
+            }
+            .pcha-objectif-icone {
+              width: 24px;
+              height: 24px;
+              color: #a78bfa;
+              filter: drop-shadow(0 0 7px rgba(167,139,250,.55));
             }
             .pcha-objectif-corps {
               display: grid;
