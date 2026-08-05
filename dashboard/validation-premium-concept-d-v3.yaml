@@ -397,6 +397,10 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header {
+              overflow: visible;
+              padding-bottom: 8px;
+            }
             #header__title {
               display: flex;
               align-items: center;
@@ -422,7 +426,8 @@ views:
               gap: 6px;
               margin: 0;
               width: 100%;
-              padding: 0 10px;
+              min-height: 44px;
+              padding: 0 10px 8px;
               box-sizing: border-box;
             }
             #header__states > #states__state {
@@ -545,6 +550,10 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header {
+              overflow: visible;
+              padding-bottom: 8px;
+            }
             #header__title {
               display: flex;
               align-items: center;
@@ -569,7 +578,8 @@ views:
               gap: 10px;
               margin: 0;
               width: 100%;
-              padding: 0 10px;
+              min-height: 44px;
+              padding: 0 10px 8px;
               box-sizing: border-box;
             }
             #header__states > #states__state {
@@ -766,6 +776,10 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header {
+              overflow: visible;
+              padding-bottom: 8px;
+            }
             #header__title {
               display: flex;
               align-items: center;
@@ -790,7 +804,8 @@ views:
               gap: 10px;
               margin: 0;
               width: 100%;
-              padding: 0 10px;
+              min-height: 44px;
+              padding: 0 10px 8px;
               box-sizing: border-box;
             }
             #header__states > #states__state {
