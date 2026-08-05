@@ -36,11 +36,12 @@ Une valeur brute ou calibrée hors de l'intervalle strict `10–50 °C` doit act
 # 4. Référence et objectif quotidien
 
 1. Vérifier l'affichage de `sensor.pcha_temperature_reference_objectif_quotidien`.
-2. Avant le lever du soleil + 30 minutes, vérifier que `binary_sensor.pcha_objectif_filtration_fige` est `off`.
-3. Faire varier une mesure de test cohérente : seule la valeur brute maximale de la fenêtre doit être conservée comme candidate.
-4. Après lever du soleil + 30 minutes, vérifier que l'objectif passe à l'état figé.
-5. Vérifier qu'une hausse de température ultérieure ne modifie plus l'objectif du jour.
-6. Vérifier que `sensor.pcha_heure_atteinte_objectif` applique la planification et que la carte affiche la référence, le statut et `Atteint à`.
+2. Vérifier que l'attribut `temperature_moyenne_jour_en_cours` évolue à partir des échantillons calibrés cohérents.
+3. Simuler le changement de jour et vérifier que la moyenne de la journée terminée devient `temperature_reference`.
+4. Vérifier que les accumulateurs journaliers repartent pour la nouvelle journée.
+5. Vérifier qu'une variation de température après minuit ne modifie plus la référence ni l'objectif du jour.
+6. Vérifier la formule : `T / 5` jusqu'à 25 °C, puis `T / 5 + (T − 25)` au-dessus de 25 °C.
+7. Vérifier que `sensor.pcha_heure_atteinte_objectif` applique la planification et que la carte affiche la référence, le statut et `Atteint à`.
 
 # 5. Planification
 
