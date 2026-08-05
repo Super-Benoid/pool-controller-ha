@@ -390,7 +390,7 @@ views:
               margin: 0;
               width: 100%;
               min-height: 50px;
-              padding: 0 10px 8px;
+              padding: 4px 10px 8px;
               box-sizing: border-box;
             }
             #header__states > #states__state {
@@ -464,7 +464,9 @@ views:
             type: area
             color: '#a78bfa'
             stroke_width: 3
-            float_precision: 0
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
             show:
               in_header: raw
               extremas: true
@@ -475,7 +477,9 @@ views:
             name: Moy. > seuil
             type: line
             color: '#e879f9'
-            float_precision: 0
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
             show:
               in_header: raw
               in_chart: false
@@ -542,7 +546,7 @@ views:
               margin: 0;
               width: 100%;
               min-height: 50px;
-              padding: 0 10px 8px;
+              padding: 4px 10px 8px;
               box-sizing: border-box;
             }
             #header__states > #states__state {
@@ -615,6 +619,15 @@ views:
             group_by:
               func: avg
               duration: 5min
+          - entity: sensor.pcha_renouvellements_bassin_du_jour
+            name: Volumes bassin
+            type: line
+            color: '#67e8f9'
+            float_precision: 1
+            show:
+              in_header: raw
+              in_chart: false
+              legend_value: false
         apex_config:
           chart:
             height: 180
@@ -647,6 +660,10 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header {
+              overflow: visible;
+              padding-bottom: 8px;
+            }
             #header__title {
               display: flex;
               align-items: center;
@@ -664,6 +681,55 @@ views:
               -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZD0iTTIuNSA2YzEuNS0xLjUgMyAxLjUgNC41IDBzMyAxLjUgNC41IDAgMyAxLjUgNC41IDBIMjFtLTMtMyAzIDMtMyAzTTIuNSAxMmMxLjUtMS41IDMgMS41IDQuNSAwczMgMS41IDQuNSAwIDMgMS41IDQuNSAwSDIxbS0zLTMgMyAzLTMgM00yLjUgMThjMS41LTEuNSAzIDEuNSA0LjUgMHMzIDEuNSA0LjUgMCAzIDEuNSA0LjUgMEgyMW0tMy0zIDMgMy0zIDMiLz48L3N2Zz4=") center / contain no-repeat;
               mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZD0iTTIuNSA2YzEuNS0xLjUgMyAxLjUgNC41IDBzMyAxLjUgNC41IDAgMyAxLjUgNC41IDBIMjFtLTMtMyAzIDMtMyAzTTIuNSAxMmMxLjUtMS41IDMgMS41IDQuNSAwczMgMS41IDQuNSAwIDMgMS41IDQuNSAwSDIxbS0zLTMgMyAzLTMgM00yLjUgMThjMS41LTEuNSAzIDEuNSA0LjUgMHMzIDEuNSA0LjUgMCAzIDEuNSA0LjUgMEgyMW0tMy0zIDMgMy0zIDMiLz48L3N2Zz4=") center / contain no-repeat;
               filter: drop-shadow(0 0 7px rgba(45,212,191,.65));
+            }
+            #header__states {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 10px;
+              margin: 0;
+              width: 100%;
+              min-height: 50px;
+              padding: 4px 10px 8px;
+              box-sizing: border-box;
+            }
+            #header__states > #states__state {
+              min-width: 0;
+              margin: 0;
+              overflow: visible;
+            }
+            #header__states > #states__state:nth-child(2) {
+              text-align: right;
+            }
+            #header__states > #states__state:nth-child(2) #state__value {
+              justify-content: flex-end;
+              margin: 0;
+            }
+            #header__states #state__value {
+              display: flex !important;
+              align-items: baseline;
+              width: 100%;
+              max-width: 100%;
+              overflow: visible;
+              box-sizing: border-box;
+            }
+            #header__states > #states__state:nth-child(1) #state__value {
+              justify-content: flex-start;
+            }
+            #header__states #state__value > #state {
+              font-size: 1.8em;
+              line-height: 1.05;
+              white-space: nowrap;
+            }
+            #header__states #state__value > #uom {
+              font-size: 1em;
+              white-space: nowrap;
+            }
+            #header__states #state__name {
+              overflow: visible;
+              white-space: nowrap;
+              text-overflow: clip;
+              font-size: .8em;
+              line-height: 1.15;
             }
             ha-card {
               background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(7,43,48,.94));
@@ -768,7 +834,7 @@ views:
               margin: 0;
               width: 100%;
               min-height: 50px;
-              padding: 0 10px 8px;
+              padding: 4px 10px 8px;
               box-sizing: border-box;
             }
             #header__states > #states__state {
@@ -861,7 +927,6 @@ views:
               const progress = Math.max(0, Math.min(100, Number(entity.state) || 0));
               return `
                 <div class="pcha-objectif-entete">
-                  <ha-icon icon="mdi:target" class="pcha-objectif-icone"></ha-icon>
                   <span>Objectif quotidien de filtration</span>
                 </div>
                 <div class="pcha-objectif-corps">
@@ -899,26 +964,35 @@ views:
               - text-align: left
         extra_styles: |
             .pcha-objectif-entete {
-              display: flex;
+              display: inline-flex;
               align-items: center;
-              gap: 10px;
-              width: 100%;
-              color: #f8fafc;
-              font-size: 19px;
-              font-weight: 750;
+              justify-content: flex-start;
+              gap: 9px;
+              width: auto;
+              max-width: 100%;
+              color: #eee8ff;
+              font-size: 16px;
+              font-weight: 600;
               margin-bottom: 14px;
               text-align: left;
             }
+            .pcha-objectif-entete::before {
+              content: "";
+              display: inline-block;
+              flex: 0 0 21px;
+              width: 21px;
+              height: 21px;
+              background: linear-gradient(145deg, #67e8f9, #a78bfa 55%, #f0abfc);
+              -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iNy41IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuOCIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjMuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIxLjMiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0ibTEyLjUgMTcgMi41IDIuNSA1LTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+") center / contain no-repeat;
+              mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iNy41IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuOCIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjMuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIxLjMiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0ibTEyLjUgMTcgMi41IDIuNSA1LTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+") center / contain no-repeat;
+              filter: drop-shadow(0 0 7px rgba(167,139,250,.65));
+            }
             .pcha-objectif-entete span {
-              display: block;
+              display: inline-block;
+              flex: 0 1 auto;
+              width: auto !important;
               margin: 0;
               text-align: left;
-            }
-            .pcha-objectif-icone {
-              width: 24px;
-              height: 24px;
-              color: #a78bfa;
-              filter: drop-shadow(0 0 7px rgba(167,139,250,.55));
             }
             .pcha-objectif-corps {
               display: grid;
