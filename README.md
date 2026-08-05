@@ -16,7 +16,7 @@ Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du m
 * sonde de température directement immergée dans le bassin ;
 * suppression du délai de circulation nécessaire à la température ;
 * calibrage signé de `−3,0 à +3,0 °C` par pas de `0,1 °C` ;
-* objectif quotidien basé sur la température calibrée moyenne de la veille, figée au changement de jour ;
+* objectif quotidien basé sur la température calibrée moyenne de la veille, figée au changement de jour après au moins 18 heures de mesures valides ;
 * planification visant une fin deux heures avant le coucher du soleil ;
 * BH1750 déporté sur D1 mini et transmis à l'ESP32 Jardin par Packet Transport UDP ;
 * MES-004 étendu à la liaison distante et à l'état du BH1750 ;
