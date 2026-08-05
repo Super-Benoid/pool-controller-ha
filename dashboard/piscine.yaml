@@ -243,32 +243,17 @@ views:
               - sensor.pcha_objectif_filtration_quotidien
               - sensor.pcha_temps_filtration_realise
               - sensor.pcha_temps_filtration_restant
+              - sensor.pcha_heure_atteinte_objectif
               - sensor.pcha_temperature_reference_objectif_quotidien
               - binary_sensor.pcha_objectif_filtration_fige
-              - input_select.pcha_etat_machine
-              - sun.sun
             content: |
               {% set objectif = ((states('sensor.pcha_objectif_filtration_quotidien') | float(0)) * 60) | round(0) | int %}
               {% set realise = states('sensor.pcha_temps_filtration_realise') | float(0) | round(0) | int %}
               {% set restant = states('sensor.pcha_temps_filtration_restant') | float(0) | round(0) | int %}
               {% set reference = states('sensor.pcha_temperature_reference_objectif_quotidien') %}
               {% set statut = 'Figée' if is_state('binary_sensor.pcha_objectif_filtration_fige', 'on') else 'Provisoire' %}
-              {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
-              {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
-              {% if restant <= 0 %}
-                {% set atteint = 'Atteint' %}
-              {% elif is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
-                {% set fin = now() + timedelta(minutes=restant) %}
-                {% set atteint = fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') %}
-              {% elif coucher is not none and coucher.date() == now().date() %}
-                {% set echeance = coucher - timedelta(hours=2) %}
-                {% set depart = echeance - timedelta(minutes=restant) %}
-                {% set fin = echeance if now() < depart else now() + timedelta(minutes=restant) %}
-                {% set atteint = fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') %}
-              {% else %}
-                {% set fin = now() + timedelta(minutes=restant) %}
-                {% set atteint = fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') %}
-              {% endif %}
+              {% set atteint_brut = states('sensor.pcha_heure_atteinte_objectif') %}
+              {% set atteint = 'Indisponible' if atteint_brut in ['unknown', 'unavailable', 'none', ''] else atteint_brut %}
 
               | Indicateur | Valeur |
               |:--|--:|

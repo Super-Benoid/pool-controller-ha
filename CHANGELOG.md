@@ -14,6 +14,7 @@
 * candidate maximale de minuit à trente minutes après le lever du soleil ;
 * référence calibrée et objectif figé jusqu'au lendemain ;
 * affichage de la référence et de son statut dans le dashboard.
+* centralisation de l'heure prévisionnelle dans `sensor.pcha_heure_atteinte_objectif` ;
 
 ### Luminosité et solaire
 

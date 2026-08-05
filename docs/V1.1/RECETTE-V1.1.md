@@ -40,7 +40,7 @@ Une valeur brute ou calibrée hors de l'intervalle strict `10–50 °C` doit act
 3. Faire varier une mesure de test cohérente : seule la valeur brute maximale de la fenêtre doit être conservée comme candidate.
 4. Après lever du soleil + 30 minutes, vérifier que l'objectif passe à l'état figé.
 5. Vérifier qu'une hausse de température ultérieure ne modifie plus l'objectif du jour.
-6. Vérifier que la carte affiche la référence, le statut et `Atteint à`.
+6. Vérifier que `sensor.pcha_heure_atteinte_objectif` applique la planification et que la carte affiche la référence, le statut et `Atteint à`.
 
 # 5. Planification
 

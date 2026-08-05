@@ -13,6 +13,7 @@
 #   binary_sensor.pcha_filtration_requise
 #   binary_sensor.pcha_objectif_filtration_fige
 #   sensor.pcha_objectif_filtration_quotidien
+#   sensor.pcha_heure_atteinte_objectif
 #   sensor.pcha_temperature_reference_objectif_quotidien
 #   sensor.pcha_temperature_piscine_max_jour
 #   sensor.pcha_temperature_piscine_min_jour
@@ -284,6 +285,35 @@
           {{ [((objectif | float(0)) * 60 - (realise | float(0))), 0] | max | round(0) }}
         {% else %}
           {{ none }}
+        {% endif %}
+
+- sensor:
+    - name: PCHA Heure atteinte objectif
+      unique_id: pcha_heure_atteinte_objectif
+      default_entity_id: sensor.pcha_heure_atteinte_objectif
+      icon: mdi:clock-check-outline
+      state: >
+        {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
+        {% if not is_number(restant_brut) %}
+          Indisponible
+        {% else %}
+          {% set restant = restant_brut | float(0) %}
+          {% if restant <= 0 %}
+            Atteint
+          {% else %}
+            {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+            {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+            {% if is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
+              {% set fin = now() + timedelta(minutes=restant) %}
+            {% elif coucher is not none and coucher.date() == now().date() %}
+              {% set echeance = coucher - timedelta(hours=2) %}
+              {% set depart = echeance - timedelta(minutes=restant) %}
+              {% set fin = echeance if now() < depart else now() + timedelta(minutes=restant) %}
+            {% else %}
+              {% set fin = now() + timedelta(minutes=restant) %}
+            {% endif %}
+            {{ fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') }}
+          {% endif %}
         {% endif %}
 
 - sensor:

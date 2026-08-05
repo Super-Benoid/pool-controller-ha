@@ -589,6 +589,8 @@ views:
         show_state: false
         tap_action:
           action: more-info
+        triggers_update:
+          - sensor.pcha_heure_atteinte_objectif
         view_layout:
           grid-area: objectif
         custom_fields:
@@ -614,16 +616,8 @@ views:
                 return `${s.state} ${unit}`;
               };
               const targetTime = () => {
-                const s = get('sensor.pcha_temps_filtration_restant');
-                if (!valid(s)) return '—';
-                const number = Number(s.state);
-                if (!Number.isFinite(number)) return '—';
-                const unit = s.attributes.unit_of_measurement || 'min';
-                const minutes = unit === 'h' ? number * 60 : number;
-                const target = new Date(Date.now() + minutes * 60000);
-                const hours = String(target.getHours()).padStart(2, '0');
-                const mins = String(target.getMinutes()).padStart(2, '0');
-                return `${hours}H${mins}`;
+                const s = get('sensor.pcha_heure_atteinte_objectif');
+                return valid(s) ? s.state : '—';
               };
               const progress = Math.max(0, Math.min(100, Number(entity.state) || 0));
               return `

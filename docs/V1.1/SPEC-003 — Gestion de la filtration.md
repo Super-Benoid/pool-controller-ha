@@ -22,6 +22,7 @@ Cette SPEC définit l'objectif quotidien de filtration et la demande automatique
 
 ```text
 sensor.pcha_objectif_filtration_quotidien
+sensor.pcha_heure_atteinte_objectif
 sensor.pcha_temperature_reference_objectif_quotidien
 binary_sensor.pcha_objectif_filtration_fige
 binary_sensor.pcha_filtration_requise
