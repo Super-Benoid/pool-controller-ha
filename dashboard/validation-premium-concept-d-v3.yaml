@@ -1,11 +1,11 @@
 ################################################################################
-# PCHA V1.1 — Accueil Premium Concept D — V3
+# PCHA V2.0 — Accueil Premium Concept D
 # Affichage normal : interface Home Assistant conservée.
 # Affichage immersif : ajouter ?kiosk à l'URL puis utiliser F11.
 # Cette version utilise directement la vue custom:grid-layout.
 ################################################################################
 
-title: PCHA — Concept D V3
+title: PCHA — Concept D V2.0
 
 views:
   - title: Validation Concept D
@@ -344,6 +344,15 @@ views:
             group_by:
               func: avg
               duration: 10min
+          - entity: sensor.pcha_ecart_temperature_exterieure_bassin
+            name: Δ extérieur − bassin
+            type: line
+            color: '#818cf8'
+            float_precision: 1
+            show:
+              in_header: raw
+              in_chart: false
+              legend_value: false
           - entity: sensor.pcha_temperature_exterieure
             name: Extérieure
             type: line
@@ -366,6 +375,8 @@ views:
               show: false
           dataLabels:
             enabled: false
+          legend:
+            show: false
           grid:
             borderColor: rgba(148,163,184,.14)
           xaxis:
@@ -400,6 +411,26 @@ views:
               -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xNSAxM1Y1YTMgMyAwIDAgMC02IDB2OGE1IDUgMCAxIDAgNiAwWm0tMyA4YTMgMyAwIDAgMS0xLTUuODNWNWExIDEgMCAwIDEgMiAwdjEwLjE3QTMgMyAwIDAgMSAxMiAyMVoiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTIiIGN5PSIxNyIgcj0iMi4yIi8+PC9zdmc+") center / contain no-repeat;
               mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xNSAxM1Y1YTMgMyAwIDAgMC02IDB2OGE1IDUgMCAxIDAgNiAwWm0tMyA4YTMgMyAwIDAgMS0xLTUuODNWNWExIDEgMCAwIDEgMiAwdjEwLjE3QTMgMyAwIDAgMSAxMiAyMVoiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTIiIGN5PSIxNyIgcj0iMi4yIi8+PC9zdmc+") center / contain no-repeat;
               filter: drop-shadow(0 0 7px rgba(34,211,238,.65));
+            }
+            #header__states {
+              display: grid;
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+              align-items: start;
+            }
+            #header__states > #states__state {
+              min-width: 0;
+            }
+            #header__states > #states__state:nth-child(2) {
+              text-align: center;
+            }
+            #header__states > #states__state:nth-child(2) #state__value {
+              margin-inline: auto;
+            }
+            #header__states > #states__state:nth-child(3) {
+              text-align: right;
+            }
+            #header__states > #states__state:nth-child(3) #state__value {
+              margin-left: auto;
             }
             ha-card {
               background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
@@ -924,23 +955,77 @@ views:
         view_layout:
           grid-area: consigne
         card:
-          type: tile
-          entity: input_number.pcha_duree_traitement
-          name: Durée du traitement
-          icon: mdi:timer-cog-outline
-          color: purple
-          features:
-            - type: numeric-input
-              style: buttons
-          card_mod:
-            style: |
-              ha-card {
-                background: linear-gradient(145deg, rgba(20,17,49,.98), rgba(15,23,42,.98));
-                border: 1px solid rgba(167,139,250,.34);
-                border-radius: 18px;
-                min-height: 92px;
-                box-shadow: 0 0 24px rgba(139,92,246,.08);
-              }
+          type: grid
+          columns: 2
+          square: false
+          cards:
+            - type: tile
+              entity: input_number.pcha_duree_traitement
+              name: Durée prévue
+              icon: mdi:timer-cog-outline
+              color: purple
+              tap_action:
+                action: more-info
+              features:
+                - type: numeric-input
+                  style: slider
+              card_mod:
+                style: |
+                  ha-card {
+                    background: linear-gradient(145deg, rgba(20,17,49,.98), rgba(15,23,42,.98));
+                    border: 1px solid rgba(167,139,250,.34);
+                    border-radius: 18px;
+                    min-height: 92px;
+                    box-shadow: 0 0 24px rgba(139,92,246,.08);
+                  }
+            - type: custom:button-card
+              entity: sensor.pcha_temps_traitement_restant
+              name: Temps restant
+              icon: mdi:timer-sand
+              show_state: false
+              tap_action:
+                action: more-info
+              triggers_update:
+                - timer.pcha_traitement
+              custom_fields:
+                duree: >
+                  [[[
+                    const minutes = Math.max(0, Math.ceil(Number(entity.state)));
+                    if (!Number.isFinite(minutes)) return 'Indisponible';
+                    const heures = Math.floor(minutes / 60);
+                    const reste = minutes % 60;
+                    const valeur = heures > 0
+                      ? `${heures} h ${String(reste).padStart(2, '0')} min`
+                      : `${reste} min`;
+                    const pause = states['timer.pcha_traitement']?.state === 'paused';
+                    return pause ? `En pause · ${valeur}` : valeur;
+                  ]]]
+              styles:
+                card:
+                  - background: linear-gradient(145deg, rgba(20,17,49,.98), rgba(15,23,42,.98))
+                  - border: 1px solid rgba(232,121,249,.32)
+                  - border-radius: 18px
+                  - min-height: 92px
+                  - padding: 12px
+                  - box-shadow: 0 0 24px rgba(139,92,246,.08)
+                grid:
+                  - grid-template-areas: '"i n" "i duree"'
+                  - grid-template-columns: 42px 1fr
+                  - grid-template-rows: min-content min-content
+                icon:
+                  - color: '#e879f9'
+                  - width: 28px
+                name:
+                  - justify-self: start
+                  - color: '#cbd5e1'
+                  - font-size: 13px
+                  - font-weight: 600
+                custom_fields:
+                  duree:
+                    - justify-self: start
+                    - color: '#f0abfc'
+                    - font-size: 16px
+                    - font-weight: 750
 
       - type: tile
         entity: input_number.pcha_seuil_luminosite_chauffage

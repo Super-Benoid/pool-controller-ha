@@ -1,5 +1,15 @@
 # Changelog
 
+## V2.0 — 2026-08-05
+
+### Dashboard Concept D
+
+* maintien du numéro V2.0 pour les corrections mineures du dashboard ;
+* affichage conditionnel du temps de traitement restant, avec format heures/minutes et indication de pause ;
+* remplacement des boutons répétitifs de durée par un curseur de 5 à 1 440 minutes ;
+* saisie exacte toujours accessible en ouvrant la carte de durée ;
+* fiabilisation du temps restant par arrondi à la minute supérieure.
+
 ## V1.1 — 2026-08-04
 
 ### Température
@@ -36,6 +46,7 @@
 * ajout du thème sombre cyan/violet `PCHA Concept D` ;
 * remplacement des simples tuiles de tendance par quatre cartes capteur détaillées avec axes et historique 24 h ;
 * ajout d’un pictogramme coloré avant le titre de chaque graphique (température, luminosité, débit et puissance), avec trois vagues fléchées pour le débit de filtration ;
+* suppression de la légende redondante sous le graphique des températures et affichage centré du delta extérieur − bassin dans son en-tête ;
 * ajout des minimums et maximums glissants sur 24 h ;
 * ajout de `sensor.pcha_progression_objectif_quotidien` et d’une jauge de progression ;
 * modernisation de l’anneau de progression avec dégradé cyan, bleu, violet et fuchsia ;

@@ -1,8 +1,17 @@
-# Pool Controller Home Assistant — PCHA V1.1
+# Pool Controller Home Assistant — PCHA V2.0
 
 Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique pour Home Assistant.
 
-## Évolutions V1.1
+## Évolutions V2.0
+
+* dashboard Concept D finalisé avec supervision temps réel ;
+* objectif quotidien enrichi avec heure prévisionnelle d’atteinte ;
+* graphiques modernisés, températures bassin/extérieur et delta thermique ;
+* mode TRAITEMENT avec durée réglable de 5 minutes à 24 heures et affichage du temps restant.
+
+Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du moteur de filtration.
+
+## Base fonctionnelle V1.1
 
 * sonde de température directement immergée dans le bassin ;
 * suppression du délai de circulation nécessaire à la température ;

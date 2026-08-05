@@ -52,7 +52,7 @@
         {% if is_state('timer.pcha_traitement', 'active') %}
           {% set fin = state_attr('timer.pcha_traitement', 'finishes_at') %}
           {% if fin %}
-            {{ [((as_timestamp(fin) - as_timestamp(now())) / 60), 0] | max | round(0) }}
+            {{ [((as_timestamp(fin) - as_timestamp(now())) / 60), 0] | max | round(0, 'ceil') | int }}
           {% else %}
             0
           {% endif %}
@@ -60,7 +60,7 @@
           {% set restant = state_attr('timer.pcha_traitement', 'remaining') | default('00:00:00', true) %}
           {% set parties = restant.split(':') %}
           {% if parties | count == 3 %}
-            {{ ((parties[0] | int(0)) * 60 + (parties[1] | int(0)) + (parties[2] | int(0)) / 60) | round(0) }}
+            {{ ((parties[0] | int(0)) * 60 + (parties[1] | int(0)) + (parties[2] | int(0)) / 60) | round(0, 'ceil') | int }}
           {% else %}
             0
           {% endif %}

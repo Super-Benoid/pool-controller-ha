@@ -1,6 +1,6 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# Dashboard V1.1 — Concept D
+# Dashboard V2.0 — Concept D
 # Cartes natives Home Assistant, sans dépendance HACS.
 ################################################################################
 
@@ -419,9 +419,11 @@ views:
             entity: input_number.pcha_duree_traitement
             name: Durée configurée
             icon: mdi:timer-edit-outline
+            tap_action:
+              action: more-info
             features:
               - type: numeric-input
-                style: buttons
+                style: slider
           - type: tile
             entity: timer.pcha_traitement
             name: Timer traitement
