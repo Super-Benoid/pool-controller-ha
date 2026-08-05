@@ -29,14 +29,16 @@ binary_sensor.pcha_filtration_requise
 
 # 3. Construction de la référence quotidienne
 
-Une mesure unique prise à minuit n'est pas représentative de la température du bassin. La référence quotidienne est donc construite à partir de la moyenne de toutes les températures calibrées cohérentes échantillonnées chaque minute pendant la journée terminée.
+Une mesure unique prise à minuit n'est pas représentative de la température du bassin. La référence quotidienne est donc construite à partir de la moyenne des températures calibrées cohérentes échantillonnées chaque minute pendant la journée terminée. Cette moyenne n'est acceptée que si au moins 1 080 échantillons valides, soit 18 heures de mesures, ont été reçus.
 
 ```text
 Pendant la journée J−1
 → échantillonnage chaque minute de la température calibrée cohérente
 → cumul de la somme et du nombre d'échantillons
-→ à minuit, calcul de la moyenne de J−1
-→ la moyenne devient la référence figée de J
+→ à minuit, contrôle d'au moins 1 080 échantillons valides
+→ si le seuil est atteint, calcul de la moyenne de J−1
+→ sinon, conservation de la dernière référence fiable en secours
+→ la référence retenue devient la référence figée de J
 → remise à zéro des accumulateurs pour la journée J
 ```
 
@@ -48,7 +50,7 @@ température de référence du jour J
   / nombre d'échantillons valides de J−1
 ```
 
-Le capteur restaure ses accumulateurs après un redémarrage. Si aucune moyenne valide de la veille n'est disponible, la dernière référence connue est conservée en secours afin de ne pas supprimer l'objectif quotidien.
+Le capteur restaure ses accumulateurs après un redémarrage. Si la couverture de la veille est inférieure à 18 heures ou si aucune moyenne valide n'est disponible, la dernière référence connue est conservée en secours afin de ne pas supprimer l'objectif quotidien.
 
 ## 3.1 Exemples
 
@@ -86,8 +88,8 @@ Avant cette heure, une filtration provenant d'une autre demande compte dans le t
 # 7. Critères d'acceptation
 
 * La température calibrée cohérente est échantillonnée chaque minute.
-* À minuit, la moyenne de la journée terminée devient la nouvelle référence.
+* À minuit, la moyenne de la journée terminée devient la nouvelle référence uniquement si au moins 1 080 échantillons valides ont été reçus.
 * La référence et l'objectif restent figés pendant toute la nouvelle journée.
-* En l'absence de moyenne valide de la veille, la dernière référence connue est conservée en secours.
+* Si la couverture est inférieure à 18 heures ou en l'absence de moyenne valide, la dernière référence connue est conservée en secours.
 * Les statistiques journalières ne dépendent pas du fonctionnement de la pompe.
 * La planification vise une fin deux heures avant le coucher du soleil.
