@@ -1,0 +1,24 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Intégration du volume filtré
+#
+# Entrées
+#   sensor.pcha_debit_filtration
+#
+# Sorties
+#   sensor.pcha_volume_filtre_total
+#
+# Le débit en L/h est intégré en kL, unité équivalente au m³. La méthode
+# gauche convient à un débit de pompe stable avec des transitions rapides.
+################################################################################
+
+- platform: integration
+  source: sensor.pcha_debit_filtration
+  name: PCHA Volume filtré total
+  unique_id: pcha_volume_filtre_total
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+  max_sub_interval:
+    minutes: 1
