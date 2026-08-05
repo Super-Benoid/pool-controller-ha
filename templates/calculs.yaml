@@ -27,7 +27,8 @@
 #
 # La température calibrée cohérente est échantillonnée chaque minute. Au
 # changement de jour, la moyenne de la journée terminée devient la référence
-# figée de la nouvelle journée et les accumulateurs sont réinitialisés.
+# figée de la nouvelle journée si au moins 1 080 échantillons valides (18 h)
+# ont été reçus. Sinon, la dernière référence fiable est conservée en secours.
 #
 # Le capteur trigger-based restaure son état et ses attributs après redémarrage.
 ################################################################################
@@ -57,7 +58,8 @@
         {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
         {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
         {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
-        {% set moyenne_hier = (somme / echantillons) if nouveau_jour and jour_accumule == hier and echantillons > 0 else none %}
+        {% set echantillons_minimum = 1080 %}
+        {% set moyenne_hier = (somme / echantillons) if nouveau_jour and jour_accumule == hier and echantillons >= echantillons_minimum else none %}
         {% set reference_precedente = this.attributes.temperature_reference | default(none) %}
         {% set temperature = states('sensor.pcha_temperature_piscine') %}
         {% set temperature_valide =
@@ -96,8 +98,11 @@
           {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
           {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
           {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
-          {% set moyenne_hier_valide = nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+          {% set echantillons_minimum = 1080 %}
+          {% set moyenne_hier_valide = nouveau_jour and jour_accumule == hier and echantillons >= echantillons_minimum %}
           {{ moyenne_hier_valide or (this.attributes.objectif_fige | default(false) | bool(false)) or is_number(this.attributes.temperature_reference | default(none)) }}
+        seuil_echantillons_reference: 1080
+        duree_minimale_mesures_reference: "18 h"
         jour_accumulation: "{{ now().date() }}"
         somme_temperature_jour: >
           {% set tid = trigger.id if trigger is defined else 'initialisation' %}
@@ -149,10 +154,11 @@
           {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
           {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
           {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% set echantillons_minimum = 1080 %}
           {% set precedente = this.attributes.temperature_reference | default(none) %}
           {% set temperature = states('sensor.pcha_temperature_piscine') %}
           {% set valide = state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent') | bool(false) and is_number(temperature) and (temperature | float(0)) > 10 and (temperature | float(0)) < 50 %}
-          {% if nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+          {% if nouveau_jour and jour_accumule == hier and echantillons >= echantillons_minimum %}
             {{ (somme / echantillons) | round(2) }}
           {% elif is_number(precedente) %}
             {{ precedente | float(0) | round(2) }}
@@ -168,7 +174,8 @@
           {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
           {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
           {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
-          {% if nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+          {% set echantillons_minimum = 1080 %}
+          {% if nouveau_jour and jour_accumule == hier and echantillons >= echantillons_minimum %}
             {{ hier }}
           {% elif this.attributes.jour_reference | default('') %}
             {{ this.attributes.jour_reference }}
@@ -182,7 +189,8 @@
           {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
           {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
           {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
-          {% if nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+          {% set echantillons_minimum = 1080 %}
+          {% if nouveau_jour and jour_accumule == hier and echantillons >= echantillons_minimum %}
             {{ now().isoformat() }}
           {% else %}
             {{ this.attributes.heure_figement | default(none) }}
@@ -194,8 +202,9 @@
           {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
           {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
           {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% set echantillons_minimum = 1080 %}
           {% if nouveau_jour %}
-            {{ not (jour_accumule == hier and echantillons > 0) }}
+            {{ not (jour_accumule == hier and echantillons >= echantillons_minimum) }}
           {% else %}
             {{ this.attributes.reference_secours | default(false) | bool(false) }}
           {% endif %}
