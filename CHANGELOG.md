@@ -9,6 +9,10 @@
 * remplacement des boutons répétitifs de durée par un curseur de 5 à 1 440 minutes ;
 * saisie exacte toujours accessible en ouvrant la carte de durée ;
 * fiabilisation du temps restant par arrondi à la minute supérieure.
+* correction des libellés tronqués dans l’en-tête du graphique des températures ;
+* centrage du pourcentage de progression et suppression de l’icône centrale de l’objectif quotidien de filtration ;
+* affichage de la luminosité moyenne au-dessus du seuil dans l’en-tête, sans courbe supplémentaire ;
+* affichage de la consommation électrique quotidienne dans l’en-tête de la puissance, sans courbe supplémentaire.
 
 ## V1.1 — 2026-08-04
 
