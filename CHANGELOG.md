@@ -37,4 +37,5 @@
 * remplacement des simples tuiles de tendance par quatre cartes capteur détaillées avec axes et historique 24 h ;
 * ajout des minimums et maximums glissants sur 24 h ;
 * ajout de `sensor.pcha_progression_objectif_quotidien` et d’une jauge de progression ;
+* modernisation de l’anneau de progression avec dégradé cyan, bleu, violet et fuchsia ;
 * réorganisation des vues Accueil, Pilotage, Solaire et Diagnostics.

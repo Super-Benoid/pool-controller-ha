@@ -635,8 +635,8 @@ views:
                   </div>
                   <div class="pcha-objectif-anneau" style="--progress:${progress}">
                     <div class="pcha-objectif-centre">
+                      <b class="pcha-progress-pourcentage"><span>${Math.round(progress)}</span><small>%</small></b>
                       <ha-icon icon="mdi:waves"></ha-icon>
-                      <b>${Math.round(progress)} %</b>
                     </div>
                   </div>
                 </div>`;
@@ -712,9 +712,11 @@ views:
               width: 146px;
               height: 146px;
               padding: 12px;
+              position: relative;
               border-radius: 50%;
-              background: conic-gradient(from -90deg, #22d3ee 0 calc(var(--progress) * .55%), #8b5cf6 calc(var(--progress) * .55%) calc(var(--progress) * 1%), rgba(34,211,238,.10) 0 100%);
-              box-shadow: 0 0 28px rgba(34,211,238,.15), inset 0 0 20px rgba(139,92,246,.12);
+              background: conic-gradient(from -90deg, #22d3ee 0%, #38bdf8 calc(var(--progress) * .35%), #8b5cf6 calc(var(--progress) * .72%), #e879f9 calc(var(--progress) * 1%), rgba(30,58,82,.50) calc(var(--progress) * 1%) 100%);
+              box-shadow: 0 0 12px rgba(34,211,238,.22), 0 0 28px rgba(139,92,246,.14), inset 0 0 18px rgba(232,121,249,.10);
+              outline: 1px solid rgba(103,232,249,.16);
               box-sizing: border-box;
             }
             .pcha-objectif-centre {
@@ -724,19 +726,41 @@ views:
               flex-direction: column;
               justify-content: center;
               align-items: center;
-              gap: 5px;
+              gap: 0;
               border-radius: 50%;
-              background: #071827;
+              background: radial-gradient(circle at 50% 35%, rgba(19,47,71,.98), #071827 68%);
               border: 1px solid rgba(34,211,238,.35);
               color: #67e8f9;
+              box-shadow: inset 0 0 22px rgba(34,211,238,.08);
             }
             .pcha-objectif-centre ha-icon {
-              width: 36px;
-              height: 36px;
+              width: 31px;
+              height: 31px;
+              color: #67e8f9;
+              opacity: .76;
+              transform: translateY(-3px);
             }
-            .pcha-objectif-centre b {
-              color: #f8fafc;
-              font-size: 18px;
+            .pcha-progress-pourcentage {
+              display: flex;
+              align-items: flex-start;
+              justify-content: center;
+              line-height: 1;
+              transform: translateY(-8px);
+              background: linear-gradient(110deg, #67e8f9 5%, #38bdf8 42%, #a78bfa 72%, #f0abfc 100%);
+              -webkit-background-clip: text;
+              background-clip: text;
+              color: transparent;
+              filter: drop-shadow(0 0 7px rgba(56,189,248,.28));
+              font-weight: 850;
+              letter-spacing: -1px;
+            }
+            .pcha-progress-pourcentage span {
+              font-size: 30px;
+            }
+            .pcha-progress-pourcentage small {
+              font-size: 15px;
+              margin: 2px 0 0 2px;
+              font-weight: 750;
             }
             @media (max-width: 700px) {
               .pcha-objectif-corps {
