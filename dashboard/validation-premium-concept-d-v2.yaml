@@ -1,0 +1,724 @@
+################################################################################
+# PCHA V1.1 — Accueil Premium Concept D — V2
+# Nom unique : validation-premium-concept-d-v2.yaml
+# Cette version utilise directement la vue custom:grid-layout.
+################################################################################
+
+title: PCHA — Concept D V2
+
+views:
+  - title: Validation Concept D
+    path: validation
+    icon: mdi:pool
+    type: custom:grid-layout
+    layout:
+      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-areas: |
+        "header header header header header header header header header header header header"
+        "mode mode mode machine machine machine niveau niveau niveau pompe pompe pompe"
+        "mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre objectif objectif objectif objectif"
+        "temperature temperature luminosite luminosite debit debit puissance puissance objectif objectif objectif objectif"
+        "reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre"
+        "mode-reglage mode-reglage mode-reglage consigne consigne consigne seuil seuil seuil alarmes alarmes alarmes"
+        "activite activite activite activite activite activite activite activite activite activite activite activite"
+      grid-gap: 14px
+      margin: 14px
+      mediaquery:
+        "(max-width: 1200px)":
+          grid-template-columns: repeat(8, minmax(0, 1fr))
+          grid-template-areas: |
+            "header header header header header header header header"
+            "mode mode mode mode machine machine machine machine"
+            "niveau niveau niveau niveau pompe pompe pompe pompe"
+            "mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre"
+            "temperature temperature temperature temperature luminosite luminosite luminosite luminosite"
+            "debit debit debit debit puissance puissance puissance puissance"
+            "objectif objectif objectif objectif objectif objectif objectif objectif"
+            "reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre"
+            "mode-reglage mode-reglage mode-reglage mode-reglage consigne consigne consigne consigne"
+            "seuil seuil seuil seuil alarmes alarmes alarmes alarmes"
+            "activite activite activite activite activite activite activite activite"
+        "(max-width: 700px)":
+          grid-template-columns: 1fr
+          grid-template-areas: |
+            "header"
+            "mode"
+            "machine"
+            "niveau"
+            "pompe"
+            "mesures-titre"
+            "temperature"
+            "luminosite"
+            "debit"
+            "puissance"
+            "objectif"
+            "reglages-titre"
+            "mode-reglage"
+            "consigne"
+            "seuil"
+            "alarmes"
+            "activite"
+          grid-gap: 10px
+          margin: 8px
+
+    cards:
+      ##########################################################################
+      # En-tête
+      ##########################################################################
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        tap_action:
+          action: none
+        view_layout:
+          grid-area: header
+        custom_fields:
+          titre: PCHA — Piscine
+          sous_titre: Concept D premium · supervision temps réel
+          badge: CONCEPT D
+        styles:
+          card:
+            - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
+            - border: 1px solid rgba(34,211,238,.30)
+            - border-radius: 24px
+            - box-shadow: 0 16px 42px rgba(0,0,0,.32), 0 0 30px rgba(34,211,238,.08)
+            - padding: 22px 26px
+          grid:
+            - grid-template-areas: '"titre badge" "sous_titre badge"'
+            - grid-template-columns: 1fr auto
+            - grid-template-rows: min-content min-content
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 34px
+              - font-weight: 800
+              - letter-spacing: -0.8px
+            sous_titre:
+              - justify-self: start
+              - color: '#94a3b8'
+              - font-size: 14px
+              - padding-top: 5px
+            badge:
+              - color: '#67e8f9'
+              - background: linear-gradient(135deg, rgba(6,182,212,.18), rgba(139,92,246,.22))
+              - border: 1px solid rgba(103,232,249,.34)
+              - border-radius: 999px
+              - padding: 8px 14px
+              - font-size: 12px
+              - font-weight: 700
+
+      ##########################################################################
+      # États principaux
+      ##########################################################################
+      - type: custom:button-card
+        entity: input_select.pcha_mode_de_fonctionnement
+        name: Mode
+        icon: mdi:alpha-a-circle-outline
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: mode
+        styles:
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(34,211,238,.25)
+            - border-radius: 20px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 17px 18px
+            - min-height: 92px
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 58px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - color: '#22d3ee'
+            - width: 39px
+          name:
+            - justify-self: start
+            - align-self: end
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 600
+          state:
+            - justify-self: start
+            - align-self: start
+            - color: '#67e8f9'
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: custom:button-card
+        entity: input_select.pcha_etat_machine
+        name: Machine
+        icon: mdi:state-machine
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: machine
+        styles:
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(52,211,153,.25)
+            - border-radius: 20px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 17px 18px
+            - min-height: 92px
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 58px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - color: '#34d399'
+            - width: 39px
+          name:
+            - justify-self: start
+            - align-self: end
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 600
+          state:
+            - justify-self: start
+            - align-self: start
+            - color: '#6ee7b7'
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: custom:button-card
+        entity: input_select.pcha_niveau_fonctionnement
+        name: Niveau
+        icon: mdi:waves
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: niveau
+        styles:
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(167,139,250,.28)
+            - border-radius: 20px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 17px 18px
+            - min-height: 92px
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 58px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - color: '#a78bfa'
+            - width: 39px
+          name:
+            - justify-self: start
+            - align-self: end
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 600
+          state:
+            - justify-self: start
+            - align-self: start
+            - color: '#c4b5fd'
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: custom:button-card
+        entity: switch.pcha_commande_pompe_filtration
+        name: Pompe
+        icon: mdi:water-pump
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: pompe
+        styles:
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(34,211,238,.25)
+            - border-radius: 20px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 17px 18px
+            - min-height: 92px
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 58px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - color: '#22d3ee'
+            - width: 39px
+          name:
+            - justify-self: start
+            - align-self: end
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 600
+          state:
+            - justify-self: start
+            - align-self: start
+            - color: '#67e8f9'
+            - font-size: 18px
+            - font-weight: 750
+
+      ##########################################################################
+      # Titre mesures
+      ##########################################################################
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        tap_action:
+          action: none
+        view_layout:
+          grid-area: mesures-titre
+        custom_fields:
+          titre: Mesures en direct
+          sous_titre: Valeur actuelle, courbe 24 h et extrêmes enregistrés
+        styles:
+          card:
+            - background: rgba(7,24,40,.78)
+            - border: 1px solid rgba(34,211,238,.20)
+            - border-radius: 18px
+            - padding: 15px 18px
+            - box-shadow: none
+          grid:
+            - grid-template-areas: '"titre" "sous_titre"'
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 19px
+              - font-weight: 750
+            sous_titre:
+              - justify-self: start
+              - color: '#94a3b8'
+              - font-size: 12px
+              - padding-top: 4px
+
+      ##########################################################################
+      # ApexCharts
+      ##########################################################################
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: temperature
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Température bassin
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_temperature_piscine
+            name: Température
+            type: area
+            color: '#22d3ee'
+            stroke_width: 3
+            float_precision: 1
+            show:
+              in_header: raw
+              extremas: true
+            group_by:
+              func: avg
+              duration: 10min
+        apex_config:
+          chart:
+            height: 245
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.42
+              opacityTo: 0.03
+          dataLabels:
+            enabled: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            decimalsInFloat: 1
+            labels:
+              style:
+                colors: '#94a3b8'
+          tooltip:
+            theme: dark
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
+              border: 1px solid rgba(34,211,238,.32);
+              border-radius: 21px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28), 0 0 22px rgba(34,211,238,.06);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: luminosite
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Luminosité
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_luminosite
+            name: Luminosité
+            type: area
+            color: '#a78bfa'
+            stroke_width: 3
+            float_precision: 0
+            show:
+              in_header: raw
+              extremas: true
+            group_by:
+              func: avg
+              duration: 10min
+        apex_config:
+          chart:
+            height: 245
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.43
+              opacityTo: 0.03
+          dataLabels:
+            enabled: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            decimalsInFloat: 0
+            labels:
+              style:
+                colors: '#94a3b8'
+          tooltip:
+            theme: dark
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(34,22,65,.94));
+              border: 1px solid rgba(167,139,250,.34);
+              border-radius: 21px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28), 0 0 22px rgba(139,92,246,.07);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: debit
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Débit filtration
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_debit_filtration
+            name: Débit
+            type: area
+            color: '#2dd4bf'
+            stroke_width: 3
+            float_precision: 0
+            show:
+              in_header: raw
+              extremas: true
+            group_by:
+              func: avg
+              duration: 5min
+        apex_config:
+          chart:
+            height: 245
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.40
+              opacityTo: 0.03
+          dataLabels:
+            enabled: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            min: 0
+            decimalsInFloat: 0
+            labels:
+              style:
+                colors: '#94a3b8'
+          tooltip:
+            theme: dark
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(7,43,48,.94));
+              border: 1px solid rgba(45,212,191,.32);
+              border-radius: 21px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28), 0 0 22px rgba(45,212,191,.06);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: puissance
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Puissance pompe
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_puissance_pompe_filtration
+            name: Puissance
+            type: area
+            color: '#c084fc'
+            stroke_width: 3
+            float_precision: 0
+            show:
+              in_header: raw
+              extremas: true
+            group_by:
+              func: avg
+              duration: 5min
+        apex_config:
+          chart:
+            height: 245
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.43
+              opacityTo: 0.03
+          dataLabels:
+            enabled: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            min: 0
+            decimalsInFloat: 0
+            labels:
+              style:
+                colors: '#94a3b8'
+          tooltip:
+            theme: dark
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(43,22,66,.94));
+              border: 1px solid rgba(192,132,252,.34);
+              border-radius: 21px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28), 0 0 22px rgba(192,132,252,.07);
+              overflow: hidden;
+            }
+
+      ##########################################################################
+      # Objectif quotidien — version sans JavaScript complexe
+      ##########################################################################
+      - type: vertical-stack
+        view_layout:
+          grid-area: objectif
+        cards:
+          - type: gauge
+            entity: sensor.pcha_progression_objectif_quotidien
+            name: Progression objectif quotidien
+            min: 0
+            max: 100
+            needle: false
+            severity:
+              green: 75
+              yellow: 40
+              red: 0
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(145deg, rgba(20,17,49,.98), rgba(8,28,46,.98));
+                  border: 1px solid rgba(167,139,250,.36);
+                  border-radius: 24px 24px 0 0;
+                  box-shadow: 0 16px 40px rgba(0,0,0,.34), 0 0 34px rgba(139,92,246,.10);
+                }
+          - type: entities
+            title: Objectif quotidien
+            show_header_toggle: false
+            entities:
+              - entity: sensor.pcha_objectif_filtration_quotidien
+                name: Objectif
+                icon: mdi:target
+              - entity: sensor.pcha_temperature_reference_objectif_quotidien
+                name: Référence
+                icon: mdi:thermometer-check
+              - entity: sensor.pcha_temps_filtration_realise
+                name: Temps réalisé
+                icon: mdi:timer-check-outline
+              - entity: sensor.pcha_temps_filtration_restant
+                name: Temps restant
+                icon: mdi:timer-sand
+              - entity: binary_sensor.pcha_objectif_filtration_fige
+                name: Référence figée
+                icon: mdi:lock-check-outline
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(145deg, rgba(20,17,49,.98), rgba(8,28,46,.98));
+                  border: 1px solid rgba(167,139,250,.36);
+                  border-top: 0;
+                  border-radius: 0 0 24px 24px;
+                  box-shadow: 0 16px 40px rgba(0,0,0,.34), 0 0 34px rgba(139,92,246,.10);
+                }
+
+      ##########################################################################
+      # Réglages rapides
+      ##########################################################################
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        tap_action:
+          action: none
+        view_layout:
+          grid-area: reglages-titre
+        custom_fields:
+          titre: Réglages rapides
+        styles:
+          card:
+            - background: rgba(7,24,40,.78)
+            - border: 1px solid rgba(34,211,238,.20)
+            - border-radius: 18px
+            - padding: 13px 18px
+            - box-shadow: none
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 19px
+              - font-weight: 750
+
+      - type: tile
+        entity: input_select.pcha_mode_de_fonctionnement
+        name: Mode de fonctionnement
+        icon: mdi:cog-play-outline
+        color: cyan
+        features:
+          - type: select-options
+        view_layout:
+          grid-area: mode-reglage
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(34,211,238,.24);
+              border-radius: 20px;
+            }
+
+      - type: tile
+        entity: input_number.pcha_temperature_de_consigne
+        name: Consigne bassin
+        icon: mdi:thermometer-plus
+        color: cyan
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: consigne
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(34,211,238,.24);
+              border-radius: 20px;
+            }
+
+      - type: tile
+        entity: input_number.pcha_seuil_luminosite_chauffage
+        name: Seuil solaire
+        icon: mdi:white-balance-sunny
+        color: purple
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: seuil
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(20,17,49,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(167,139,250,.28);
+              border-radius: 20px;
+            }
+
+      - type: tile
+        entity: input_boolean.pcha_acquitter_alarmes
+        name: Acquitter alarmes
+        icon: mdi:alarm-check
+        color: red
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: alarmes
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(31,17,35,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(251,113,133,.28);
+              border-radius: 20px;
+            }
+
+      ##########################################################################
+      # Activité récente
+      ##########################################################################
+      - type: history-graph
+        title: Activité récente — 24 heures
+        hours_to_show: 24
+        view_layout:
+          grid-area: activite
+        entities:
+          - entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+          - entity: binary_sensor.pcha_chauffage_solaire_actif
+            name: Chauffage solaire
+          - entity: input_select.pcha_etat_machine
+            name: Machine
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(5,22,38,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(34,211,238,.23);
+              border-radius: 22px;
+              box-shadow: 0 14px 36px rgba(0,0,0,.30);
+              overflow: hidden;
+            }

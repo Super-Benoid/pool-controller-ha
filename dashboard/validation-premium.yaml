@@ -7,105 +7,13 @@ views:
     type: masonry
     cards:
       - type: markdown
-        title: 1 — Dashboard YAML
+        title: Validation PCHA
         content: |
-          ## ✅ Le dashboard YAML est chargé
-          Si cette carte est visible, le fichier et sa déclaration dans `configuration.yaml` sont corrects.
-        card_mod:
-          style: |
-            ha-card {
-              background: linear-gradient(135deg, rgba(6, 24, 41, 0.98), rgba(19, 16, 48, 0.98));
-              border: 1px solid rgba(34, 211, 238, 0.35);
-              border-radius: 20px;
-              color: #f8fafc;
-            }
+          ## ✅ Le fichier est bien chargé
+
+          Si cette carte apparaît, le chemin et le nom du fichier sont corrects.
 
       - type: tile
         entity: sensor.pcha_temperature_piscine
-        name: 2 — Entité PCHA native
+        name: Température bassin
         icon: mdi:thermometer-water
-
-      - type: custom:button-card
-        entity: input_select.pcha_mode_de_fonctionnement
-        name: 3 — Button Card
-        icon: mdi:gesture-tap-button
-        show_state: true
-        tap_action:
-          action: none
-        styles:
-          card:
-            - background: linear-gradient(145deg, rgba(8, 29, 47, 0.98), rgba(17, 24, 39, 0.98))
-            - border: 1px solid rgba(34, 211, 238, 0.35)
-            - border-radius: 20px
-            - padding: 18px
-          icon:
-            - color: '#22d3ee'
-          name:
-            - color: '#cbd5e1'
-          state:
-            - color: '#67e8f9'
-            - font-size: 18px
-            - font-weight: 700
-
-      - type: custom:apexcharts-card
-        graph_span: 24h
-        header:
-          show: true
-          title: 4 — ApexCharts Card
-          show_states: true
-          colorize_states: true
-        series:
-          - entity: sensor.pcha_temperature_piscine
-            name: Température bassin
-            type: area
-            color: '#22d3ee'
-            stroke_width: 3
-            float_precision: 1
-            show:
-              in_header: raw
-              extremas: true
-            group_by:
-              func: avg
-              duration: 10min
-        apex_config:
-          chart:
-            height: 250px
-          dataLabels:
-            enabled: false
-          tooltip:
-            theme: dark
-        card_mod:
-          style: |
-            ha-card {
-              background: linear-gradient(145deg, rgba(5, 22, 38, 0.98), rgba(24, 18, 54, 0.98));
-              border: 1px solid rgba(167, 139, 250, 0.35);
-              border-radius: 20px;
-              overflow: hidden;
-            }
-
-      - type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout:
-          grid-template-columns: repeat(2, minmax(0, 1fr))
-          grid-gap: 12px
-        cards:
-          - type: tile
-            entity: input_select.pcha_etat_machine
-            name: 5A — Layout Card
-            icon: mdi:view-grid-outline
-          - type: tile
-            entity: input_select.pcha_niveau_fonctionnement
-            name: 5B — Layout Card
-            icon: mdi:view-grid-plus-outline
-
-      - type: markdown
-        title: Lecture du résultat
-        content: |
-          - **Carte 1 visible** : fichier YAML et déclaration corrects.
-          - **Carte 2 visible** : l'entité PCHA existe.
-          - **Carte 3 visible** : `button-card` est chargé.
-          - **Carte 4 visible** : `apexcharts-card` est chargé.
-          - **Cartes 5A et 5B visibles côte à côte** : `layout-card` est chargé.
-          - **Fond sombre stylé sur les cartes 1 et 4** : `card-mod` est chargé.
-
-          Une carte rouge avec **Custom element doesn't exist** indique précisément la ressource manquante.
