@@ -37,11 +37,12 @@ Une valeur brute ou calibrée hors de l'intervalle strict `10–50 °C` doit act
 
 1. Vérifier l'affichage de `sensor.pcha_temperature_reference_objectif_quotidien`.
 2. Vérifier que l'attribut `temperature_moyenne_jour_en_cours` évolue à partir des échantillons calibrés cohérents.
-3. Simuler le changement de jour et vérifier que la moyenne de la journée terminée devient `temperature_reference`.
+3. Simuler le changement de jour avec au moins 1 080 échantillons valides et vérifier que la moyenne de la journée terminée devient `temperature_reference`.
 4. Vérifier que les accumulateurs journaliers repartent pour la nouvelle journée.
 5. Vérifier qu'une variation de température après minuit ne modifie plus la référence ni l'objectif du jour.
 6. Vérifier la formule : `T / 5` jusqu'à 25 °C, puis `T / 5 + (T − 25)` au-dessus de 25 °C.
-7. Vérifier que `sensor.pcha_heure_atteinte_objectif` applique la planification et que la carte affiche la référence, le statut et `Atteint à`.
+7. Simuler moins de 1 080 échantillons valides sur la journée et vérifier que la dernière référence fiable est conservée avec `reference_secours: true`.
+8. Vérifier que `sensor.pcha_heure_atteinte_objectif` applique la planification et que la carte affiche la référence, le statut et `Atteint à`.
 
 # 5. Planification
 
