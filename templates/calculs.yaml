@@ -18,6 +18,7 @@
 #   sensor.pcha_temperature_piscine_max_jour
 #   sensor.pcha_temperature_piscine_min_jour
 #   sensor.pcha_progression_objectif_quotidien
+#   sensor.pcha_renouvellements_bassin_du_jour
 #   sensor.pcha_temps_filtration_realise
 #   sensor.pcha_temps_filtration_restant
 ################################################################################
@@ -459,3 +460,26 @@
         {% endif %}
       attributes:
         jour: "{{ now().date() }}"
+
+################################################################################
+# Volume quotidien filtré rapporté au volume du bassin de 4 m³.
+################################################################################
+- sensor:
+    - name: PCHA Renouvellements bassin du jour
+      unique_id: pcha_renouvellements_bassin_du_jour
+      default_entity_id: sensor.pcha_renouvellements_bassin_du_jour
+      icon: mdi:rotate-3d-variant
+      unit_of_measurement: "x"
+      state_class: measurement
+      state: >
+        {% set volume = states('sensor.pcha_volume_filtre_quotidien') %}
+        {% if is_number(volume) %}
+          {{ ((volume | float(0)) / 4) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+      attributes:
+        volume_bassin_m3: 4
+        volume_filtre_m3: >
+          {% set volume = states('sensor.pcha_volume_filtre_quotidien') %}
+          {{ volume | float(0) | round(2) if is_number(volume) else 0 }}
