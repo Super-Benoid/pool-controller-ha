@@ -84,7 +84,8 @@ Les identifiants historiques `temperature_piscine` sont conservés comme contrat
 Température calibrée cohérente
         │
         ├── échantillonnage chaque minute
-        ├── moyenne de la journée terminée
+        ├── moyenne acceptée après au moins 18 h de mesures valides
+        ├── sinon conservation de la dernière référence fiable
         ▼
 sensor.pcha_temperature_reference_objectif_quotidien
         │
