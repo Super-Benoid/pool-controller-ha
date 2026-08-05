@@ -3,10 +3,8 @@
 # SPEC-003 — Calculs de filtration V1.1
 #
 # Entrées
-#   input_number.pcha_correction_temperature_piscine
 #   input_select.pcha_etat_machine
 #   sensor.pcha_temperature_piscine
-#   sensor.pcha_temperature_piscine_brute
 #   sun.sun
 #
 # Sorties
@@ -27,10 +25,9 @@
 ################################################################################
 # Objectif quotidien
 #
-# De minuit à 30 minutes après le lever du soleil, le système mémorise la
-# température brute maximale valide du bassin. Le calibrage signé est appliqué
-# à cette candidate. À la fin de la fenêtre, l'objectif est figé jusqu'au
-# lendemain. Avant le figement, l'objectif affiché est provisoire.
+# La température calibrée cohérente est échantillonnée chaque minute. Au
+# changement de jour, la moyenne de la journée terminée devient la référence
+# figée de la nouvelle journée et les accumulateurs sont réinitialisés.
 #
 # Le capteur trigger-based restaure son état et ses attributs après redémarrage.
 ################################################################################
@@ -41,19 +38,10 @@
     - trigger: time
       at: "00:00:00"
       id: minuit
-    - trigger: state
-      entity_id: sensor.pcha_temperature_piscine_brute
-      id: temperature
-    - trigger: state
-      entity_id: input_number.pcha_correction_temperature_piscine
-      id: calibrage
-    - trigger: sun
-      event: sunrise
-      offset: "00:30:00"
-      id: figer
     - trigger: time_pattern
       minutes: "/1"
-      id: verification
+      seconds: "30"
+      id: echantillon
   sensor:
     - name: PCHA Objectif filtration quotidien
       unique_id: pcha_objectif_filtration_quotidien
@@ -64,66 +52,34 @@
       state: >
         {% set tid = trigger.id if trigger is defined else 'initialisation' %}
         {% set aujourd_hui = now().date() | string %}
-        {% set jour_precedent = this.attributes.jour | default('') %}
-        {% set nouveau_jour = tid == 'minuit' or jour_precedent != aujourd_hui %}
-        {% set deja_fige = (not nouveau_jour) and (this.attributes.objectif_fige | default(false) | bool(false)) %}
-
-        {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-        {% set brute_valide =
-             state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false)
-             and is_number(brute)
-             and (brute | float(0)) > 10
-             and (brute | float(0)) < 50 %}
-        {% set candidate_precedente = this.attributes.temperature_candidate_brute | default(none) %}
-        {% if nouveau_jour %}
-          {% set candidate = (brute | float(0)) if brute_valide else none %}
-        {% elif not deja_fige %}
-          {% if brute_valide and is_number(candidate_precedente) %}
-            {% set candidate = [candidate_precedente | float(0), brute | float(0)] | max %}
-          {% elif brute_valide %}
-            {% set candidate = brute | float(0) %}
-          {% elif is_number(candidate_precedente) %}
-            {% set candidate = candidate_precedente | float(0) %}
-          {% else %}
-            {% set candidate = none %}
-          {% endif %}
+        {% set hier = (now().date() - timedelta(days=1)) | string %}
+        {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
+        {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
+        {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
+        {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+        {% set moyenne_hier = (somme / echantillons) if nouveau_jour and jour_accumule == hier and echantillons > 0 else none %}
+        {% set reference_precedente = this.attributes.temperature_reference | default(none) %}
+        {% set temperature = states('sensor.pcha_temperature_piscine') %}
+        {% set temperature_valide =
+             state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent') | bool(false)
+             and is_number(temperature)
+             and (temperature | float(0)) > 10
+             and (temperature | float(0)) < 50 %}
+        {% if moyenne_hier is not none %}
+          {% set reference = moyenne_hier %}
+        {% elif is_number(reference_precedente) %}
+          {% set reference = reference_precedente | float(0) %}
+        {% elif temperature_valide %}
+          {% set reference = temperature | float(0) %}
         {% else %}
-          {% set candidate = candidate_precedente | float(0) if is_number(candidate_precedente) else none %}
+          {% set reference = none %}
         {% endif %}
-
-        {% set ns = namespace(apres_fenetre=false) %}
-        {% if tid == 'figer' %}
-          {% set ns.apres_fenetre = true %}
-        {% else %}
-          {% set lever_brut = state_attr('sun.sun', 'next_rising') %}
-          {% set prochain_lever = as_local(as_datetime(lever_brut)) if lever_brut else none %}
-          {% if prochain_lever is not none %}
-            {% if prochain_lever.date() == now().date() %}
-              {% set fin_fenetre = prochain_lever + timedelta(minutes=30) %}
-            {% else %}
-              {# Secours après redémarrage : le prochain lever est celui de demain. #}
-              {% set fin_fenetre = prochain_lever - timedelta(days=1) + timedelta(minutes=30) %}
-            {% endif %}
-            {% set ns.apres_fenetre = now() >= fin_fenetre %}
-          {% endif %}
-        {% endif %}
-
-        {% set calibrage = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
-        {% set reference = (candidate + calibrage) if candidate is not none else none %}
-        {% set reference_valide = reference is not none and reference > 10 and reference < 50 %}
-
-        {% if deja_fige and is_number(this.state) %}
-          {{ this.state | float(0) }}
-        {% elif reference_valide %}
+        {% if reference is not none and reference > 10 and reference < 50 %}
           {% set t = reference | float(0) %}
-          {% if t < 20 %}
-            4
-          {% elif t < 24 %}
-            6
-          {% elif t < 27 %}
-            8
+          {% if t <= 25 %}
+            {{ (t / 5) | round(2) }}
           {% else %}
-            {{ (10 + 2 * (t - 27)) | round(1) }}
+            {{ ((t / 5) + (t - 25)) | round(2) }}
           {% endif %}
         {% elif is_number(this.state) %}
           {{ this.state | float(0) }}
@@ -135,119 +91,115 @@
         objectif_fige: >
           {% set tid = trigger.id if trigger is defined else 'initialisation' %}
           {% set aujourd_hui = now().date() | string %}
-          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour | default('')) != aujourd_hui %}
-          {% set deja_fige = (not nouveau_jour) and (this.attributes.objectif_fige | default(false) | bool(false)) %}
-          {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-          {% set brute_valide = state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false) and is_number(brute) %}
-          {% set candidate_precedente = this.attributes.temperature_candidate_brute | default(none) %}
-          {% if nouveau_jour %}
-            {% set candidate = (brute | float(0)) if brute_valide else none %}
-          {% elif not deja_fige %}
-            {% if brute_valide and is_number(candidate_precedente) %}
-              {% set candidate = [candidate_precedente | float(0), brute | float(0)] | max %}
-            {% elif brute_valide %}
-              {% set candidate = brute | float(0) %}
-            {% elif is_number(candidate_precedente) %}
-              {% set candidate = candidate_precedente | float(0) %}
-            {% else %}
-              {% set candidate = none %}
-            {% endif %}
-          {% else %}
-            {% set candidate = candidate_precedente | float(0) if is_number(candidate_precedente) else none %}
-          {% endif %}
-          {% set ns = namespace(apres=false) %}
-          {% if tid == 'figer' %}
-            {% set ns.apres = true %}
-          {% else %}
-            {% set lever_brut = state_attr('sun.sun', 'next_rising') %}
-            {% set prochain_lever = as_local(as_datetime(lever_brut)) if lever_brut else none %}
-            {% if prochain_lever is not none %}
-              {% set fin_fenetre = (prochain_lever + timedelta(minutes=30)) if prochain_lever.date() == now().date() else (prochain_lever - timedelta(days=1) + timedelta(minutes=30)) %}
-              {% set ns.apres = now() >= fin_fenetre %}
-            {% endif %}
-          {% endif %}
-          {% set calibrage = states('input_number.pcha_correction_temperature_piscine') | float(0) %}
-          {% set reference = (candidate + calibrage) if candidate is not none else none %}
-          {{ deja_fige or (ns.apres and reference is not none and reference > 10 and reference < 50) }}
-        temperature_candidate_brute: >
+          {% set hier = (now().date() - timedelta(days=1)) | string %}
+          {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
+          {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
+          {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
+          {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% set moyenne_hier_valide = nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+          {{ moyenne_hier_valide or (this.attributes.objectif_fige | default(false) | bool(false)) or is_number(this.attributes.temperature_reference | default(none)) }}
+        jour_accumulation: "{{ now().date() }}"
+        somme_temperature_jour: >
           {% set tid = trigger.id if trigger is defined else 'initialisation' %}
-          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour | default('')) != (now().date() | string) %}
-          {% set deja_fige = (not nouveau_jour) and (this.attributes.objectif_fige | default(false) | bool(false)) %}
-          {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-          {% set brute_valide = state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false) and is_number(brute) %}
-          {% set precedente = this.attributes.temperature_candidate_brute | default(none) %}
+          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour_accumulation | default('')) != (now().date() | string) %}
+          {% set precedente = this.attributes.somme_temperature_jour | default(0) | float(0) %}
+          {% set temperature = states('sensor.pcha_temperature_piscine') %}
+          {% set valide = state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent') | bool(false) and is_number(temperature) and (temperature | float(0)) > 10 and (temperature | float(0)) < 50 %}
           {% if nouveau_jour %}
-            {{ (brute | float(0) | round(1)) if brute_valide else none }}
-          {% elif deja_fige %}
-            {{ (precedente | float(0) | round(1)) if is_number(precedente) else none }}
-          {% elif brute_valide and is_number(precedente) %}
-            {{ [precedente | float(0), brute | float(0)] | max | round(1) }}
-          {% elif brute_valide %}
-            {{ brute | float(0) | round(1) }}
-          {% elif is_number(precedente) %}
-            {{ precedente | float(0) | round(1) }}
+            {{ temperature | float(0) if valide else 0 }}
+          {% elif tid == 'echantillon' and valide %}
+            {{ precedente + (temperature | float(0)) }}
+          {% else %}
+            {{ precedente }}
+          {% endif %}
+        echantillons_temperature_jour: >
+          {% set tid = trigger.id if trigger is defined else 'initialisation' %}
+          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour_accumulation | default('')) != (now().date() | string) %}
+          {% set precedents = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% set temperature = states('sensor.pcha_temperature_piscine') %}
+          {% set valide = state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent') | bool(false) and is_number(temperature) and (temperature | float(0)) > 10 and (temperature | float(0)) < 50 %}
+          {% if nouveau_jour %}
+            {{ 1 if valide else 0 }}
+          {% elif tid == 'echantillon' and valide %}
+            {{ precedents + 1 }}
+          {% else %}
+            {{ precedents }}
+          {% endif %}
+        temperature_moyenne_jour_en_cours: >
+          {% set tid = trigger.id if trigger is defined else 'initialisation' %}
+          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour_accumulation | default('')) != (now().date() | string) %}
+          {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
+          {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% set temperature = states('sensor.pcha_temperature_piscine') %}
+          {% set valide = state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent') | bool(false) and is_number(temperature) and (temperature | float(0)) > 10 and (temperature | float(0)) < 50 %}
+          {% if nouveau_jour %}
+            {{ temperature | float(0) | round(2) if valide else none }}
+          {% elif tid == 'echantillon' and valide %}
+            {{ ((somme + (temperature | float(0))) / (echantillons + 1)) | round(2) }}
+          {% elif echantillons > 0 %}
+            {{ (somme / echantillons) | round(2) }}
           {% else %}
             {{ none }}
           {% endif %}
         temperature_reference: >
           {% set tid = trigger.id if trigger is defined else 'initialisation' %}
-          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour | default('')) != (now().date() | string) %}
-          {% set deja_fige = (not nouveau_jour) and (this.attributes.objectif_fige | default(false) | bool(false)) %}
-          {% if deja_fige and is_number(this.attributes.temperature_reference | default(none)) %}
-            {{ this.attributes.temperature_reference | float(0) | round(1) }}
+          {% set aujourd_hui = now().date() | string %}
+          {% set hier = (now().date() - timedelta(days=1)) | string %}
+          {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
+          {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
+          {% set somme = this.attributes.somme_temperature_jour | default(0) | float(0) %}
+          {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% set precedente = this.attributes.temperature_reference | default(none) %}
+          {% set temperature = states('sensor.pcha_temperature_piscine') %}
+          {% set valide = state_attr('sensor.pcha_temperature_piscine', 'corrected_value_coherent') | bool(false) and is_number(temperature) and (temperature | float(0)) > 10 and (temperature | float(0)) < 50 %}
+          {% if nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+            {{ (somme / echantillons) | round(2) }}
+          {% elif is_number(precedente) %}
+            {{ precedente | float(0) | round(2) }}
+          {% elif valide %}
+            {{ temperature | float(0) | round(2) }}
           {% else %}
-            {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-            {% set brute_valide = state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false) and is_number(brute) %}
-            {% set precedente = this.attributes.temperature_candidate_brute | default(none) %}
-            {% if nouveau_jour %}
-              {% set candidate = (brute | float(0)) if brute_valide else none %}
-            {% elif brute_valide and is_number(precedente) %}
-              {% set candidate = [precedente | float(0), brute | float(0)] | max %}
-            {% elif brute_valide %}
-              {% set candidate = brute | float(0) %}
-            {% elif is_number(precedente) %}
-              {% set candidate = precedente | float(0) %}
-            {% else %}
-              {% set candidate = none %}
-            {% endif %}
-            {% set reference = (candidate + states('input_number.pcha_correction_temperature_piscine') | float(0)) if candidate is not none else none %}
-            {{ reference | round(1) if reference is not none and reference > 10 and reference < 50 else none }}
+            {{ none }}
           {% endif %}
-        calibrage_reference: >
+        jour_reference: >
           {% set tid = trigger.id if trigger is defined else 'initialisation' %}
-          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour | default('')) != (now().date() | string) %}
-          {% set deja_fige = (not nouveau_jour) and (this.attributes.objectif_fige | default(false) | bool(false)) %}
-          {% if deja_fige and is_number(this.attributes.calibrage_reference | default(none)) %}
-            {{ this.attributes.calibrage_reference | float(0) }}
+          {% set aujourd_hui = now().date() | string %}
+          {% set hier = (now().date() - timedelta(days=1)) | string %}
+          {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
+          {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
+          {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% if nouveau_jour and jour_accumule == hier and echantillons > 0 %}
+            {{ hier }}
+          {% elif this.attributes.jour_reference | default('') %}
+            {{ this.attributes.jour_reference }}
           {% else %}
-            {{ states('input_number.pcha_correction_temperature_piscine') | float(0) }}
+            {{ aujourd_hui }}
           {% endif %}
         heure_figement: >
           {% set tid = trigger.id if trigger is defined else 'initialisation' %}
-          {% set nouveau_jour = tid == 'minuit' or (this.attributes.jour | default('')) != (now().date() | string) %}
-          {% set deja_fige = (not nouveau_jour) and (this.attributes.objectif_fige | default(false) | bool(false)) %}
-          {% if deja_fige %}
-            {{ this.attributes.heure_figement | default(none) }}
-          {% elif tid == 'figer' %}
+          {% set aujourd_hui = now().date() | string %}
+          {% set hier = (now().date() - timedelta(days=1)) | string %}
+          {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
+          {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
+          {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% if nouveau_jour and jour_accumule == hier and echantillons > 0 %}
             {{ now().isoformat() }}
           {% else %}
-            {% set lever_brut = state_attr('sun.sun', 'next_rising') %}
-            {% set prochain_lever = as_local(as_datetime(lever_brut)) if lever_brut else none %}
-            {% set ns = namespace(apres=false) %}
-            {% if prochain_lever is not none %}
-              {% set fin_fenetre = (prochain_lever + timedelta(minutes=30)) if prochain_lever.date() == now().date() else (prochain_lever - timedelta(days=1) + timedelta(minutes=30)) %}
-              {% set ns.apres = now() >= fin_fenetre %}
-            {% endif %}
-            {% set brute = states('sensor.pcha_temperature_piscine_brute') %}
-            {% set brute_valide = state_attr('sensor.pcha_temperature_piscine_brute', 'source_coherent') | bool(false) and is_number(brute) %}
-            {% set candidate_disponible = is_number(this.attributes.temperature_candidate_brute | default(none)) or brute_valide %}
-            {% if ns.apres and candidate_disponible %}
-              {{ now().isoformat() }}
-            {% else %}
-              {{ none }}
-            {% endif %}
+            {{ this.attributes.heure_figement | default(none) }}
           {% endif %}
-        strategie_reference: MAXIMUM_BRUT_DEPUIS_MINUIT_JUSQU_A_LEVER_PLUS_30_MIN
+        reference_secours: >
+          {% set tid = trigger.id if trigger is defined else 'initialisation' %}
+          {% set aujourd_hui = now().date() | string %}
+          {% set hier = (now().date() - timedelta(days=1)) | string %}
+          {% set jour_accumule = this.attributes.jour_accumulation | default('') %}
+          {% set nouveau_jour = tid == 'minuit' or jour_accumule != aujourd_hui %}
+          {% set echantillons = this.attributes.echantillons_temperature_jour | default(0) | int(0) %}
+          {% if nouveau_jour %}
+            {{ not (jour_accumule == hier and echantillons > 0) }}
+          {% else %}
+            {{ this.attributes.reference_secours | default(false) | bool(false) }}
+          {% endif %}
+        strategie_reference: MOYENNE_CALIBREE_JOUR_PRECEDENT_FIGEE_A_MINUIT
 
 # Entités de lecture facilitant l'affichage et le diagnostic de la référence.
 - sensor:
