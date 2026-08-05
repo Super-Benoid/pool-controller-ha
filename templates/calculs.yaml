@@ -21,6 +21,7 @@
 #   sensor.pcha_renouvellements_bassin_du_jour
 #   sensor.pcha_temps_filtration_realise
 #   sensor.pcha_temps_filtration_restant
+#   number.pcha_seuil_luminosite_chauffage_klux
 ################################################################################
 
 ################################################################################
@@ -483,3 +484,25 @@
         volume_filtre_m3: >
           {% set volume = states('sensor.pcha_volume_filtre_quotidien') %}
           {{ volume | float(0) | round(2) if is_number(volume) else 0 }}
+
+################################################################################
+# Seuil solaire affiché en klux sans modifier le helper métier stocké en lux.
+################################################################################
+- number:
+    - name: PCHA Seuil luminosité chauffage klux
+      unique_id: pcha_seuil_luminosite_chauffage_klux
+      default_entity_id: number.pcha_seuil_luminosite_chauffage_klux
+      icon: mdi:white-balance-sunny
+      unit_of_measurement: "klux"
+      min: 0
+      max: 50
+      step: 0.5
+      state: >
+        {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') %}
+        {{ ((seuil | float(0)) / 1000) | round(1) if is_number(seuil) else none }}
+      set_value:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.pcha_seuil_luminosite_chauffage
+          data:
+            value: "{{ (value | float(0)) * 1000 }}"
