@@ -336,9 +336,10 @@ views:
               func: avg
               duration: 10min
           - entity: sensor.pcha_ecart_temperature_exterieure_bassin
-            name: Δ T
+            name: Δ bassin − ext.
             type: line
             color: '#818cf8'
+            transform: "return Number(x) * -1;"
             float_precision: 1
             show:
               in_header: raw
