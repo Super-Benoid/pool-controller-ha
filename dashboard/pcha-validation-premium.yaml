@@ -4,200 +4,59 @@ views:
   - title: Validation
     path: validation
     icon: mdi:test-tube
-    type: custom:grid-layout
-    layout:
-      grid-template-columns: repeat(4, minmax(0, 1fr))
-      grid-template-areas: |
-        "header header header header"
-        "mode machine niveau pompe"
-        "graph graph graph graph"
-        "info info info info"
-      grid-gap: 14px
-      margin: 14px
-      mediaquery:
-        "(max-width: 900px)":
-          grid-template-columns: repeat(2, minmax(0, 1fr))
-          grid-template-areas: |
-            "header header"
-            "mode machine"
-            "niveau pompe"
-            "graph graph"
-            "info info"
-        "(max-width: 600px)":
-          grid-template-columns: 1fr
-          grid-template-areas: |
-            "header"
-            "mode"
-            "machine"
-            "niveau"
-            "pompe"
-            "graph"
-            "info"
-
+    type: masonry
     cards:
       - type: markdown
+        title: 1 — Dashboard YAML
         content: |
-          # PCHA — Validation Premium
-          Cette page vérifie **layout-card**, **button-card**, **ApexCharts Card** et **card-mod**.
-        view_layout:
-          grid-area: header
+          ## ✅ Le dashboard YAML est chargé
+          Si cette carte est visible, le fichier et sa déclaration dans `configuration.yaml` sont corrects.
         card_mod:
           style: |
             ha-card {
               background: linear-gradient(135deg, rgba(6, 24, 41, 0.98), rgba(19, 16, 48, 0.98));
-              border: 1px solid rgba(34, 211, 238, 0.30);
-              border-radius: 22px;
-              box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35), 0 0 24px rgba(34, 211, 238, 0.08);
+              border: 1px solid rgba(34, 211, 238, 0.35);
+              border-radius: 20px;
               color: #f8fafc;
-              padding: 8px 16px;
             }
+
+      - type: tile
+        entity: sensor.pcha_temperature_piscine
+        name: 2 — Entité PCHA native
+        icon: mdi:thermometer-water
 
       - type: custom:button-card
         entity: input_select.pcha_mode_de_fonctionnement
-        name: Mode
-        icon: mdi:cog-play-outline
+        name: 3 — Button Card
+        icon: mdi:gesture-tap-button
         show_state: true
         tap_action:
           action: none
-        view_layout:
-          grid-area: mode
         styles:
           card:
             - background: linear-gradient(145deg, rgba(8, 29, 47, 0.98), rgba(17, 24, 39, 0.98))
-            - border: 1px solid rgba(34, 211, 238, 0.30)
+            - border: 1px solid rgba(34, 211, 238, 0.35)
             - border-radius: 20px
-            - box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28)
             - padding: 18px
-          grid:
-            - grid-template-areas: '"i n" "i s"'
-            - grid-template-columns: 52px 1fr
-            - grid-template-rows: min-content min-content
           icon:
             - color: '#22d3ee'
-            - width: 34px
           name:
-            - justify-self: start
             - color: '#cbd5e1'
-            - font-size: 14px
           state:
-            - justify-self: start
-            - color: '#67e8f9'
-            - font-size: 18px
-            - font-weight: 700
-
-      - type: custom:button-card
-        entity: input_select.pcha_etat_machine
-        name: Machine
-        icon: mdi:state-machine
-        show_state: true
-        tap_action:
-          action: none
-        view_layout:
-          grid-area: machine
-        styles:
-          card:
-            - background: linear-gradient(145deg, rgba(8, 29, 47, 0.98), rgba(17, 24, 39, 0.98))
-            - border: 1px solid rgba(52, 211, 153, 0.28)
-            - border-radius: 20px
-            - box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28)
-            - padding: 18px
-          grid:
-            - grid-template-areas: '"i n" "i s"'
-            - grid-template-columns: 52px 1fr
-            - grid-template-rows: min-content min-content
-          icon:
-            - color: '#34d399'
-            - width: 34px
-          name:
-            - justify-self: start
-            - color: '#cbd5e1'
-            - font-size: 14px
-          state:
-            - justify-self: start
-            - color: '#6ee7b7'
-            - font-size: 18px
-            - font-weight: 700
-
-      - type: custom:button-card
-        entity: input_select.pcha_niveau_fonctionnement
-        name: Niveau
-        icon: mdi:shield-check-outline
-        show_state: true
-        tap_action:
-          action: none
-        view_layout:
-          grid-area: niveau
-        styles:
-          card:
-            - background: linear-gradient(145deg, rgba(8, 29, 47, 0.98), rgba(17, 24, 39, 0.98))
-            - border: 1px solid rgba(167, 139, 250, 0.30)
-            - border-radius: 20px
-            - box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28)
-            - padding: 18px
-          grid:
-            - grid-template-areas: '"i n" "i s"'
-            - grid-template-columns: 52px 1fr
-            - grid-template-rows: min-content min-content
-          icon:
-            - color: '#a78bfa'
-            - width: 34px
-          name:
-            - justify-self: start
-            - color: '#cbd5e1'
-            - font-size: 14px
-          state:
-            - justify-self: start
-            - color: '#c4b5fd'
-            - font-size: 18px
-            - font-weight: 700
-
-      - type: custom:button-card
-        entity: switch.pcha_commande_pompe_filtration
-        name: Pompe
-        icon: mdi:water-pump
-        show_state: true
-        tap_action:
-          action: none
-        view_layout:
-          grid-area: pompe
-        styles:
-          card:
-            - background: linear-gradient(145deg, rgba(8, 29, 47, 0.98), rgba(17, 24, 39, 0.98))
-            - border: 1px solid rgba(34, 211, 238, 0.30)
-            - border-radius: 20px
-            - box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28)
-            - padding: 18px
-          grid:
-            - grid-template-areas: '"i n" "i s"'
-            - grid-template-columns: 52px 1fr
-            - grid-template-rows: min-content min-content
-          icon:
-            - color: '#22d3ee'
-            - width: 34px
-          name:
-            - justify-self: start
-            - color: '#cbd5e1'
-            - font-size: 14px
-          state:
-            - justify-self: start
             - color: '#67e8f9'
             - font-size: 18px
             - font-weight: 700
 
       - type: custom:apexcharts-card
         graph_span: 24h
-        update_interval: 30s
         header:
           show: true
-          title: Température bassin — test ApexCharts
+          title: 4 — ApexCharts Card
           show_states: true
           colorize_states: true
-        now:
-          show: true
-          label: Maintenant
         series:
           - entity: sensor.pcha_temperature_piscine
-            name: Température
+            name: Température bassin
             type: area
             color: '#22d3ee'
             stroke_width: 3
@@ -210,49 +69,43 @@ views:
               duration: 10min
         apex_config:
           chart:
-            height: 260px
-            toolbar:
-              show: false
+            height: 250px
           dataLabels:
             enabled: false
-          grid:
-            borderColor: rgba(148, 163, 184, 0.16)
-          xaxis:
-            labels:
-              style:
-                colors: '#94a3b8'
-          yaxis:
-            labels:
-              style:
-                colors: '#94a3b8'
           tooltip:
             theme: dark
-        view_layout:
-          grid-area: graph
         card_mod:
           style: |
             ha-card {
               background: linear-gradient(145deg, rgba(5, 22, 38, 0.98), rgba(24, 18, 54, 0.98));
-              border: 1px solid rgba(34, 211, 238, 0.28);
-              border-radius: 22px;
-              box-shadow: 0 14px 38px rgba(0, 0, 0, 0.35), 0 0 30px rgba(124, 58, 237, 0.08);
+              border: 1px solid rgba(167, 139, 250, 0.35);
+              border-radius: 20px;
               overflow: hidden;
             }
 
+      - type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout:
+          grid-template-columns: repeat(2, minmax(0, 1fr))
+          grid-gap: 12px
+        cards:
+          - type: tile
+            entity: input_select.pcha_etat_machine
+            name: 5A — Layout Card
+            icon: mdi:view-grid-outline
+          - type: tile
+            entity: input_select.pcha_niveau_fonctionnement
+            name: 5B — Layout Card
+            icon: mdi:view-grid-plus-outline
+
       - type: markdown
+        title: Lecture du résultat
         content: |
-          ## Résultat attendu
-          - quatre tuiles sombres alignées ;
-          - une mise en page qui passe à deux colonnes puis une colonne sur écran étroit ;
-          - un graphique cyan sur 24 heures avec la valeur actuelle et les extrêmes ;
-          - aucune erreur **Custom element doesn't exist**.
-        view_layout:
-          grid-area: info
-        card_mod:
-          style: |
-            ha-card {
-              background: rgba(15, 23, 42, 0.92);
-              border: 1px solid rgba(167, 139, 250, 0.24);
-              border-radius: 18px;
-              color: #cbd5e1;
-            }
+          - **Carte 1 visible** : fichier YAML et déclaration corrects.
+          - **Carte 2 visible** : l'entité PCHA existe.
+          - **Carte 3 visible** : `button-card` est chargé.
+          - **Carte 4 visible** : `apexcharts-card` est chargé.
+          - **Cartes 5A et 5B visibles côte à côte** : `layout-card` est chargé.
+          - **Fond sombre stylé sur les cartes 1 et 4** : `card-mod` est chargé.
+
+          Une carte rouge avec **Custom element doesn't exist** indique précisément la ressource manquante.
