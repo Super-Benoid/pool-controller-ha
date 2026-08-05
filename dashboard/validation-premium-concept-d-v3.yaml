@@ -17,7 +17,6 @@ views:
       grid-template-areas: |
         "header header header header header header header header header header header header"
         "mode mode mode machine machine machine niveau niveau niveau pompe pompe pompe"
-        "mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre objectif objectif objectif objectif"
         "temperature temperature luminosite luminosite debit debit puissance puissance objectif objectif objectif objectif"
         "reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre"
         "mode-reglage mode-reglage mode-reglage consigne consigne consigne seuil seuil seuil alarmes alarmes alarmes"
@@ -31,7 +30,6 @@ views:
             "header header header header header header header header"
             "mode mode mode mode machine machine machine machine"
             "niveau niveau niveau niveau pompe pompe pompe pompe"
-            "mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre mesures-titre"
             "temperature temperature temperature temperature luminosite luminosite luminosite luminosite"
             "debit debit debit debit puissance puissance puissance puissance"
             "objectif objectif objectif objectif objectif objectif objectif objectif"
@@ -47,7 +45,6 @@ views:
             "machine"
             "niveau"
             "pompe"
-            "mesures-titre"
             "temperature"
             "luminosite"
             "debit"
@@ -285,40 +282,6 @@ views:
             - font-weight: 750
 
       ##########################################################################
-      # Titre mesures
-      ##########################################################################
-      - type: custom:button-card
-        show_icon: false
-        show_name: false
-        tap_action:
-          action: none
-        view_layout:
-          grid-area: mesures-titre
-        custom_fields:
-          titre: Mesures en direct
-          sous_titre: Valeur actuelle, courbe 24 h et extrêmes enregistrés
-        styles:
-          card:
-            - background: rgba(7,24,40,.78)
-            - border: 1px solid rgba(34,211,238,.20)
-            - border-radius: 16px
-            - padding: 10px 16px
-            - box-shadow: none
-          grid:
-            - grid-template-areas: '"titre" "sous_titre"'
-          custom_fields:
-            titre:
-              - justify-self: start
-              - color: '#f8fafc'
-              - font-size: 18px
-              - font-weight: 750
-            sous_titre:
-              - justify-self: start
-              - color: '#94a3b8'
-              - font-size: 12px
-              - padding-top: 2px
-
-      ##########################################################################
       # ApexCharts
       ##########################################################################
       - type: custom:apexcharts-card
@@ -426,7 +389,7 @@ views:
               gap: 6px;
               margin: 0;
               width: 100%;
-              min-height: 44px;
+              min-height: 50px;
               padding: 0 10px 8px;
               box-sizing: border-box;
             }
@@ -444,12 +407,12 @@ views:
               box-sizing: border-box;
             }
             #header__states #state__value > #state {
-              font-size: 20px;
+              font-size: 1.8em;
               line-height: 1.05;
               white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: 10px;
+              font-size: 1em;
               white-space: nowrap;
             }
             #header__states #state__name {
@@ -457,7 +420,7 @@ views:
               overflow: visible;
               white-space: nowrap;
               text-overflow: clip;
-              font-size: 9px;
+              font-size: .8em;
               line-height: 1.15;
             }
             #header__states > #states__state:nth-child(1) #state__value {
@@ -578,7 +541,7 @@ views:
               gap: 10px;
               margin: 0;
               width: 100%;
-              min-height: 44px;
+              min-height: 50px;
               padding: 0 10px 8px;
               box-sizing: border-box;
             }
@@ -606,19 +569,19 @@ views:
               justify-content: flex-start;
             }
             #header__states #state__value > #state {
-              font-size: 20px;
+              font-size: 1.8em;
               line-height: 1.05;
               white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: 10px;
+              font-size: 1em;
               white-space: nowrap;
             }
             #header__states #state__name {
               overflow: visible;
               white-space: nowrap;
               text-overflow: clip;
-              font-size: 9px;
+              font-size: .8em;
               line-height: 1.15;
             }
             ha-card {
@@ -804,7 +767,7 @@ views:
               gap: 10px;
               margin: 0;
               width: 100%;
-              min-height: 44px;
+              min-height: 50px;
               padding: 0 10px 8px;
               box-sizing: border-box;
             }
@@ -832,19 +795,19 @@ views:
               justify-content: flex-start;
             }
             #header__states #state__value > #state {
-              font-size: 20px;
+              font-size: 1.8em;
               line-height: 1.05;
               white-space: nowrap;
             }
             #header__states #state__value > #uom {
-              font-size: 10px;
+              font-size: 1em;
               white-space: nowrap;
             }
             #header__states #state__name {
               overflow: visible;
               white-space: nowrap;
               text-overflow: clip;
-              font-size: 9px;
+              font-size: .8em;
               line-height: 1.15;
             }
             ha-card {
