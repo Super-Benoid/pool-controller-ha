@@ -383,6 +383,24 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header__title {
+              display: flex;
+              align-items: center;
+              gap: 9px;
+              color: #d8f8ff;
+              font-weight: 600;
+            }
+            #header__title::before {
+              content: "";
+              display: inline-block;
+              flex: 0 0 21px;
+              width: 21px;
+              height: 21px;
+              background: linear-gradient(145deg, #67e8f9, #06b6d4);
+              -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xNSAxM1Y1YTMgMyAwIDAgMC02IDB2OGE1IDUgMCAxIDAgNiAwWm0tMyA4YTMgMyAwIDAgMS0xLTUuODNWNWExIDEgMCAwIDEgMiAwdjEwLjE3QTMgMyAwIDAgMSAxMiAyMVoiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTIiIGN5PSIxNyIgcj0iMi4yIi8+PC9zdmc+") center / contain no-repeat;
+              mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xNSAxM1Y1YTMgMyAwIDAgMC02IDB2OGE1IDUgMCAxIDAgNiAwWm0tMyA4YTMgMyAwIDAgMS0xLTUuODNWNWExIDEgMCAwIDEgMiAwdjEwLjE3QTMgMyAwIDAgMSAxMiAyMVoiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTIiIGN5PSIxNyIgcj0iMi4yIi8+PC9zdmc+") center / contain no-repeat;
+              filter: drop-shadow(0 0 7px rgba(34,211,238,.65));
+            }
             ha-card {
               background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
               border: 1px solid rgba(34,211,238,.32);
@@ -445,6 +463,24 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header__title {
+              display: flex;
+              align-items: center;
+              gap: 9px;
+              color: #eee8ff;
+              font-weight: 600;
+            }
+            #header__title::before {
+              content: "";
+              display: inline-block;
+              flex: 0 0 21px;
+              width: 21px;
+              height: 21px;
+              background: linear-gradient(145deg, #c4b5fd, #8b5cf6);
+              -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBmaWxsPSJ3aGl0ZSIgY3g9IjEyIiBjeT0iMTIiIHI9IjQiLz48cGF0aCBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTEyIDJ2Mm0wIDE2djJNMiAxMmgybTE2IDBoMk00LjkzIDQuOTNsMS40MiAxLjQybTExLjMgMTEuMyAxLjQyIDEuNDJNMTkuMDcgNC45M2wtMS40MiAxLjQybS0xMS4zIDExLjMtMS40MiAxLjQyIi8+PC9zdmc+") center / contain no-repeat;
+              mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBmaWxsPSJ3aGl0ZSIgY3g9IjEyIiBjeT0iMTIiIHI9IjQiLz48cGF0aCBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTEyIDJ2Mm0wIDE2djJNMiAxMmgybTE2IDBoMk00LjkzIDQuOTNsMS40MiAxLjQybTExLjMgMTEuMyAxLjQyIDEuNDJNMTkuMDcgNC45M2wtMS40MiAxLjQybS0xMS4zIDExLjMtMS40MiAxLjQyIi8+PC9zdmc+") center / contain no-repeat;
+              filter: drop-shadow(0 0 7px rgba(139,92,246,.65));
+            }
             ha-card {
               background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(34,22,65,.94));
               border: 1px solid rgba(167,139,250,.34);
@@ -508,6 +544,24 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header__title {
+              display: flex;
+              align-items: center;
+              gap: 9px;
+              color: #d9fff8;
+              font-weight: 600;
+            }
+            #header__title::before {
+              content: "";
+              display: inline-block;
+              flex: 0 0 21px;
+              width: 21px;
+              height: 21px;
+              background: linear-gradient(145deg, #5eead4, #14b8a6);
+              -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0zIDZoOG00IDBoNk0zIDEyaDNtNCAwaDExTTMgMThoMTBtNCAwaDQiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTMiIGN5PSI2IiByPSIyLjIiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iOCIgY3k9IjEyIiByPSIyLjIiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTUiIGN5PSIxOCIgcj0iMi4yIi8+PC9zdmc+") center / contain no-repeat;
+              mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0zIDZoOG00IDBoNk0zIDEyaDNtNCAwaDExTTMgMThoMTBtNCAwaDQiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTMiIGN5PSI2IiByPSIyLjIiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iOCIgY3k9IjEyIiByPSIyLjIiLz48Y2lyY2xlIGZpbGw9IndoaXRlIiBjeD0iMTUiIGN5PSIxOCIgcj0iMi4yIi8+PC9zdmc+") center / contain no-repeat;
+              filter: drop-shadow(0 0 7px rgba(45,212,191,.65));
+            }
             ha-card {
               background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(7,43,48,.94));
               border: 1px solid rgba(45,212,191,.32);
@@ -571,6 +625,24 @@ views:
             theme: dark
         card_mod:
           style: |
+            #header__title {
+              display: flex;
+              align-items: center;
+              gap: 9px;
+              color: #f2e7ff;
+              font-weight: 600;
+            }
+            #header__title::before {
+              content: "";
+              display: inline-block;
+              flex: 0 0 21px;
+              width: 21px;
+              height: 21px;
+              background: linear-gradient(145deg, #e879f9, #8b5cf6);
+              -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMy4yIDIgNC44IDEzaDYuMUw5LjggMjIgMTkuMiAxMGgtNi4zWiIvPjwvc3ZnPg==") center / contain no-repeat;
+              mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMy4yIDIgNC44IDEzaDYuMUw5LjggMjIgMTkuMiAxMGgtNi4zWiIvPjwvc3ZnPg==") center / contain no-repeat;
+              filter: drop-shadow(0 0 7px rgba(192,132,252,.68));
+            }
             ha-card {
               background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(43,22,66,.94));
               border: 1px solid rgba(192,132,252,.34);
