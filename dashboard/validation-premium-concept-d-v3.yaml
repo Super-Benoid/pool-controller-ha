@@ -73,6 +73,7 @@ views:
       - type: custom:button-card
         show_icon: false
         show_name: false
+        update_timer: 1min
         tap_action:
           action: none
         triggers_update:
@@ -85,6 +86,13 @@ views:
         custom_fields:
           titre: Pool Controller Home Assistant
           sous_titre: Synthèse décisionnelle en temps réel
+          heure: |
+            [[[
+              return new Date().toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            ]]]
           statuts: |
             [[[
               const on = (id) => states[id]?.state === 'on';
@@ -114,8 +122,8 @@ views:
             - padding: 15px 22px
             - min-height: 72px
           grid:
-            - grid-template-areas: '"titre statuts" "sous_titre statuts"'
-            - grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr)
+            - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts"'
+            - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
             - grid-template-rows: min-content min-content
           custom_fields:
             titre:
@@ -129,6 +137,19 @@ views:
               - color: '#94a3b8'
               - font-size: 14px
               - padding-top: 5px
+            heure:
+              - justify-self: center
+              - align-self: center
+              - padding: 5px 18px
+              - border-radius: 14px
+              - border: 1px solid rgba(103,232,249,.18)
+              - background: rgba(8,28,46,.58)
+              - color: '#67e8f9'
+              - font-size: 27px
+              - line-height: 1
+              - font-weight: 800
+              - letter-spacing: 1px
+              - text-shadow: 0 0 12px rgba(34,211,238,.30)
             statuts:
               - justify-self: stretch
               - align-self: center
@@ -1237,7 +1258,9 @@ views:
                   - font-weight: 600
                 custom_fields:
                   duree:
-                    - justify-self: start
+                    - justify-self: center
+                    - width: 100%
+                    - text-align: center
                     - color: '#f0abfc'
                     - font-size: 22px
                     - line-height: 1.05
