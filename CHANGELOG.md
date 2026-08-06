@@ -22,6 +22,8 @@
 * rééquilibrage de l'accueil : graphes élargis, objectif quotidien compact et durée d'ensoleillement ajoutée entre la valeur actuelle et la moyenne de luminosité.
 * ajout de l'onglet Solaire Concept D : décision de chauffe, courbes température/luminosité, bilan du jour, réglages et historique responsive.
 * ajout de l'onglet Diagnostics Concept D : synthèse globale, comptage des défauts actifs, familles MES/COH/PRO, gravités, cause MES-004, temporisations et historique 24 heures.
+* harmonisation de la hauteur des cartes de synthèse Diagnostics et reformulation des libellés MES au repos pour éviter toute fausse impression de défaut.
+* ajout de l'onglet Historique Concept D : indicateurs quotidiens, courbes séparées des températures, de la luminosité, du débit, de la puissance et de l'objectif, puis chronologies du fonctionnement et des diagnostics sur 24 heures.
 
 ## V1.1 — 2026-08-04
 
