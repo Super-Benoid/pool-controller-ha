@@ -52,7 +52,7 @@
 * ajout du thème sombre cyan/violet `PCHA Concept D` ;
 * remplacement des simples tuiles de tendance par quatre cartes capteur détaillées avec axes et historique 24 h ;
 * ajout d’un pictogramme coloré avant le titre de chaque graphique (température, luminosité, débit et puissance), avec trois vagues fléchées pour le débit de filtration ;
-* suppression de la légende redondante sous le graphique des températures et affichage centré du delta bassin − extérieur dans son en-tête ;
+* suppression de la légende redondante sous le graphique des températures et affichage centré du delta bassin − extérieur par une entité dédiée, sans inversion de la logique solaire ;
 * ajout des minimums et maximums glissants sur 24 h ;
 * ajout de `sensor.pcha_progression_objectif_quotidien` et d’une jauge de progression ;
 * modernisation de l’anneau de progression avec dégradé cyan, bleu, violet et fuchsia ;
