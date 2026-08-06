@@ -17,6 +17,7 @@
 #   script.pcha_machine_filtration
 #   script.pcha_machine_initialiser
 #   script.pcha_machine_reevaluer
+#   script.pcha_machine_vidange
 ################################################################################
 
 pcha_machine_attente:
@@ -50,6 +51,22 @@ pcha_machine_filtration:
         entity_id: input_select.pcha_etat_machine
       data:
         option: FILTRATION
+
+pcha_machine_vidange:
+  alias: PCHA - Machine - État VIDANGE
+  description: Démarre la pompe dans le circuit de vidange sans qualifier cette marche comme une filtration.
+  icon: mdi:water-minus
+  mode: single
+  sequence:
+    - action: script.pcha_pompe_demarrer
+    - condition: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      state: "on"
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: VIDANGE
 
 pcha_machine_initialiser:
   alias: PCHA - Machine - Initialiser
@@ -89,24 +106,51 @@ pcha_machine_reevaluer:
           {{ is_state('switch.pcha_commande_pompe_filtration', 'on') }}
         mode_fonctionnement: >
           {{ states('input_select.pcha_mode_de_fonctionnement') }}
+        critique_bloquant: >
+          {% set vidange = is_state('input_select.pcha_mode_de_fonctionnement', 'VIDANGE') %}
+          {% set critique_non_hydraulique =
+               is_state('binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible', 'on') %}
+          {{
+            is_state('input_select.pcha_niveau_fonctionnement', 'CRITIQUE')
+            and (not vidange or critique_non_hydraulique)
+          }}
         temporisations_auto: >
           {{ appliquer_temporisations_auto | default(false) | bool(false) }}
 
     - choose:
-        # Le niveau CRITIQUE est prioritaire sur toutes les temporisations.
+        # Le niveau CRITIQUE est prioritaire. En VIDANGE, seuls MES-002 et
+        # PRO-001 sont tolérés puisque le débitmètre est volontairement hors du
+        # circuit. Tout autre critique reste bloquant.
         - conditions:
             - condition: template
-              value_template: "{{ niveau_critique }}"
+              value_template: "{{ critique_bloquant }}"
           sequence:
             - action: script.pcha_machine_attente
 
+        # La vidange possède un état distinct afin de ne pas créditer cette
+        # durée dans l'objectif quotidien de filtration.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  mode_fonctionnement == 'VIDANGE'
+                  and demande_active
+                  and (etat_machine != 'VIDANGE' or not pompe_active)
+                }}
+          sequence:
+            - action: script.pcha_machine_vidange
 
         # Une demande active impose FILTRATION. Cette branche corrige aussi le
         # cas où l'état annonce FILTRATION alors que la pompe est réellement OFF.
         - conditions:
             - condition: template
               value_template: >
-                {{ demande_active and (etat_machine != 'FILTRATION' or not pompe_active) }}
+                {{
+                  mode_fonctionnement != 'VIDANGE'
+                  and etat_machine != 'VIDANGE'
+                  and demande_active
+                  and (etat_machine != 'FILTRATION' or not pompe_active)
+                }}
           sequence:
             - variables:
                 attente_avant_demarrage: >
@@ -127,7 +171,7 @@ pcha_machine_reevaluer:
               value_template: >
                 {{
                   is_state('binary_sensor.pcha_demande_fonctionnement', 'on')
-                  and not is_state('input_select.pcha_niveau_fonctionnement', 'CRITIQUE')
+                  and not critique_bloquant
                 }}
             - action: script.pcha_machine_filtration
 
@@ -160,6 +204,6 @@ pcha_machine_reevaluer:
               value_template: >
                 {{
                   not is_state('binary_sensor.pcha_demande_fonctionnement', 'on')
-                  or is_state('input_select.pcha_niveau_fonctionnement', 'CRITIQUE')
+                  or critique_bloquant
                 }}
             - action: script.pcha_machine_attente

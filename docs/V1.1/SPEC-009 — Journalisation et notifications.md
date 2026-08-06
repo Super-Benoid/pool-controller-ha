@@ -72,7 +72,7 @@ En V1.1 :
 
 Une notification contient au minimum un titre, une description, la date et l'heure, le niveau et une recommandation.
 
-# 7. Acquittement
+# 7. Effacement des notifications
 
 La commande :
 
@@ -82,7 +82,7 @@ input_boolean.pcha_acquitter_alarmes
 
 ferme les notifications persistantes PCHA visibles.
 
-L'acquittement :
+L'effacement :
 
 * ne réarme aucun diagnostic ;
 * ne modifie pas le niveau global ;
@@ -92,6 +92,8 @@ L'acquittement :
 
 La commande revient automatiquement à `off` après traitement.
 
+Cette commande est distincte de `input_button.pcha_rearmer_defaut_debit`. Le réarmement de PRO-001 agit sur un verrou fonctionnel et n'est accepté que dans les conditions de sécurité définies par la SPEC-007.
+
 # 8. Fichiers responsables
 
 ```text
@@ -99,7 +101,7 @@ automations/journalisation.yaml
 automations/notifications.yaml
 ```
 
-Le premier fichier produit et enregistre les événements. Le second fichier gère exclusivement les notifications et leur acquittement.
+Le premier fichier produit et enregistre les événements. Le second fichier gère exclusivement les notifications et leur effacement.
 
 # 9. Critères d'acceptation
 
@@ -108,8 +110,8 @@ Le premier fichier produit et enregistre les événements. Le second fichier gè
 * Toute activation critique provoque une notification persistante et mobile.
 * Toute activation dégradée provoque une notification persistante et mobile.
 * La disparition d'un diagnostic ferme sa notification persistante.
-* L'acquittement ne modifie aucune information fonctionnelle.
-* La journalisation et les notifications ne modifient aucune entité fonctionnelle, à l'exception du retour automatique de la commande d'acquittement à `off`.
+* L'effacement des notifications ne modifie aucune information fonctionnelle.
+* La journalisation et les notifications ne modifient aucune entité fonctionnelle, à l'exception du retour automatique de la commande d'effacement à `off`.
 
 # 10. Références
 

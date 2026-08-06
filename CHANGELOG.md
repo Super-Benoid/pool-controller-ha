@@ -2,6 +2,11 @@
 
 ## Maintenance après V2.0
 
+* ajout du mode VIDANGE temporisé de 1 à 10 minutes, sans comptabilisation comme filtration et avec retour obligatoire sur OFF ;
+* réarmement automatique de MES-002 après 60 secondes de retour stable du débitmètre ;
+* mémorisation de PRO-001 jusqu'à un réarmement manuel effectué pompe arrêtée et en mode OFF ;
+* séparation entre l'effacement des notifications et le réarmement fonctionnel ;
+* ajout d'un onglet Maintenance avec simulation temporaire des quatre mesures principales ;
 * suppression des anciens dashboards remplacés par le Concept D V2.0 ;
 * suppression d'une image dupliquée et d'un helper vide ;
 * retrait de la documentation V1.0 de la branche principale, toujours disponible dans l'historique Git ;

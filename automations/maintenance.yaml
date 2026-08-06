@@ -1,0 +1,75 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# Maintenance — Simulations temporaires des capteurs
+#
+# Entrées
+#   input_boolean.pcha_maintenance_*
+#   input_button.pcha_arreter_tests_maintenance
+#   timer.pcha_maintenance
+#
+# Sorties
+#   Arrêt automatique de toutes les simulations après cinq minutes
+################################################################################
+
+- id: pcha_maintenance_demarrer_temporisation
+  alias: PCHA - Maintenance - Temporiser les simulations
+  description: Limite toute simulation de capteur à cinq minutes.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id:
+        - input_boolean.pcha_maintenance_temperature_indisponible
+        - input_boolean.pcha_maintenance_debit_indisponible
+        - input_boolean.pcha_maintenance_puissance_indisponible
+        - input_boolean.pcha_maintenance_luminosite_indisponible
+      to: "on"
+  actions:
+    - action: timer.start
+      target:
+        entity_id: timer.pcha_maintenance
+      data:
+        duration: "00:05:00"
+
+- id: pcha_maintenance_arreter_tests
+  alias: PCHA - Maintenance - Arrêter les tests
+  description: Désactive toutes les simulations sur commande, expiration ou redémarrage.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.pcha_maintenance
+      id: expiration
+    - trigger: state
+      entity_id: input_button.pcha_arreter_tests_maintenance
+      id: commande
+    - trigger: homeassistant
+      event: start
+      id: demarrage
+    - trigger: template
+      value_template: >
+        {{
+          is_state('input_boolean.pcha_maintenance_temperature_indisponible', 'off')
+          and is_state('input_boolean.pcha_maintenance_debit_indisponible', 'off')
+          and is_state('input_boolean.pcha_maintenance_puissance_indisponible', 'off')
+          and is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'off')
+          and is_state('timer.pcha_maintenance', 'active')
+        }}
+      id: aucun_test
+  actions:
+    - action: input_boolean.turn_off
+      target:
+        entity_id:
+          - input_boolean.pcha_maintenance_temperature_indisponible
+          - input_boolean.pcha_maintenance_debit_indisponible
+          - input_boolean.pcha_maintenance_puissance_indisponible
+          - input_boolean.pcha_maintenance_luminosite_indisponible
+    - if:
+        - condition: template
+          value_template: "{{ not is_state('timer.pcha_maintenance', 'idle') }}"
+      then:
+        - action: timer.cancel
+          target:
+            entity_id: timer.pcha_maintenance

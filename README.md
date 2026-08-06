@@ -7,7 +7,10 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 * dashboard Concept D finalisé avec supervision temps réel ;
 * objectif quotidien enrichi avec heure prévisionnelle d’atteinte ;
 * graphiques modernisés, températures bassin/extérieur et delta thermique ;
-* mode TRAITEMENT avec durée réglable de 5 minutes à 24 heures et affichage du temps restant.
+* mode TRAITEMENT avec durée réglable de 5 minutes à 24 heures et affichage du temps restant ;
+* mode VIDANGE sécurisé de 1 à 10 minutes avec retour obligatoire sur `OFF` ;
+* défaut de débit critique mémorisé jusqu'à un réarmement manuel contrôlé ;
+* onglet Maintenance avec simulations temporaires des capteurs.
 
 Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du moteur de filtration.
 
@@ -63,6 +66,7 @@ Une ancienne correction `+2,0 °C` doit donc devenir un calibrage `−2,0 °C`.
 * conventions : `docs/CONVENTIONS.md` ;
 * documentation courante : `docs/V1.1/` ;
 * exemples ESPHome : `esphome/`.
+* maintenance et tests : `docs/MAINTENANCE.md`.
 
 Les anciennes versions restent consultables dans l'historique Git et dans les tags de version, notamment `v2.0`.
 

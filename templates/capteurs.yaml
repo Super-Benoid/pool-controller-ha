@@ -36,7 +36,10 @@
       device_class: connectivity
       icon: mdi:access-point-network
       state: >
-        {{ is_state('binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite', 'on') }}
+        {{
+          not is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'on')
+          and is_state('binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite', 'on')
+        }}
       attributes:
         source_entity: binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite
         source_state: >
@@ -48,7 +51,10 @@
       device_class: connectivity
       icon: mdi:brightness-5
       state: >
-        {{ is_state('binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok', 'on') }}
+        {{
+          not is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'on')
+          and is_state('binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok', 'on')
+        }}
       attributes:
         source_entity: binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok
         source_state: >
@@ -63,8 +69,9 @@
       unit_of_measurement: "L/h"
       state_class: measurement
       state: >
+        {% set maintenance = is_state('input_boolean.pcha_maintenance_debit_indisponible', 'on') %}
         {% set source = states('sensor.jardin_esp32_jardin_debit_filtration_piscine') %}
-        {% if is_number(source) %}
+        {% if not maintenance and is_number(source) %}
           {{ source | float(0) | round(0) }}
         {% elif is_number(this.state) %}
           {{ this.state | float(0) | round(0) }}
@@ -73,7 +80,12 @@
         {% endif %}
       attributes:
         source_available: >
-          {{ is_number(states('sensor.jardin_esp32_jardin_debit_filtration_piscine')) }}
+          {{
+            not is_state('input_boolean.pcha_maintenance_debit_indisponible', 'on')
+            and is_number(states('sensor.jardin_esp32_jardin_debit_filtration_piscine'))
+          }}
+        maintenance_forcee: >
+          {{ is_state('input_boolean.pcha_maintenance_debit_indisponible', 'on') }}
 
     - name: PCHA Énergie pompe filtration
       unique_id: pcha_energie_pompe_filtration
@@ -104,13 +116,14 @@
       state_class: measurement
       state: >
         {% set source = states('sensor.jardin_esp32_jardin_luminosite') %}
+        {% set maintenance = is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'on') %}
         {% set liaison = states('binary_sensor.pcha_liaison_luminosite_distante') %}
         {% set capteur = states('binary_sensor.pcha_capteur_luminosite_distant_ok') %}
         {% set mesure_coherente =
              is_number(source)
              and (source | float(0)) >= 0
              and (source | float(0)) <= 100000 %}
-        {% set chaine_valide = liaison == 'on' and capteur == 'on' and mesure_coherente %}
+        {% set chaine_valide = not maintenance and liaison == 'on' and capteur == 'on' and mesure_coherente %}
         {% if chaine_valide %}
           {{ source | float(0) | round(0) }}
         {% elif is_number(this.state) %}
@@ -121,7 +134,8 @@
       attributes:
         source_available: >
           {{
-            is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on')
+            not is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'on')
+            and is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on')
             and is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on')
             and is_number(states('sensor.jardin_esp32_jardin_luminosite'))
             and (states('sensor.jardin_esp32_jardin_luminosite') | float(0)) >= 0
@@ -132,7 +146,8 @@
         source_coherent: >
           {% set source = states('sensor.jardin_esp32_jardin_luminosite') %}
           {{
-            is_number(source)
+            not is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'on')
+            and is_number(source)
             and (source | float(0)) >= 0
             and (source | float(0)) <= 100000
           }}
@@ -142,6 +157,8 @@
           {{ states('binary_sensor.pcha_capteur_luminosite_distant_ok') }}
         source_value: >
           {{ states('sensor.jardin_esp32_jardin_luminosite') }}
+        maintenance_forcee: >
+          {{ is_state('input_boolean.pcha_maintenance_luminosite_indisponible', 'on') }}
 
     - name: PCHA Puissance pompe filtration
       unique_id: pcha_puissance_pompe_filtration
@@ -151,8 +168,9 @@
       unit_of_measurement: "W"
       state_class: measurement
       state: >
+        {% set maintenance = is_state('input_boolean.pcha_maintenance_puissance_indisponible', 'on') %}
         {% set source = states('sensor.prises_exterieur_power') %}
-        {% if is_number(source) %}
+        {% if not maintenance and is_number(source) %}
           {{ source | float(0) | round(1) }}
         {% elif is_number(this.state) %}
           {{ this.state | float(0) | round(1) }}
@@ -161,7 +179,12 @@
         {% endif %}
       attributes:
         source_available: >
-          {{ is_number(states('sensor.prises_exterieur_power')) }}
+          {{
+            not is_state('input_boolean.pcha_maintenance_puissance_indisponible', 'on')
+            and is_number(states('sensor.prises_exterieur_power'))
+          }}
+        maintenance_forcee: >
+          {{ is_state('input_boolean.pcha_maintenance_puissance_indisponible', 'on') }}
 
     - name: PCHA Température extérieure
       unique_id: pcha_temperature_exterieure
@@ -191,6 +214,7 @@
       unit_of_measurement: "°C"
       state_class: measurement
       state: >
+        {% set maintenance = is_state('input_boolean.pcha_maintenance_temperature_indisponible', 'on') %}
         {% set source = states('sensor.jardin_esp32_jardin_temperature_bassin') %}
         {% set precedent = this.state %}
         {% set source_coherente =
@@ -201,7 +225,7 @@
              is_number(precedent)
              and (precedent | float(0)) > 10
              and (precedent | float(0)) < 50 %}
-        {% if source_coherente %}
+        {% if not maintenance and source_coherente %}
           {{ source | float(0) | round(1) }}
         {% elif precedent_coherent %}
           {{ precedent | float(0) | round(1) }}
@@ -210,17 +234,23 @@
         {% endif %}
       attributes:
         source_available: >
-          {{ is_number(states('sensor.jardin_esp32_jardin_temperature_bassin')) }}
+          {{
+            not is_state('input_boolean.pcha_maintenance_temperature_indisponible', 'on')
+            and is_number(states('sensor.jardin_esp32_jardin_temperature_bassin'))
+          }}
         source_coherent: >
           {% set source = states('sensor.jardin_esp32_jardin_temperature_bassin') %}
           {{
-            is_number(source)
+            not is_state('input_boolean.pcha_maintenance_temperature_indisponible', 'on')
+            and is_number(source)
             and (source | float(0)) > 10
             and (source | float(0)) < 50
           }}
         source_value: >
           {{ states('sensor.jardin_esp32_jardin_temperature_bassin') }}
         source_entity: sensor.jardin_esp32_jardin_temperature_bassin
+        maintenance_forcee: >
+          {{ is_state('input_boolean.pcha_maintenance_temperature_indisponible', 'on') }}
 
 # Température métier du bassin. La sonde est immergée directement dans l'eau :
 # la mesure calibrée est donc disponible immédiatement, pompe arrêtée ou en marche.

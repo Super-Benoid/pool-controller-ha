@@ -7,9 +7,40 @@
 #
 # Sorties
 #   input_boolean.pcha_acquitter_alarmes
+#   input_boolean.pcha_maintenance_debit_indisponible
+#   input_boolean.pcha_maintenance_luminosite_indisponible
+#   input_boolean.pcha_maintenance_puissance_indisponible
+#   input_boolean.pcha_maintenance_temperature_indisponible
+#   input_boolean.pcha_verrou_pro_001
 ################################################################################
 
 pcha_acquitter_alarmes:
-  name: Acquitter les alarmes
+  name: Effacer les notifications
   icon: mdi:alarm-check
+  initial: false
+
+# Ce verrou est piloté uniquement par diagnostics/diagnostics.yaml. L'absence
+# de valeur initiale permet à Home Assistant de restaurer son dernier état.
+pcha_verrou_pro_001:
+  name: Verrou défaut débit critique
+  icon: mdi:lock-alert
+
+pcha_maintenance_temperature_indisponible:
+  name: Simuler température bassin indisponible
+  icon: mdi:thermometer-off
+  initial: false
+
+pcha_maintenance_debit_indisponible:
+  name: Simuler débit indisponible
+  icon: mdi:gauge-empty
+  initial: false
+
+pcha_maintenance_puissance_indisponible:
+  name: Simuler puissance indisponible
+  icon: mdi:flash-off
+  initial: false
+
+pcha_maintenance_luminosite_indisponible:
+  name: Simuler luminosité indisponible
+  icon: mdi:brightness-5
   initial: false

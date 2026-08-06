@@ -34,6 +34,7 @@
           and states('input_select.pcha_etat_machine') not in ['unknown', 'unavailable']
           and states('input_select.pcha_mode_de_fonctionnement') not in ['unknown', 'unavailable']
           and states('input_select.pcha_niveau_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_boolean.pcha_verrou_pro_001') not in ['unknown', 'unavailable']
           and states('switch.pcha_commande_pompe_filtration') not in ['unknown', 'unavailable']
         }}
       timeout: "00:01:00"
@@ -65,6 +66,7 @@
           and states('input_select.pcha_etat_machine') not in ['unknown', 'unavailable']
           and states('input_select.pcha_mode_de_fonctionnement') not in ['unknown', 'unavailable']
           and states('input_select.pcha_niveau_fonctionnement') not in ['unknown', 'unavailable']
+          and states('input_boolean.pcha_verrou_pro_001') not in ['unknown', 'unavailable']
           and states('switch.pcha_commande_pompe_filtration') not in ['unknown', 'unavailable']
         }}
   actions:
@@ -72,6 +74,15 @@
       data:
         appliquer_temporisations_auto: >
           {{
-            trigger.entity_id == 'binary_sensor.pcha_demande_fonctionnement'
-            and is_state('input_select.pcha_mode_de_fonctionnement', 'AUTO')
+            is_state('input_select.pcha_mode_de_fonctionnement', 'AUTO')
+            and (
+              trigger.entity_id == 'binary_sensor.pcha_demande_fonctionnement'
+              or (
+                trigger.entity_id == 'input_select.pcha_niveau_fonctionnement'
+                and trigger.from_state is not none
+                and trigger.from_state.state == 'CRITIQUE'
+                and trigger.to_state is not none
+                and trigger.to_state.state != 'CRITIQUE'
+              )
+            )
           }}

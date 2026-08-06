@@ -1,15 +1,28 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# SPEC-004 / SPEC-006 — Timer de traitement
+# SPEC-004 / SPEC-006 — Temporisations utilisateur
 #
 # Entrées
 #   Aucune
 #
 # Sorties
+#   timer.pcha_maintenance
 #   timer.pcha_traitement
+#   timer.pcha_vidange
 ################################################################################
 
 pcha_traitement:
   name: Traitement
   icon: mdi:timer-play
   restore: true
+
+pcha_vidange:
+  name: Vidange
+  icon: mdi:water-minus
+  restore: false
+
+pcha_maintenance:
+  name: Simulation de maintenance
+  icon: mdi:test-tube
+  duration: "00:05:00"
+  restore: false

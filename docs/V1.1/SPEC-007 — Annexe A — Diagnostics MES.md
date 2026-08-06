@@ -18,13 +18,21 @@
 
 Actif lorsque `sensor.jardin_esp32_jardin_temperature_bassin` ne fournit plus de valeur numérique pendant le délai configuré. La mesure n'attend jamais le démarrage de la pompe.
 
-# 3. MES-003 — Puissance pompe indisponible
+# 3. MES-002 — Débit indisponible
+
+MES-002 devient actif après **60 secondes consécutives** sans mesure de débit exploitable. Il est `CRITIQUE` et arrête la filtration tant que la circulation ne peut plus être vérifiée.
+
+Son réarmement est automatique après **60 secondes consécutives** de mesures de nouveau valides. Une simple coupure Wi-Fi ne demande donc aucune intervention manuelle. En mode `AUTO`, le redémarrage respecte le temps minimum d'arrêt de la pompe.
+
+Le mode `VIDANGE` constitue l'unique exception : le débitmètre est volontairement hors du circuit et MES-002 ne bloque pas cette marche temporisée.
+
+# 4. MES-003 — Puissance pompe indisponible
 
 MES-003 devient actif lorsque `sensor.prises_exterieur_power` ne fournit plus de valeur numérique pendant **60 secondes consécutives**. Une interruption plus courte est considérée comme une microcoupure de communication et ne déclenche pas le diagnostic.
 
 Après le retour de la mesure, MES-003 se réarme automatiquement lorsque la puissance reste numérique pendant **10 secondes consécutives**. Sa gravité reste `DEGRADE` et n'interdit pas la filtration.
 
-# 4. MES-004 — Luminosité distante indisponible
+# 5. MES-004 — Luminosité distante indisponible
 
 La chaîne surveillée est :
 
@@ -48,7 +56,7 @@ MESURE_HORS_LIMITES
 AUCUNE
 ```
 
-# 5. Effets de MES-004
+# 6. Effets de MES-004
 
 MES-004 maintient le niveau `DEGRADE`, mais n'interdit plus systématiquement le chauffage solaire :
 

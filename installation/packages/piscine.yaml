@@ -10,6 +10,7 @@
 ################################################################################
 
 input_boolean: !include ../pool-controller-ha/helpers/input_boolean.yaml
+input_button: !include ../pool-controller-ha/helpers/input_button.yaml
 input_number: !include ../pool-controller-ha/helpers/input_number.yaml
 input_select: !include ../pool-controller-ha/helpers/input_select.yaml
 sensor: !include ../pool-controller-ha/helpers/sensor.yaml

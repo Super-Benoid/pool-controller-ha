@@ -8,6 +8,7 @@
 # Sorties
 #   input_number.pcha_correction_temperature_piscine
 #   input_number.pcha_duree_traitement
+#   input_number.pcha_duree_vidange
 #   input_number.pcha_seuil_luminosite_chauffage
 #   input_number.pcha_temperature_de_consigne
 #   input_number.pcha_temps_arret_pompe_min
@@ -37,6 +38,15 @@ pcha_duree_traitement:
   step: 5
   unit_of_measurement: "min"
   mode: box
+
+pcha_duree_vidange:
+  name: Durée de la vidange
+  icon: mdi:water-minus
+  min: 1
+  max: 10
+  step: 1
+  unit_of_measurement: "min"
+  mode: slider
 
 pcha_seuil_luminosite_chauffage:
   name: Seuil de luminosité chauffage
