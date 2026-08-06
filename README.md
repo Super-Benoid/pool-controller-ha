@@ -11,6 +11,12 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 
 Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du moteur de filtration.
 
+Le dashboard V2.0 actif est :
+
+```text
+dashboard/piscine.yaml
+```
+
 ## Base fonctionnelle V1.1
 
 * sonde de température directement immergée dans le bassin ;
@@ -56,8 +62,9 @@ Une ancienne correction `+2,0 °C` doit donc devenir un calibrage `−2,0 °C`.
 * architecture : `docs/ARCHITECTURE.md` ;
 * conventions : `docs/CONVENTIONS.md` ;
 * documentation courante : `docs/V1.1/` ;
-* historique : `docs/V1.0/` ;
 * exemples ESPHome : `esphome/`.
+
+Les anciennes versions restent consultables dans l'historique Git et dans les tags de version, notamment `v2.0`.
 
 ## Entités physiques nouvelles
 

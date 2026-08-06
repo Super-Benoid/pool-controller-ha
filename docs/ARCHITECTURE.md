@@ -1,7 +1,7 @@
 # Architecture — Pool Controller Home Assistant
 
-**Version :** V1.1  
-**Statut :** Figée
+**Version :** V2.0
+**Statut :** Courante
 
 ---
 
@@ -25,8 +25,7 @@ pool-controller-ha/
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── CONVENTIONS.md
-│   ├── V1.0/              # archive
-│   └── V1.1/              # référence courante
+│   └── V1.1/              # référence technique du moteur
 ├── esphome/
 ├── helpers/
 ├── installation/
@@ -155,6 +154,6 @@ Les états quotidiens nécessitant une restauration utilisent des capteurs templ
 
 # 10. Versions
 
-* `docs/V1.0/` est conservé comme historique figé.
-* `docs/V1.1/` décrit le code courant.
-* toute évolution ultérieure crée une nouvelle version documentaire sans réécrire l'historique.
+* la version publiée courante est identifiée par le tag `v2.0` ;
+* `docs/V1.1/` reste la référence technique détaillée du moteur ;
+* les états documentaires antérieurs restent consultables dans l'historique Git et les tags de version.
