@@ -12,7 +12,7 @@
 * correction des libellés tronqués dans l’en-tête du graphique des températures ;
 * centrage du pourcentage de progression et suppression de l’icône centrale de l’objectif quotidien de filtration ;
 * affichage de la luminosité moyenne diurne dans l’en-tête, incluant les passages nuageux sans courbe supplémentaire ;
-* affichage de la consommation électrique quotidienne dans l’en-tête de la puissance, sans courbe supplémentaire.
+* affichage de la consommation électrique quotidienne dans l’en-tête de la puissance, sans courbe supplémentaire.\n* affichage du nombre de cycles de filtration avec une décimale et signalement explicite d'une source de volume indisponible ;
 * restructuration des en-têtes ApexCharts pour contenir valeurs, unités et libellés dans leurs colonnes sans débordement ;
 * suppression de la dernière icône décorative de l’objectif et alignement du titre à gauche.
 
