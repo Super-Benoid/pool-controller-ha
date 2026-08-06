@@ -16,6 +16,7 @@
 #   binary_sensor.pcha_chauffage_solaire_actif
 #   binary_sensor.pcha_chauffage_solaire_requis
 #   binary_sensor.pcha_protection_serpentin_requise
+#   sensor.pcha_ecart_temperature_bassin_exterieure
 #   sensor.pcha_ecart_temperature_exterieure_bassin
 #   sensor.pcha_source_chauffage_solaire
 #   sensor.pcha_luminosite_moyenne_superieure_seuil_jour
@@ -26,6 +27,27 @@
 # Source de pilotage et écart thermique
 ################################################################################
 - sensor:
+    # Écart positif lorsque l'eau du bassin est plus chaude que l'air.
+    # Cette entité est dédiée à l'affichage du dashboard.
+    - name: PCHA Écart température bassin extérieure
+      unique_id: pcha_ecart_temperature_bassin_exterieure
+      default_entity_id: sensor.pcha_ecart_temperature_bassin_exterieure
+      icon: mdi:thermometer-lines
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set bassin = states('sensor.pcha_temperature_piscine') %}
+        {% set exterieure = states('sensor.pcha_temperature_exterieure') %}
+        {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %}
+        {% set exterieure_valide = state_attr('sensor.pcha_temperature_exterieure', 'source_available') | bool(false) and is_number(exterieure) %}
+        {% if bassin_valide and exterieure_valide %}
+          {{ ((bassin | float(0)) - (exterieure | float(0))) | round(1) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+
+    # Écart positif lorsque l'air est plus chaud que l'eau.
+    # Cette entité reste la référence métier du chauffage solaire de secours.
     - name: PCHA Écart température extérieure bassin
       unique_id: pcha_ecart_temperature_exterieure_bassin
       default_entity_id: sensor.pcha_ecart_temperature_exterieure_bassin
