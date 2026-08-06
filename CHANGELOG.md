@@ -1,5 +1,12 @@
 # Changelog
 
+## Maintenance après V2.0
+
+* suppression des anciens dashboards remplacés par le Concept D V2.0 ;
+* suppression d'une image dupliquée et d'un helper vide ;
+* retrait de la documentation V1.0 de la branche principale, toujours disponible dans l'historique Git ;
+* mise à jour de l'exemple de configuration vers le dashboard actif.
+
 ## V2.0 — 2026-08-05
 
 ### Dashboard Concept D

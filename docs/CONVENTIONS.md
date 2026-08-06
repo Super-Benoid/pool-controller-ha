@@ -274,11 +274,11 @@ Une solution simple et claire est toujours préférée à une solution complexe.
 
 # 17. Versionnement
 
-La version V1.0 reste archivée. La version V1.1 est la référence figée du code courant.
+La version publiée courante est V2.0. Les spécifications `docs/V1.1/` restent la référence technique détaillée du moteur.
 
-Toute nouvelle fonctionnalité non indispensable à la V1.1 est reportée à une version ultérieure.
+Toute nouvelle fonctionnalité est documentée dans le changelog et livrée dans une version identifiée.
 
-La stabilité de la V1.1 est prioritaire sur l'ajout de nouvelles fonctionnalités.
+La stabilité de la version publiée reste prioritaire sur l'ajout de nouvelles fonctionnalités.
 
 ---
 
@@ -293,4 +293,4 @@ La stabilité de la V1.1 est prioritaire sur l'ajout de nouvelles fonctionnalit�
 * Les identifiants historiques `temperature_piscine` sont conservés pour compatibilité, mais les libellés parlent de **bassin**.
 * `MES-004` surveille une chaîne distante complète, pas seulement une valeur numérique.
 * Les sources ESPHome de la luminosité sont abstraites avant toute utilisation métier.
-* Les documents V1.0 ne sont jamais modifiés : la référence courante se trouve dans `docs/V1.1/`.
+* Les versions documentaires retirées de la branche principale restent accessibles dans l'historique Git et les tags de version.

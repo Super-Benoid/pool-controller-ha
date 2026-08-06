@@ -14,6 +14,6 @@ La V1.1 introduit quatre évolutions principales :
 3. la luminosité est acquise par une D1 mini proche du BH1750 puis transmise à l'ESP32 Jardin ;
 4. en cas de perte de luminosité, le chauffage solaire utilise l'écart entre la température extérieure et celle du bassin.
 
-L'objectif quotidien est calculé à partir du maximum thermique observé entre minuit et trente minutes après le lever du soleil, puis figé jusqu'au lendemain. Sa planification vise toujours une fin deux heures avant le coucher du soleil.
+L'objectif quotidien est calculé à partir de la température calibrée moyenne de la veille, validée après au moins 18 heures de mesures exploitables, puis figé au changement de jour. En l'absence de moyenne valide, la dernière référence fiable est conservée. Sa planification vise toujours une fin deux heures avant le coucher du soleil.
 
-La documentation V1.0 reste conservée comme historique. Le dossier `docs/V1.1/` constitue la référence applicable au code courant.
+Le dossier `docs/V1.1/` constitue la référence technique détaillée du moteur. Les versions antérieures restent consultables dans l'historique Git et les tags de version.

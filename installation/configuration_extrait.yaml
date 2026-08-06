@@ -4,7 +4,7 @@
 #
 # Entrées
 #   /config/packages/
-#   pool-controller-ha/dashboard/piscine.yaml
+#   pool-controller-ha/dashboard/validation-premium-concept-d-v3.yaml
 #
 # Sorties
 #   Chargement des packages PCHA
@@ -21,7 +21,7 @@ lovelace:
   dashboards:
     pcha-piscine:
       mode: yaml
-      filename: pool-controller-ha/dashboard/piscine.yaml
-      title: Piscine
+      filename: pool-controller-ha/dashboard/validation-premium-concept-d-v3.yaml
+      title: Pool Controller
       icon: mdi:pool
       show_in_sidebar: true
