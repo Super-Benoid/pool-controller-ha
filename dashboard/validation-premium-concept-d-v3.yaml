@@ -20,14 +20,14 @@ views:
       attachment: fixed
     type: custom:grid-layout
     layout:
-      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-columns: repeat(16, minmax(0, 1fr))
       grid-template-areas: |
-        "header header header header header header header header header header header header"
-        "mode mode mode machine machine machine niveau niveau niveau pompe pompe pompe"
-        "temperature temperature luminosite luminosite debit debit puissance puissance objectif objectif objectif objectif"
-        "reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre"
-        "mode-reglage mode-reglage mode-reglage consigne consigne consigne seuil seuil seuil alarmes alarmes alarmes"
-        "activite activite activite activite activite activite activite activite activite activite activite activite"
+        "header header header header header header header header header header header header header header header header"
+        "mode mode mode mode machine machine machine machine niveau niveau niveau niveau pompe pompe pompe pompe"
+        "temperature temperature temperature luminosite luminosite luminosite debit debit debit puissance puissance puissance objectif objectif objectif objectif"
+        "reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre reglages-titre"
+        "mode-reglage mode-reglage mode-reglage mode-reglage consigne consigne consigne consigne seuil seuil seuil seuil alarmes alarmes alarmes alarmes"
+        "activite activite activite activite activite activite activite activite activite activite activite activite activite activite activite activite"
       grid-gap: 12px
       margin: 12px
       mediaquery:
@@ -498,6 +498,17 @@ views:
             group_by:
               func: avg
               duration: 10min
+          - entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
+            name: Ensoleillement
+            type: line
+            color: '#c4b5fd'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_header: true
+              in_chart: false
+              legend_value: false
           - entity: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
             name: Moy. jour
             type: line
@@ -566,7 +577,7 @@ views:
             }
             #header__states {
               display: grid;
-              grid-template-columns: repeat(2, minmax(0, 1fr));
+              grid-template-columns: repeat(3, minmax(0, 1fr));
               gap: 10px;
               margin: 0;
               width: 100%;
@@ -580,9 +591,16 @@ views:
               overflow: visible;
             }
             #header__states > #states__state:nth-child(2) {
-              text-align: right;
+              text-align: center;
             }
             #header__states > #states__state:nth-child(2) #state__value {
+              justify-content: center;
+              margin: 0;
+            }
+            #header__states > #states__state:nth-child(3) {
+              text-align: right;
+            }
+            #header__states > #states__state:nth-child(3) #state__value {
               justify-content: flex-end;
               margin: 0;
             }
@@ -1965,6 +1983,584 @@ views:
             ha-card {
               background: linear-gradient(145deg, rgba(5,22,38,.98), rgba(15,23,42,.98));
               border: 1px solid rgba(34,211,238,.23);
+              border-radius: 18px;
+              box-shadow: 0 14px 36px rgba(0,0,0,.30);
+              overflow: hidden;
+            }
+
+  - title: Solaire
+    path: solaire
+    icon: mdi:white-balance-sunny
+    background: *pcha_background
+    type: custom:grid-layout
+    layout:
+      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-areas: |
+        "header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire"
+        "solaire-requis solaire-requis solaire-requis solaire-actif solaire-actif solaire-actif protection protection protection source-solaire source-solaire source-solaire"
+        "temperature-solaire temperature-solaire temperature-solaire temperature-solaire temperature-solaire temperature-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire"
+        "bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre"
+        "ensoleillement ensoleillement ensoleillement moyenne-solaire moyenne-solaire moyenne-solaire seuil-solaire seuil-solaire seuil-solaire delta-solaire delta-solaire delta-solaire"
+        "reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre"
+        "consigne-solaire consigne-solaire consigne-solaire calibrage-solaire calibrage-solaire calibrage-solaire seuil-reglage-solaire seuil-reglage-solaire seuil-reglage-solaire validation-solaire validation-solaire validation-solaire"
+        "historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire"
+      grid-gap: 12px
+      margin: 12px
+      mediaquery:
+        "(max-width: 1200px)":
+          grid-template-columns: repeat(8, minmax(0, 1fr))
+          grid-template-areas: |
+            "header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire header-solaire"
+            "solaire-requis solaire-requis solaire-requis solaire-requis solaire-actif solaire-actif solaire-actif solaire-actif"
+            "protection protection protection protection source-solaire source-solaire source-solaire source-solaire"
+            "temperature-solaire temperature-solaire temperature-solaire temperature-solaire temperature-solaire temperature-solaire temperature-solaire temperature-solaire"
+            "luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire luminosite-solaire"
+            "bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre bilan-titre"
+            "ensoleillement ensoleillement ensoleillement ensoleillement moyenne-solaire moyenne-solaire moyenne-solaire moyenne-solaire"
+            "seuil-solaire seuil-solaire seuil-solaire seuil-solaire delta-solaire delta-solaire delta-solaire delta-solaire"
+            "reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre reglages-solaire-titre"
+            "consigne-solaire consigne-solaire consigne-solaire consigne-solaire calibrage-solaire calibrage-solaire calibrage-solaire calibrage-solaire"
+            "seuil-reglage-solaire seuil-reglage-solaire seuil-reglage-solaire seuil-reglage-solaire validation-solaire validation-solaire validation-solaire validation-solaire"
+            "historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire historique-solaire"
+        "(max-width: 700px)":
+          grid-template-columns: 1fr
+          grid-template-areas: |
+            "header-solaire"
+            "solaire-requis"
+            "solaire-actif"
+            "protection"
+            "source-solaire"
+            "temperature-solaire"
+            "luminosite-solaire"
+            "bilan-titre"
+            "ensoleillement"
+            "moyenne-solaire"
+            "seuil-solaire"
+            "delta-solaire"
+            "reglages-solaire-titre"
+            "consigne-solaire"
+            "calibrage-solaire"
+            "seuil-reglage-solaire"
+            "validation-solaire"
+            "historique-solaire"
+          grid-gap: 10px
+          margin: 8px
+
+    cards:
+      ##########################################################################
+      # En-tête Solaire
+      ##########################################################################
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        update_timer: 1min
+        tap_action:
+          action: none
+        triggers_update:
+          - sensor.pcha_source_chauffage_solaire
+          - binary_sensor.pcha_chauffage_solaire_requis
+          - binary_sensor.pcha_chauffage_solaire_actif
+          - binary_sensor.pcha_protection_serpentin_requise
+        view_layout:
+          grid-area: header-solaire
+        custom_fields:
+          titre: Chauffage solaire
+          sous_titre: Confort thermique et protection du serpentin
+          heure: |
+            [[[
+              return new Date().toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            ]]]
+          statuts: |
+            [[[
+              const on = (id) => states[id]?.state === 'on';
+              const pill = (icon, label, value, color) => `
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid ${color}55;background:${color}14;white-space:nowrap;">
+                  <ha-icon icon="${icon}" style="width:18px;color:${color};"></ha-icon>
+                  <span style="color:#94a3b8;">${label}</span>
+                  <b style="color:${color};">${value}</b>
+                </span>`;
+              const actif = on('binary_sensor.pcha_chauffage_solaire_actif');
+              const requis = on('binary_sensor.pcha_chauffage_solaire_requis');
+              const protection = on('binary_sensor.pcha_protection_serpentin_requise');
+              const source = states['sensor.pcha_source_chauffage_solaire']?.state ?? 'Indisponible';
+              return `<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;">
+                ${pill('mdi:source-branch', 'Source', source.replaceAll('_', ' '), source === 'LUMINOSITE' ? '#fbbf24' : '#a78bfa')}
+                ${pill('mdi:solar-power', 'Chauffage', actif ? 'Actif' : requis ? 'Requis' : 'Inactif', actif ? '#34d399' : requis ? '#fbbf24' : '#94a3b8')}
+                ${pill('mdi:shield-sun-outline', 'Serpentin', protection ? 'Protection' : 'Normal', protection ? '#fb7185' : '#22d3ee')}
+              </div>`;
+            ]]]
+        styles:
+          card:
+            - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
+            - border: 1px solid rgba(167,139,250,.30)
+            - border-radius: 20px
+            - box-shadow: 0 16px 42px rgba(0,0,0,.32), 0 0 30px rgba(167,139,250,.08)
+            - padding: 15px 22px
+            - min-height: 72px
+          grid:
+            - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts"'
+            - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
+            - grid-template-rows: min-content min-content
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 30px
+              - font-weight: 800
+            sous_titre:
+              - justify-self: start
+              - color: '#94a3b8'
+              - font-size: 14px
+              - padding-top: 5px
+            heure:
+              - justify-self: center
+              - align-self: center
+              - padding: 5px 18px
+              - border-radius: 14px
+              - border: 1px solid rgba(167,139,250,.20)
+              - background: rgba(24,18,54,.58)
+              - color: '#c4b5fd'
+              - font-size: 27px
+              - line-height: 1
+              - font-weight: 800
+            statuts:
+              - justify-self: stretch
+              - align-self: center
+              - font-size: 12px
+
+      ##########################################################################
+      # Décision solaire
+      ##########################################################################
+      - type: custom:button-card
+        entity: binary_sensor.pcha_chauffage_solaire_requis
+        name: Chauffage requis
+        icon: mdi:solar-power
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: solaire-requis
+        state:
+          - value: 'on'
+            color: '#fbbf24'
+          - value: 'off'
+            color: '#94a3b8'
+        styles: &solar_status_styles
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(167,139,250,.27)
+            - border-radius: 18px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 13px 16px
+            - min-height: 74px
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 52px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - width: 39px
+          name:
+            - justify-self: start
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 600
+          state:
+            - justify-self: start
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_chauffage_solaire_actif
+        name: Chauffage actif
+        icon: mdi:sun-thermometer-outline
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: solaire-actif
+        state:
+          - value: 'on'
+            color: '#34d399'
+          - value: 'off'
+            color: '#94a3b8'
+        styles: *solar_status_styles
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_protection_serpentin_requise
+        name: Protection serpentin
+        icon: mdi:shield-sun-outline
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: protection
+        state:
+          - value: 'on'
+            color: '#fb7185'
+          - value: 'off'
+            color: '#22d3ee'
+        styles: *solar_status_styles
+
+      - type: custom:button-card
+        entity: sensor.pcha_source_chauffage_solaire
+        name: Source de pilotage
+        icon: mdi:source-branch
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: source-solaire
+        styles: *solar_status_styles
+
+      ##########################################################################
+      # Courbes solaires
+      ##########################################################################
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: temperature-solaire
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Températures bassin / extérieur
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_temperature_piscine
+            name: Bassin
+            color: '#22d3ee'
+            stroke_width: 3
+            float_precision: 1
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: avg
+              duration: 10min
+          - entity: sensor.pcha_temperature_exterieure
+            name: Extérieur
+            color: '#e879f9'
+            stroke_width: 3
+            float_precision: 1
+            show:
+              in_header: true
+            group_by:
+              func: avg
+              duration: 10min
+        apex_config: &solar_apex_config
+          chart:
+            height: 220
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+          dataLabels:
+            enabled: false
+          legend:
+            show: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            labels:
+              style:
+                colors: '#94a3b8'
+          tooltip:
+            theme: dark
+        card_mod:
+          style: |
+            #header__title { color: #dffaff; font-weight: 650; }
+            #header__states { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; width:100%; }
+            #header__states > #states__state:nth-child(2) { text-align:right; }
+            #header__states > #states__state:nth-child(2) #state__value { justify-content:flex-end; }
+            ha-card {
+              background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
+              border: 1px solid rgba(34,211,238,.32);
+              border-radius: 18px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: luminosite-solaire
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Luminosité et seuil solaire
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_luminosite
+            name: Actuelle
+            type: area
+            color: '#a78bfa'
+            stroke_width: 3
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: avg
+              duration: 10min
+          - entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
+            name: Ensoleillement
+            color: '#c4b5fd'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_header: true
+              in_chart: false
+              legend_value: false
+          - entity: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+            name: Moy. jour
+            color: '#e879f9'
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_header: true
+              in_chart: false
+              legend_value: false
+          - entity: number.pcha_seuil_luminosite_chauffage_klux
+            name: Seuil
+            color: '#fbbf24'
+            stroke_width: 2
+            float_precision: 1
+            show:
+              in_header: false
+              legend_value: false
+        apex_config:
+          <<: *solar_apex_config
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.40
+              opacityTo: 0.03
+        card_mod:
+          style: |
+            #header__title { color:#eee8ff; font-weight:650; }
+            #header__states { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; width:100%; }
+            #header__states > #states__state:nth-child(2) { text-align:center; }
+            #header__states > #states__state:nth-child(2) #state__value { justify-content:center; }
+            #header__states > #states__state:nth-child(3) { text-align:right; }
+            #header__states > #states__state:nth-child(3) #state__value { justify-content:flex-end; }
+            ha-card {
+              background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(34,22,65,.94));
+              border: 1px solid rgba(167,139,250,.34);
+              border-radius: 18px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28);
+              overflow: hidden;
+            }
+
+      ##########################################################################
+      # Bilan solaire du jour
+      ##########################################################################
+      - type: custom:button-card
+        name: Bilan solaire du jour
+        icon: mdi:chart-sunburst
+        view_layout:
+          grid-area: bilan-titre
+        styles: &solar_section_styles
+          card:
+            - background: rgba(5,28,42,.90)
+            - border: 1px solid rgba(34,211,238,.22)
+            - border-radius: 16px
+            - padding: 8px 16px
+          grid:
+            - grid-template-areas: '"i n"'
+            - grid-template-columns: min-content 1fr
+          icon:
+            - color: '#a78bfa'
+            - width: 24px
+          name:
+            - justify-self: start
+            - color: '#f8fafc'
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: custom:button-card
+        entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
+        name: Ensoleillement
+        icon: mdi:sun-clock-outline
+        show_state: false
+        view_layout:
+          grid-area: ensoleillement
+        custom_fields:
+          valeur: |
+            [[[
+              const min = Number(entity?.state);
+              if (!Number.isFinite(min)) return 'Indisponible';
+              return `${String(Math.floor(min / 60)).padStart(2, '0')}h${String(Math.round(min % 60)).padStart(2, '0')}`;
+            ]]]
+        styles: &solar_metric_styles
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(167,139,250,.27)
+            - border-radius: 18px
+            - padding: 14px 17px
+            - min-height: 92px
+          grid:
+            - grid-template-areas: '"i n" "i valeur"'
+            - grid-template-columns: 46px 1fr
+          icon:
+            - color: '#fbbf24'
+            - width: 34px
+          name:
+            - justify-self: start
+            - color: '#cbd5e1'
+            - font-size: 14px
+          custom_fields:
+            valeur:
+              - justify-self: start
+              - color: '#fbbf24'
+              - font-size: 24px
+              - font-weight: 800
+
+      - type: custom:button-card
+        entity: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+        name: Luminosité moyenne
+        icon: mdi:sun-compass
+        show_state: false
+        view_layout:
+          grid-area: moyenne-solaire
+        custom_fields:
+          valeur: |
+            [[[
+              const lux = Number(entity?.state);
+              return Number.isFinite(lux) ? `${(lux / 1000).toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1})} klux` : 'Indisponible';
+            ]]]
+        styles: *solar_metric_styles
+
+      - type: custom:button-card
+        entity: number.pcha_seuil_luminosite_chauffage_klux
+        name: Seuil solaire
+        icon: mdi:white-balance-sunny
+        show_state: false
+        view_layout:
+          grid-area: seuil-solaire
+        custom_fields:
+          valeur: |
+            [[[
+              const valeur = Number(entity?.state);
+              return Number.isFinite(valeur) ? `${valeur.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1})} klux` : 'Indisponible';
+            ]]]
+        styles: *solar_metric_styles
+
+      - type: custom:button-card
+        entity: sensor.pcha_ecart_temperature_exterieure_bassin
+        name: Écart extérieur − bassin
+        icon: mdi:thermometer-lines
+        show_state: false
+        view_layout:
+          grid-area: delta-solaire
+        custom_fields:
+          valeur: |
+            [[[
+              const valeur = Number(entity?.state);
+              return Number.isFinite(valeur) ? `${valeur.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1})} °C` : 'Indisponible';
+            ]]]
+        styles: *solar_metric_styles
+
+      ##########################################################################
+      # Réglages solaires
+      ##########################################################################
+      - type: custom:button-card
+        name: Réglages solaires
+        icon: mdi:tune-variant
+        view_layout:
+          grid-area: reglages-solaire-titre
+        styles: *solar_section_styles
+
+      - type: tile
+        entity: input_number.pcha_temperature_de_consigne
+        name: Consigne bassin
+        icon: mdi:thermometer-water
+        color: cyan
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: consigne-solaire
+        card_mod: &solar_tile_mod
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(167,139,250,.27);
+              border-radius: 18px;
+              min-height: 100px;
+            }
+
+      - type: tile
+        entity: input_number.pcha_correction_temperature_piscine
+        name: Calibrage bassin
+        icon: mdi:tune-vertical
+        color: cyan
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: calibrage-solaire
+        card_mod: *solar_tile_mod
+
+      - type: tile
+        entity: number.pcha_seuil_luminosite_chauffage_klux
+        name: Seuil solaire
+        icon: mdi:white-balance-sunny
+        color: purple
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: seuil-reglage-solaire
+        card_mod: *solar_tile_mod
+
+      - type: tile
+        entity: input_number.pcha_temps_validation_luminosite
+        name: Validation luminosité
+        icon: mdi:timer-check-outline
+        color: purple
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: validation-solaire
+        card_mod: *solar_tile_mod
+
+      ##########################################################################
+      # Historique solaire
+      ##########################################################################
+      - type: history-graph
+        title: Chauffage solaire — 24 heures
+        hours_to_show: 24
+        view_layout:
+          grid-area: historique-solaire
+        entities:
+          - entity: binary_sensor.pcha_chauffage_solaire_requis
+            name: Requis
+          - entity: binary_sensor.pcha_chauffage_solaire_actif
+            name: Actif
+          - entity: binary_sensor.pcha_protection_serpentin_requise
+            name: Protection
+          - entity: binary_sensor.pcha_liaison_luminosite_distante
+            name: Liaison D1 mini
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(5,22,38,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(167,139,250,.25);
               border-radius: 18px;
               box-shadow: 0 14px 36px rgba(0,0,0,.30);
               overflow: hidden;
