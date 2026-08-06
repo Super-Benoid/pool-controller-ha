@@ -648,9 +648,10 @@ views:
             name: Cycles
             type: line
             color: '#67e8f9'
+            unit: x
             float_precision: 1
             show:
-              in_header: raw
+              in_header: true
               in_chart: false
               legend_value: false
         apex_config:
