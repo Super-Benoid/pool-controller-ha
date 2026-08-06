@@ -22,6 +22,6 @@ lovelace:
     pcha-validation:
       mode: yaml
       filename: pool-controller-ha/dashboard/piscine.yaml
-      title: PCHA Validation
+      title: PCHA
       icon: mdi:pool
       show_in_sidebar: true
