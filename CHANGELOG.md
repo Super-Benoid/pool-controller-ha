@@ -19,6 +19,8 @@
 * filtrage des microcoupures de puissance : MES-003 s'active après 60 secondes d'indisponibilité et se réarme après 10 secondes stables.
 * correction du compteur de cycles : chargement explicite de l'intégrateur de débit et suppression du faux `0` lorsque sa source n'est pas disponible.
 * ajout de l'onglet Pilotage Concept D : chaîne de décision, commandes de mode et traitement, mesures de fonctionnement, temporisations et historique responsive.
+* rééquilibrage de l'accueil : graphes élargis, objectif quotidien compact et durée d'ensoleillement ajoutée entre la valeur actuelle et la moyenne de luminosité.
+* ajout de l'onglet Solaire Concept D : décision de chauffe, courbes température/luminosité, bilan du jour, réglages et historique responsive.
 
 ## V1.1 — 2026-08-04
 
