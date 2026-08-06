@@ -499,7 +499,7 @@ views:
               func: avg
               duration: 10min
           - entity: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
-            name: Moy. > seuil
+            name: Moy. jour
             type: line
             color: '#e879f9'
             unit: klux
