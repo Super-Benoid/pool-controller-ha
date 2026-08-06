@@ -4,11 +4,11 @@
 #
 # Entrées
 #   /config/packages/
-#   pool-controller-ha/dashboard/validation-premium-concept-d-v3.yaml
+#   pool-controller-ha/dashboard/piscine.yaml
 #
 # Sorties
 #   Chargement des packages PCHA
-#   Tableau de bord pcha-piscine
+#   Tableau de bord pcha-validation
 ################################################################################
 
 homeassistant:
@@ -19,9 +19,9 @@ frontend:
 
 lovelace:
   dashboards:
-    pcha-piscine:
+    pcha-validation:
       mode: yaml
-      filename: pool-controller-ha/dashboard/validation-premium-concept-d-v3.yaml
-      title: Pool Controller
+      filename: pool-controller-ha/dashboard/piscine.yaml
+      title: PCHA Validation
       icon: mdi:pool
       show_in_sidebar: true

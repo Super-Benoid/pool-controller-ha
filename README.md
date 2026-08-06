@@ -14,7 +14,7 @@ Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du m
 Le dashboard V2.0 actif est :
 
 ```text
-dashboard/validation-premium-concept-d-v3.yaml
+dashboard/piscine.yaml
 ```
 
 ## Base fonctionnelle V1.1
