@@ -21,6 +21,7 @@
 * ajout de l'onglet Pilotage Concept D : chaîne de décision, commandes de mode et traitement, mesures de fonctionnement, temporisations et historique responsive.
 * rééquilibrage de l'accueil : graphes élargis, objectif quotidien compact et durée d'ensoleillement ajoutée entre la valeur actuelle et la moyenne de luminosité.
 * ajout de l'onglet Solaire Concept D : décision de chauffe, courbes température/luminosité, bilan du jour, réglages et historique responsive.
+* ajout de l'onglet Diagnostics Concept D : synthèse globale, comptage des défauts actifs, familles MES/COH/PRO, gravités, cause MES-004, temporisations et historique 24 heures.
 
 ## V1.1 — 2026-08-04
 
