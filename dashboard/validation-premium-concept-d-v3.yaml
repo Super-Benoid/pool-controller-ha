@@ -1872,9 +1872,14 @@ views:
             - border: 1px solid rgba(34,211,238,.22)
             - border-radius: 15px
             - padding: 9px 16px
+          grid:
+            - grid-template-areas: '"titre"'
+            - grid-template-columns: 1fr
           custom_fields:
             titre:
               - justify-self: start
+              - width: 100%
+              - text-align: left
               - color: '#f8fafc'
               - font-size: 17px
               - font-weight: 750
