@@ -2565,3 +2565,628 @@ views:
               box-shadow: 0 14px 36px rgba(0,0,0,.30);
               overflow: hidden;
             }
+
+  - title: Diagnostics
+    path: diagnostics
+    icon: mdi:shield-alert-outline
+    background: *pcha_background
+    type: custom:grid-layout
+    layout:
+      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-areas: |
+        "header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics"
+        "niveau-global niveau-global niveau-global actifs actifs actifs machine-diagnostic machine-diagnostic machine-diagnostic acquitter acquitter acquitter"
+        "mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre"
+        "mes-001 mes-001 mes-001 mes-002 mes-002 mes-002 mes-003 mes-003 mes-003 mes-004 mes-004 mes-004"
+        "coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre"
+        "coh-001 coh-001 coh-001 coh-001 coh-001 coh-001 coh-002 coh-002 coh-002 coh-002 coh-002 coh-002"
+        "pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre"
+        "pro-001 pro-001 pro-001 pro-001 pro-002 pro-002 pro-002 pro-002 pro-003 pro-003 pro-003 pro-003"
+        "temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic"
+        "validation-temperature validation-temperature validation-temperature validation-temperature validation-debit-diagnostic validation-debit-diagnostic validation-debit-diagnostic validation-debit-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic"
+        "historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics"
+      grid-gap: 12px
+      margin: 12px
+      mediaquery:
+        "(max-width: 1200px)":
+          grid-template-columns: repeat(8, minmax(0, 1fr))
+          grid-template-areas: |
+            "header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics header-diagnostics"
+            "niveau-global niveau-global niveau-global niveau-global actifs actifs actifs actifs"
+            "machine-diagnostic machine-diagnostic machine-diagnostic machine-diagnostic acquitter acquitter acquitter acquitter"
+            "mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre"
+            "mes-001 mes-001 mes-001 mes-001 mes-002 mes-002 mes-002 mes-002"
+            "mes-003 mes-003 mes-003 mes-003 mes-004 mes-004 mes-004 mes-004"
+            "coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre"
+            "coh-001 coh-001 coh-001 coh-001 coh-002 coh-002 coh-002 coh-002"
+            "pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre"
+            "pro-001 pro-001 pro-001 pro-001 pro-002 pro-002 pro-002 pro-002"
+            "pro-003 pro-003 pro-003 pro-003 pro-003 pro-003 pro-003 pro-003"
+            "temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic temporisations-diagnostic"
+            "validation-temperature validation-temperature validation-temperature validation-temperature validation-debit-diagnostic validation-debit-diagnostic validation-debit-diagnostic validation-debit-diagnostic"
+            "validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic validation-luminosite-diagnostic"
+            "historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics historique-diagnostics"
+        "(max-width: 700px)":
+          grid-template-columns: 1fr
+          grid-template-areas: |
+            "header-diagnostics"
+            "niveau-global"
+            "actifs"
+            "machine-diagnostic"
+            "acquitter"
+            "mes-titre"
+            "mes-001"
+            "mes-002"
+            "mes-003"
+            "mes-004"
+            "coh-titre"
+            "coh-001"
+            "coh-002"
+            "pro-titre"
+            "pro-001"
+            "pro-002"
+            "pro-003"
+            "temporisations-diagnostic"
+            "validation-temperature"
+            "validation-debit-diagnostic"
+            "validation-luminosite-diagnostic"
+            "historique-diagnostics"
+          grid-gap: 10px
+          margin: 8px
+
+    cards:
+      ##########################################################################
+      # En-tête Diagnostics
+      ##########################################################################
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        update_timer: 1min
+        tap_action:
+          action: none
+        triggers_update:
+          - input_select.pcha_niveau_fonctionnement
+          - input_select.pcha_etat_machine
+          - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+          - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+          - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+          - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+          - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+          - binary_sensor.pcha_diagnostic_pro_001_debit_critique
+          - binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+          - binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+        view_layout:
+          grid-area: header-diagnostics
+        custom_fields:
+          titre: Diagnostics et sécurité
+          sous_titre: Disponibilité, cohérence et surveillance du procédé
+          heure: |
+            [[[
+              return new Date().toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            ]]]
+          statuts: |
+            [[[
+              const ids = [
+                'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+                'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
+                'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
+                'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
+                'binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant',
+                'binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible'
+              ];
+              const actifs = ids.filter(id => states[id]?.state === 'on').length;
+              const niveau = states['input_select.pcha_niveau_fonctionnement']?.state ?? 'INDISPONIBLE';
+              const machine = states['input_select.pcha_etat_machine']?.state ?? 'INDISPONIBLE';
+              const color = niveau === 'CRITIQUE' ? '#fb7185' : niveau === 'DEGRADE' ? '#fbbf24' : '#34d399';
+              const pill = (icon, label, value, c) => `
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid ${c}55;background:${c}14;white-space:nowrap;">
+                  <ha-icon icon="${icon}" style="width:18px;color:${c};"></ha-icon>
+                  <span style="color:#94a3b8;">${label}</span>
+                  <b style="color:${c};">${value}</b>
+                </span>`;
+              return `<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;">
+                ${pill('mdi:shield-check-outline', 'Niveau', niveau, color)}
+                ${pill('mdi:alert-circle-outline', 'Actifs', actifs, actifs ? '#fb7185' : '#34d399')}
+                ${pill('mdi:state-machine', 'Machine', machine, '#22d3ee')}
+              </div>`;
+            ]]]
+        styles:
+          card:
+            - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
+            - border: 1px solid rgba(34,211,238,.30)
+            - border-radius: 20px
+            - box-shadow: 0 16px 42px rgba(0,0,0,.32), 0 0 30px rgba(34,211,238,.08)
+            - padding: 15px 22px
+            - min-height: 72px
+          grid:
+            - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts"'
+            - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
+            - grid-template-rows: min-content min-content
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 30px
+              - font-weight: 800
+            sous_titre:
+              - justify-self: start
+              - color: '#94a3b8'
+              - font-size: 14px
+              - padding-top: 5px
+            heure:
+              - justify-self: center
+              - align-self: center
+              - padding: 5px 18px
+              - border-radius: 14px
+              - border: 1px solid rgba(103,232,249,.18)
+              - background: rgba(8,28,46,.58)
+              - color: '#67e8f9'
+              - font-size: 27px
+              - line-height: 1
+              - font-weight: 800
+            statuts:
+              - justify-self: stretch
+              - align-self: center
+              - font-size: 12px
+
+      ##########################################################################
+      # Synthèse globale
+      ##########################################################################
+      - type: custom:button-card
+        entity: input_select.pcha_niveau_fonctionnement
+        name: Niveau global
+        icon: mdi:shield-check-outline
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: niveau-global
+        state:
+          - value: NORMAL
+            color: '#34d399'
+          - value: DEGRADE
+            color: '#fbbf24'
+          - value: CRITIQUE
+            color: '#fb7185'
+        styles: &diag_summary_styles
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(34,211,238,.25)
+            - border-radius: 18px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 13px 16px
+            - min-height: 78px
+          grid:
+            - grid-template-areas: '"i n" "i s"'
+            - grid-template-columns: 52px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - width: 39px
+          name:
+            - justify-self: start
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 600
+          state:
+            - justify-self: start
+            - font-size: 18px
+            - font-weight: 800
+
+      - type: custom:button-card
+        name: Diagnostics actifs
+        icon: mdi:alert-circle-outline
+        show_state: false
+        tap_action:
+          action: none
+        triggers_update:
+          - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+          - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+          - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+          - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+          - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+          - binary_sensor.pcha_diagnostic_pro_001_debit_critique
+          - binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+          - binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+        view_layout:
+          grid-area: actifs
+        custom_fields:
+          valeur: |
+            [[[
+              const ids = [
+                'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+                'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
+                'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
+                'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
+                'binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant',
+                'binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible'
+              ];
+              const n = ids.filter(id => states[id]?.state === 'on').length;
+              return `<span style="color:${n ? '#fb7185' : '#34d399'}">${n}</span>`;
+            ]]]
+        styles:
+          <<: *diag_summary_styles
+          grid:
+            - grid-template-areas: '"i n" "i valeur"'
+            - grid-template-columns: 52px 1fr
+          custom_fields:
+            valeur:
+              - justify-self: start
+              - font-size: 24px
+              - font-weight: 850
+
+      - type: custom:button-card
+        entity: input_select.pcha_etat_machine
+        name: État machine
+        icon: mdi:state-machine
+        show_state: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: machine-diagnostic
+        styles: *diag_summary_styles
+
+      - type: tile
+        entity: input_boolean.pcha_acquitter_alarmes
+        name: Acquitter les alarmes
+        icon: mdi:alarm-check
+        color: red
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: acquitter
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(40,17,34,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(251,113,133,.30);
+              border-radius: 18px;
+              min-height: 78px;
+            }
+
+      ##########################################################################
+      # Sections et cartes diagnostics
+      ##########################################################################
+      - type: custom:button-card
+        name: MES — Disponibilité des mesures
+        icon: mdi:gauge-empty
+        view_layout:
+          grid-area: mes-titre
+        styles: &diag_section_styles
+          card:
+            - background: rgba(5,28,42,.90)
+            - border: 1px solid rgba(34,211,238,.22)
+            - border-radius: 16px
+            - padding: 8px 16px
+          grid:
+            - grid-template-areas: '"i n"'
+            - grid-template-columns: min-content 1fr
+          icon:
+            - color: '#22d3ee'
+            - width: 24px
+          name:
+            - justify-self: start
+            - color: '#f8fafc'
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+        name: MES-001 — Température bassin
+        label: Mesure indisponible
+        icon: mdi:thermometer-alert
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: mes-001
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+        styles: &diag_card_styles
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(52,211,153,.25)
+            - border-radius: 18px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.26)
+            - padding: 15px 16px
+            - min-height: 98px
+          grid:
+            - grid-template-areas: '"i n gravite" "i l gravite"'
+            - grid-template-columns: 46px minmax(0, 1fr) auto
+            - grid-template-rows: min-content min-content
+          icon:
+            - color: '#34d399'
+            - width: 34px
+          name:
+            - justify-self: start
+            - color: '#e2e8f0'
+            - font-size: 14px
+            - font-weight: 700
+          label:
+            - justify-self: start
+            - color: '#94a3b8'
+            - font-size: 12px
+            - white-space: normal
+            - text-align: left
+          custom_fields:
+            gravite:
+              - justify-self: end
+              - align-self: center
+              - padding: 5px 8px
+              - border-radius: 999px
+              - background: rgba(52,211,153,.12)
+              - color: '#34d399'
+              - font-size: 11px
+              - font-weight: 800
+        state: &diag_degrade_state
+          - value: 'on'
+            styles:
+              card:
+                - background: linear-gradient(145deg, rgba(50,34,10,.98), rgba(31,24,35,.98))
+                - border: 1px solid rgba(251,191,36,.55)
+                - box-shadow: 0 0 24px rgba(251,191,36,.12)
+              icon:
+                - color: '#fbbf24'
+              custom_fields:
+                gravite:
+                  - background: rgba(251,191,36,.15)
+                  - color: '#fbbf24'
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+        name: MES-002 — Débit filtration
+        label: Mesure indisponible
+        icon: mdi:gauge-empty
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: mes-002
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: &diag_critique_state
+          - value: 'on'
+            styles:
+              card:
+                - background: linear-gradient(145deg, rgba(56,18,30,.98), rgba(31,20,39,.98))
+                - border: 1px solid rgba(251,113,133,.60)
+                - box-shadow: 0 0 26px rgba(251,113,133,.14)
+              icon:
+                - color: '#fb7185'
+              custom_fields:
+                gravite:
+                  - background: rgba(251,113,133,.15)
+                  - color: '#fb7185'
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+        name: MES-003 — Puissance pompe
+        label: Mesure indisponible après 60 s
+        icon: mdi:flash-alert
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: mes-003
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_degrade_state
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+        name: MES-004 — Luminosité distante
+        label: |
+          [[[
+            if (entity.state !== 'on') return 'Chaîne distante disponible';
+            const cause = entity.attributes?.cause ?? 'CAUSE INCONNUE';
+            return cause.replaceAll('_', ' ');
+          ]]]
+        icon: mdi:sun-wireless
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: mes-004
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_degrade_state
+
+      - type: custom:button-card
+        name: COH — Cohérence des mesures
+        icon: mdi:compare-horizontal
+        view_layout:
+          grid-area: coh-titre
+        styles: *diag_section_styles
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+        name: COH-001 — Débit / puissance / commande
+        label: Valeurs ou commande incohérentes
+        icon: mdi:vector-difference-ab
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: coh-001
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_degrade_state
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+        name: COH-002 — Température bassin
+        label: Hors de la plage stricte 10–50 °C
+        icon: mdi:thermometer-alert
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: coh-002
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_degrade_state
+
+      - type: custom:button-card
+        name: PRO — Surveillance du procédé
+        icon: mdi:alert-octagon-outline
+        view_layout:
+          grid-area: pro-titre
+        styles: *diag_section_styles
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+        name: PRO-001 — Débit critique
+        label: Débit inférieur à 500 L/h en filtration
+        icon: mdi:water-alert
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: pro-001
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_critique_state
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+        name: PRO-002 — Débit insuffisant
+        label: Débit compris entre 500 et 3 000 L/h
+        icon: mdi:water-minus
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: pro-002
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_degrade_state
+
+      - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+        name: PRO-003 — Protection serpentin
+        label: Circulation de protection impossible
+        icon: mdi:shield-sun-outline
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: pro-003
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_critique_state
+
+      ##########################################################################
+      # Temporisations et historique
+      ##########################################################################
+      - type: custom:button-card
+        name: Temporisations des diagnostics
+        icon: mdi:timer-cog-outline
+        view_layout:
+          grid-area: temporisations-diagnostic
+        styles: *diag_section_styles
+
+      - type: tile
+        entity: input_number.pcha_temps_validation_temperature_piscine
+        name: Validation température
+        icon: mdi:thermometer-clock
+        color: cyan
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: validation-temperature
+        card_mod: &diag_tile_mod
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(34,211,238,.25);
+              border-radius: 18px;
+              min-height: 100px;
+            }
+
+      - type: tile
+        entity: input_number.pcha_temps_validation_debit
+        name: Validation débit
+        icon: mdi:timer-alert-outline
+        color: cyan
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: validation-debit-diagnostic
+        card_mod: *diag_tile_mod
+
+      - type: tile
+        entity: input_number.pcha_temps_validation_luminosite
+        name: Validation luminosité
+        icon: mdi:sun-clock-outline
+        color: purple
+        features:
+          - type: numeric-input
+            style: buttons
+        view_layout:
+          grid-area: validation-luminosite-diagnostic
+        card_mod: *diag_tile_mod
+
+      - type: history-graph
+        title: Historique des diagnostics — 24 heures
+        hours_to_show: 24
+        view_layout:
+          grid-area: historique-diagnostics
+        entities:
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau global
+          - entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+            name: MES-001
+          - entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+            name: MES-002
+          - entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+            name: MES-003
+          - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+            name: MES-004
+          - entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+            name: COH-001
+          - entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+            name: COH-002
+          - entity: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+            name: PRO-001
+          - entity: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+            name: PRO-002
+          - entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+            name: PRO-003
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(5,22,38,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(34,211,238,.23);
+              border-radius: 18px;
+              box-shadow: 0 14px 36px rgba(0,0,0,.30);
+              overflow: hidden;
+            }
