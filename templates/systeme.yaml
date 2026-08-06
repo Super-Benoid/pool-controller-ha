@@ -8,10 +8,12 @@
 #   binary_sensor.pcha_protection_serpentin_requise
 #   input_select.pcha_mode_de_fonctionnement
 #   timer.pcha_traitement
+#   timer.pcha_vidange
 #
 # Sorties
 #   binary_sensor.pcha_demande_fonctionnement
 #   sensor.pcha_temps_traitement_restant
+#   sensor.pcha_temps_vidange_restant
 ################################################################################
 
 # Demande unique consommée par la machine à états.
@@ -36,6 +38,8 @@
           {{ is_state('timer.pcha_traitement', 'active') or is_state('timer.pcha_traitement', 'paused') }}
         {% elif mode == 'MARCHE_FORCEE' %}
           true
+        {% elif mode == 'VIDANGE' %}
+          {{ is_state('timer.pcha_vidange', 'active') }}
         {% else %}
           false
         {% endif %}
@@ -61,6 +65,24 @@
           {% set parties = restant.split(':') %}
           {% if parties | count == 3 %}
             {{ ((parties[0] | int(0)) * 60 + (parties[1] | int(0)) + (parties[2] | int(0)) / 60) | round(0, 'ceil') | int }}
+          {% else %}
+            0
+          {% endif %}
+        {% else %}
+          0
+        {% endif %}
+
+    - name: PCHA Temps vidange restant
+      unique_id: pcha_temps_vidange_restant
+      default_entity_id: sensor.pcha_temps_vidange_restant
+      icon: mdi:timer-sand
+      unit_of_measurement: "min"
+      state_class: measurement
+      state: >
+        {% if is_state('timer.pcha_vidange', 'active') %}
+          {% set fin = state_attr('timer.pcha_vidange', 'finishes_at') %}
+          {% if fin %}
+            {{ [((as_timestamp(fin) - as_timestamp(now())) / 60), 0] | max | round(0, 'ceil') | int }}
           {% else %}
             0
           {% endif %}

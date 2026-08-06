@@ -37,6 +37,7 @@ binary_sensor.pcha_demande_fonctionnement
 | `AUTO` | Active si la filtration automatique, le chauffage solaire ou la protection du serpentin demande une circulation |
 | `TRAITEMENT` | Active pendant la durée du traitement |
 | `MARCHE_FORCEE` | Active tant que le mode reste sélectionné |
+| `VIDANGE` | Active pendant 1 à 10 minutes après un passage explicite par `OFF` |
 
 # 4. Mode OFF
 
@@ -76,11 +77,23 @@ Une modification de `input_number.pcha_duree_traitement` pendant le traitement c
 
 La demande reste active jusqu'à la sélection d'un autre mode.
 
-# 9. Diagnostics
+# 9. Mode VIDANGE
+
+Le mode `VIDANGE` est réservé à l'évacuation d'eau lorsque la vanne du filtre à sable détourne volontairement le débit hors du débitmètre.
+
+Son entrée n'est autorisée que depuis `OFF`, pompe réellement arrêtée. La durée est réglable de 1 à 10 minutes par pas d'une minute. La machine utilise l'état distinct `VIDANGE` : cette marche n'est comptabilisée ni dans le temps de filtration quotidien, ni dans les renouvellements du bassin, ni comme chauffage solaire.
+
+`MES-002` et un éventuel verrou `PRO-001` ne bloquent pas la pompe dans ce seul mode. Les autres diagnostics critiques restent prioritaires.
+
+La circulation de vidange ne protège pas le serpentin. Lorsque la protection solaire est déjà demandée, une alerte spécifique rappelle que l'opération doit rester surveillée et limitée à dix minutes ; `PRO-003` n'est pas évalué pendant cette opération volontaire.
+
+À l'expiration, à l'annulation ou après un redémarrage de Home Assistant, la pompe s'arrête et le mode devient obligatoirement `OFF`. Un passage direct de `VIDANGE` vers un autre mode est refusé. L'utilisateur doit remettre la vanne sur FILTRATION avant de sélectionner `AUTO`.
+
+# 10. Diagnostics
 
 Les diagnostics ne modifient jamais le mode. Le niveau de fonctionnement est appliqué par la machine à états conformément à la SPEC-005.
 
-# 10. Critères d'acceptation
+# 11. Critères d'acceptation
 
 * Un seul mode est actif.
 * La demande consolidée suit exclusivement le tableau de cette SPEC.
@@ -88,8 +101,11 @@ Les diagnostics ne modifient jamais le mode. Le niveau de fonctionnement est app
 * La protection du serpentin est prise en compte en modes `AUTO` et `SECURISATION`.
 * La fin du traitement provoque le retour à `AUTO`.
 * Un diagnostic ne change pas le mode sélectionné.
+* Une vidange dure de 1 à 10 minutes et revient toujours sur `OFF`.
+* Une vidange ne crédite jamais l'objectif quotidien de filtration.
+* Une vidange interrompue par un redémarrage ne reprend jamais automatiquement.
 
-# 11. Références
+# 12. Références
 
 * SPEC-003 — Gestion de la filtration
 * SPEC-004 — Couche d'abstraction et configuration

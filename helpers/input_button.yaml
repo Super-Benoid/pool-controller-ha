@@ -1,0 +1,19 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-004 — Commandes impulsionnelles
+#
+# Entrées
+#   Aucune
+#
+# Sorties
+#   input_button.pcha_arreter_tests_maintenance
+#   input_button.pcha_rearmer_defaut_debit
+################################################################################
+
+pcha_rearmer_defaut_debit:
+  name: Réarmer le défaut de débit
+  icon: mdi:shield-refresh
+
+pcha_arreter_tests_maintenance:
+  name: Arrêter tous les tests
+  icon: mdi:stop-circle-outline

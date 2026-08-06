@@ -1,6 +1,6 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# SPEC-009 — Notifications et acquittement
+# SPEC-009 — Notifications et effacement
 #
 # Entrées
 #   Événement pcha_diagnostic
@@ -42,7 +42,7 @@
       {% if diagnostic_id == 'MES-001' %}
         Vérifier la sonde immergée du bassin et son raccordement à l’ESP32 Jardin.
       {% elif diagnostic_id == 'MES-002' %}
-        Vérifier immédiatement le débitmètre et son raccordement. La filtration est interdite tant que le diagnostic reste critique.
+        Vérifier le débitmètre, l'ESP32 et le Wi-Fi. La filtration reprendra automatiquement après 60 secondes de mesure stable.
       {% elif diagnostic_id == 'MES-003' %}
         Vérifier la mesure de puissance de la prise de filtration.
       {% elif diagnostic_id == 'MES-004' %}
@@ -52,7 +52,7 @@
       {% elif diagnostic_id == 'COH-002' %}
         Vérifier la sonde de température bassin et le calibrage ; la mesure est hors de la plage physique V1.1.
       {% elif diagnostic_id == 'PRO-001' %}
-        Vérifier immédiatement le niveau d'eau, le filtre, les tuyaux, la pompe et les éventuelles obstructions.
+        Laisser le mode sur OFF, puis vérifier le niveau d'eau, le filtre, les tuyaux, la pompe et les obstructions avant de réarmer manuellement.
       {% elif diagnostic_id == 'PRO-002' %}
         Contrôler le filtre, les tuyaux et la pompe ; le débit est insuffisant.
       {% elif diagnostic_id == 'PRO-003' %}
@@ -103,11 +103,11 @@
                 data:
                   tag: "{{ notification_id | trim }}_resolu"
 
-# L'acquittement masque les alertes persistantes PCHA, sans modifier les
+# L'effacement masque les alertes persistantes PCHA, sans modifier les
 # diagnostics, leur gravité, le niveau global ou la machine à états.
 - id: pcha_acquitter_alarmes
-  alias: PCHA - Notifications - Acquitter les alarmes
-  description: Ferme les notifications persistantes PCHA et réarme la commande utilisateur.
+  alias: PCHA - Notifications - Effacer les notifications
+  description: Ferme les notifications persistantes PCHA sans réarmer les diagnostics.
   initial_state: true
   mode: single
   triggers:

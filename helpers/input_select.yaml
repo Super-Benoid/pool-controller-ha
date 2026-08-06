@@ -18,6 +18,7 @@ pcha_etat_machine:
     - INITIALISATION
     - ATTENTE
     - FILTRATION
+    - VIDANGE
   initial: INITIALISATION
 
 pcha_mode_de_fonctionnement:
@@ -29,6 +30,7 @@ pcha_mode_de_fonctionnement:
     - AUTO
     - TRAITEMENT
     - MARCHE_FORCEE
+    - VIDANGE
 
 pcha_niveau_fonctionnement:
   name: Niveau de fonctionnement
@@ -38,4 +40,3 @@ pcha_niveau_fonctionnement:
     - INFORMATIF
     - DEGRADE
     - CRITIQUE
-

@@ -70,10 +70,11 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
         device_class: problem
         icon: mdi:gauge-empty
-        delay_on: >
-          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        delay_off: >
-          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
+        # Une coupure Wi-Fi brève ne doit ni arrêter durablement le système ni
+        # imposer une intervention. La disparition et le retour doivent être
+        # stables pendant une minute.
+        delay_on: "00:01:00"
+        delay_off: "00:01:00"
         state: >
           {{
             not (state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -83,7 +84,7 @@ template:
           diagnostic_id: MES-002
           famille: MES
           gravite: CRITIQUE
-          rearmement: TEMPORISE
+          rearmement: AUTOMATIQUE
           motif: Débit de filtration indisponible
 
       # MES-003 — Puissance pompe indisponible.
@@ -240,16 +241,16 @@ template:
       # PRO — Anomalies du procédé
       ##########################################################################
 
-      # PRO-001 — Débit inférieur à 500 L/h pendant la filtration.
-      - name: PCHA Diagnostic PRO-001 Débit critique
-        unique_id: pcha_diagnostic_pro_001_debit_critique
-        default_entity_id: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+      # Condition brute de PRO-001. Le diagnostic publié plus bas est mémorisé
+      # jusqu'à une demande explicite de réarmement.
+      - name: PCHA Condition PRO-001 Débit critique
+        unique_id: pcha_condition_pro_001_debit_critique
+        default_entity_id: binary_sensor.pcha_condition_pro_001_debit_critique
         device_class: problem
         icon: mdi:water-alert
         delay_on: >
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        delay_off: >
-          {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
+        delay_off: "00:00:00"
         state: >
           {% set debit_disponible =
                state_attr('sensor.pcha_debit_filtration', 'source_available')
@@ -268,11 +269,24 @@ template:
             and states('sensor.pcha_debit_filtration') | float(0) < 500
           }}
         attributes:
+          role: CONDITION_INTERNE
+
+      # PRO-001 publié : le verrou reste actif après l'arrêt de la pompe. Cela
+      # interdit les cycles arrêt/redémarrage en cas de tuyau percé, débranché,
+      # d'aspiration bouchée ou de manque d'eau.
+      - name: PCHA Diagnostic PRO-001 Débit critique
+        unique_id: pcha_diagnostic_pro_001_debit_critique
+        default_entity_id: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+        device_class: problem
+        icon: mdi:water-alert
+        state: >
+          {{ is_state('input_boolean.pcha_verrou_pro_001', 'on') }}
+        attributes:
           diagnostic_id: PRO-001
           famille: PRO
           gravite: CRITIQUE
-          rearmement: TEMPORISE
-          motif: Débit de filtration inférieur à 500 L/h
+          rearmement: MANUEL
+          motif: Débit de filtration inférieur à 500 L/h — inspection et réarmement requis
 
       # PRO-002 — Débit compris entre 500 et 3 000 L/h pendant la filtration.
       - name: PCHA Diagnostic PRO-002 Débit insuffisant
@@ -328,6 +342,8 @@ template:
                is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') %}
           {% set mode_off =
                is_state('input_select.pcha_mode_de_fonctionnement', 'OFF') %}
+          {% set mode_vidange =
+               is_state('input_select.pcha_mode_de_fonctionnement', 'VIDANGE') %}
           {% set actionneur_indisponible =
                not has_value('switch.pcha_commande_pompe_filtration') %}
           {% set securite_hydraulique_indisponible =
@@ -341,6 +357,7 @@ template:
                ) %}
           {{
             protection_requise
+            and not mode_vidange
             and (
               mode_off
               or actionneur_indisponible
@@ -359,6 +376,59 @@ template:
 ################################################################################
 
 automation:
+  - id: pcha_diagnostics_verrouiller_pro_001
+    alias: PCHA - Diagnostics - Verrouiller PRO-001
+    description: Mémorise tout débit critique validé jusqu'au réarmement manuel.
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.pcha_condition_pro_001_debit_critique
+        to: "on"
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.pcha_verrou_pro_001
+
+  - id: pcha_diagnostics_rearmer_pro_001
+    alias: PCHA - Diagnostics - Réarmer PRO-001
+    description: Autorise le réarmement uniquement pompe arrêtée, en mode OFF et débitmètre disponible.
+    initial_state: true
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: input_button.pcha_rearmer_defaut_debit
+    actions:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_select.pcha_mode_de_fonctionnement
+                state: "OFF"
+              - condition: state
+                entity_id: switch.pcha_commande_pompe_filtration
+                state: "off"
+              - condition: template
+                value_template: >
+                  {{
+                    state_attr('sensor.pcha_debit_filtration', 'source_available')
+                    | bool(false)
+                  }}
+            sequence:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.pcha_verrou_pro_001
+              - action: persistent_notification.dismiss
+                data:
+                  notification_id: pcha_rearmement_pro_001_refuse
+        default:
+          - action: persistent_notification.create
+            data:
+              notification_id: pcha_rearmement_pro_001_refuse
+              title: PCHA — Réarmement refusé
+              message: >
+                Placez le mode sur OFF, vérifiez l'arrêt réel de la pompe et
+                attendez le retour stable du débitmètre avant de réarmer PRO-001.
+
   - id: pcha_diagnostics_recalculer_niveau_global
     alias: PCHA - Diagnostics - Recalculer le niveau global
     description: Publie la gravité la plus élevée parmi les diagnostics actifs.

@@ -1130,6 +1130,7 @@ views:
       - type: custom:button-card
         show_icon: false
         show_name: false
+        update_timer: 1min
         tap_action:
           action: none
         view_layout:
@@ -1306,7 +1307,7 @@ views:
 
       - type: tile
         entity: input_boolean.pcha_acquitter_alarmes
-        name: Acquitter alarmes
+        name: Effacer les notifications
         icon: mdi:alarm-check
         color: red
         features:
@@ -1360,6 +1361,7 @@ views:
         "pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header pilotage-header"
         "filtration-requise filtration-requise filtration-requise demande demande demande machine-pilotage machine-pilotage machine-pilotage pompe-pilotage pompe-pilotage pompe-pilotage"
         "mode-commande mode-commande mode-commande mode-commande duree-traitement duree-traitement duree-traitement duree-traitement restant-traitement restant-traitement restant-traitement restant-traitement"
+        "vidange-duree vidange-duree vidange-duree vidange-duree vidange-duree vidange-duree vidange-restant vidange-restant vidange-restant vidange-restant vidange-restant vidange-restant"
         "debit-pilotage debit-pilotage debit-pilotage cycles-pilotage cycles-pilotage cycles-pilotage puissance-pilotage puissance-pilotage puissance-pilotage energie-pilotage energie-pilotage energie-pilotage"
         "temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre"
         "marche-min marche-min marche-min marche-min arret-min arret-min arret-min arret-min validation-debit validation-debit validation-debit validation-debit"
@@ -1375,6 +1377,7 @@ views:
             "machine-pilotage machine-pilotage machine-pilotage machine-pilotage pompe-pilotage pompe-pilotage pompe-pilotage pompe-pilotage"
             "mode-commande mode-commande mode-commande mode-commande duree-traitement duree-traitement duree-traitement duree-traitement"
             "restant-traitement restant-traitement restant-traitement restant-traitement restant-traitement restant-traitement restant-traitement restant-traitement"
+            "vidange-duree vidange-duree vidange-duree vidange-duree vidange-restant vidange-restant vidange-restant vidange-restant"
             "debit-pilotage debit-pilotage debit-pilotage debit-pilotage cycles-pilotage cycles-pilotage cycles-pilotage cycles-pilotage"
             "puissance-pilotage puissance-pilotage puissance-pilotage puissance-pilotage energie-pilotage energie-pilotage energie-pilotage energie-pilotage"
             "temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre temporisations-titre"
@@ -1392,6 +1395,8 @@ views:
             "mode-commande"
             "duree-traitement"
             "restant-traitement"
+            "vidange-duree"
+            "vidange-restant"
             "debit-pilotage"
             "cycles-pilotage"
             "puissance-pilotage"
@@ -1738,6 +1743,67 @@ views:
               - line-height: 1
               - font-weight: 850
 
+      - type: conditional
+        conditions:
+          - entity: input_select.pcha_mode_de_fonctionnement
+            state: VIDANGE
+        view_layout:
+          grid-area: vidange-duree
+        card:
+          type: tile
+          entity: input_number.pcha_duree_vidange
+          name: Durée de la vidange
+          icon: mdi:water-minus
+          color: red
+          features:
+            - type: numeric-input
+              style: slider
+          card_mod:
+            style: |
+              ha-card {
+                background: linear-gradient(145deg, rgba(56,18,30,.98), rgba(15,23,42,.98));
+                border: 1px solid rgba(251,113,133,.32);
+                border-radius: 18px;
+                min-height: 110px;
+              }
+
+      - type: conditional
+        conditions:
+          - entity: input_select.pcha_mode_de_fonctionnement
+            state: VIDANGE
+        view_layout:
+          grid-area: vidange-restant
+        card:
+          type: custom:button-card
+          entity: sensor.pcha_temps_vidange_restant
+          name: Temps de vidange restant
+          icon: mdi:timer-sand
+          show_state: true
+          tap_action:
+            action: more-info
+          styles:
+            card:
+              - background: linear-gradient(145deg, rgba(56,18,30,.98), rgba(15,23,42,.98))
+              - border: 1px solid rgba(251,113,133,.32)
+              - border-radius: 18px
+              - min-height: 110px
+              - padding: 14px 18px
+            grid:
+              - grid-template-areas: '"i n" "i s"'
+              - grid-template-columns: 48px 1fr
+            icon:
+              - color: '#fb7185'
+              - width: 34px
+            name:
+              - justify-self: start
+              - color: '#cbd5e1'
+              - font-size: 14px
+            state:
+              - justify-self: start
+              - color: '#fda4af'
+              - font-size: 25px
+              - font-weight: 850
+
       ##########################################################################
       # Mesures de fonctionnement
       ##########################################################################
@@ -1975,6 +2041,8 @@ views:
             name: Pompe
           - entity: timer.pcha_traitement
             name: Traitement
+          - entity: timer.pcha_vidange
+            name: Vidange
         card_mod:
           style: |
             ha-card {
@@ -2835,7 +2903,7 @@ views:
 
       - type: tile
         entity: input_boolean.pcha_acquitter_alarmes
-        name: Acquitter les alarmes
+        name: Effacer les notifications
         icon: mdi:alarm-check
         color: red
         features:
@@ -3187,6 +3255,317 @@ views:
               box-shadow: 0 14px 36px rgba(0,0,0,.30);
               overflow: hidden;
             }
+
+  - title: Maintenance
+    path: maintenance
+    icon: mdi:wrench-cog
+    background: *pcha_background
+    type: custom:grid-layout
+    layout:
+      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-areas: |
+        "maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header"
+        "maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte"
+        "maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre"
+        "maintenance-mode maintenance-mode maintenance-mode maintenance-mode maintenance-duree maintenance-duree maintenance-duree maintenance-duree maintenance-restant maintenance-restant maintenance-restant maintenance-restant"
+        "maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre"
+        "maintenance-temperature maintenance-temperature maintenance-temperature maintenance-debit maintenance-debit maintenance-debit maintenance-puissance maintenance-puissance maintenance-puissance maintenance-luminosite maintenance-luminosite maintenance-luminosite"
+        "maintenance-physiques maintenance-physiques maintenance-physiques maintenance-physiques maintenance-physiques maintenance-physiques maintenance-pcha maintenance-pcha maintenance-pcha maintenance-pcha maintenance-pcha maintenance-pcha"
+        "maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre"
+        "maintenance-effacer maintenance-effacer maintenance-effacer maintenance-effacer maintenance-rearmer maintenance-rearmer maintenance-rearmer maintenance-rearmer maintenance-arreter maintenance-arreter maintenance-arreter maintenance-arreter"
+      grid-gap: 12px
+      margin: 12px
+      mediaquery:
+        "(max-width: 1000px)":
+          grid-template-columns: repeat(8, minmax(0, 1fr))
+          grid-template-areas: |
+            "maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header maintenance-header"
+            "maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte maintenance-alerte"
+            "maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre maintenance-vidange-titre"
+            "maintenance-mode maintenance-mode maintenance-mode maintenance-mode maintenance-duree maintenance-duree maintenance-duree maintenance-duree"
+            "maintenance-restant maintenance-restant maintenance-restant maintenance-restant maintenance-restant maintenance-restant maintenance-restant maintenance-restant"
+            "maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre maintenance-capteurs-titre"
+            "maintenance-temperature maintenance-temperature maintenance-temperature maintenance-temperature maintenance-debit maintenance-debit maintenance-debit maintenance-debit"
+            "maintenance-puissance maintenance-puissance maintenance-puissance maintenance-puissance maintenance-luminosite maintenance-luminosite maintenance-luminosite maintenance-luminosite"
+            "maintenance-physiques maintenance-physiques maintenance-physiques maintenance-physiques maintenance-pcha maintenance-pcha maintenance-pcha maintenance-pcha"
+            "maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre maintenance-actions-titre"
+            "maintenance-effacer maintenance-effacer maintenance-effacer maintenance-effacer maintenance-rearmer maintenance-rearmer maintenance-rearmer maintenance-rearmer"
+            "maintenance-arreter maintenance-arreter maintenance-arreter maintenance-arreter maintenance-arreter maintenance-arreter maintenance-arreter maintenance-arreter"
+        "(max-width: 700px)":
+          grid-template-columns: 1fr
+          grid-template-areas: |
+            "maintenance-header"
+            "maintenance-alerte"
+            "maintenance-vidange-titre"
+            "maintenance-mode"
+            "maintenance-duree"
+            "maintenance-restant"
+            "maintenance-capteurs-titre"
+            "maintenance-temperature"
+            "maintenance-debit"
+            "maintenance-puissance"
+            "maintenance-luminosite"
+            "maintenance-physiques"
+            "maintenance-pcha"
+            "maintenance-actions-titre"
+            "maintenance-effacer"
+            "maintenance-rearmer"
+            "maintenance-arreter"
+          grid-gap: 10px
+          margin: 8px
+
+    cards:
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        update_timer: 1min
+        tap_action:
+          action: none
+        triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
+          - input_select.pcha_niveau_fonctionnement
+          - timer.pcha_maintenance
+        view_layout:
+          grid-area: maintenance-header
+        custom_fields:
+          titre: Maintenance et tests
+          sous_titre: Simulations temporaires, réarmement et vidange contrôlée
+          heure: |
+            [[[
+              return new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+            ]]]
+          statut: |
+            [[[
+              const tests = [
+                'input_boolean.pcha_maintenance_temperature_indisponible',
+                'input_boolean.pcha_maintenance_debit_indisponible',
+                'input_boolean.pcha_maintenance_puissance_indisponible',
+                'input_boolean.pcha_maintenance_luminosite_indisponible'
+              ].filter(id => states[id]?.state === 'on').length;
+              const color = tests ? '#fb7185' : '#34d399';
+              return `<span style="display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid ${color}66;background:${color}18;color:${color};font-weight:800;">
+                <ha-icon icon="${tests ? 'mdi:test-tube' : 'mdi:shield-check-outline'}" style="width:19px;"></ha-icon>
+                ${tests ? `${tests} test${tests > 1 ? 's' : ''} actif${tests > 1 ? 's' : ''}` : 'Aucun test actif'}
+              </span>`;
+            ]]]
+        styles:
+          card:
+            - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
+            - border: 1px solid rgba(34,211,238,.30)
+            - border-radius: 20px
+            - padding: 15px 22px
+            - min-height: 72px
+          grid:
+            - grid-template-areas: '"titre heure statut" "sous_titre heure statut"'
+            - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 28px
+              - font-weight: 800
+            sous_titre:
+              - justify-self: start
+              - color: '#94a3b8'
+              - font-size: 14px
+              - padding-top: 5px
+            heure:
+              - justify-self: center
+              - color: '#67e8f9'
+              - font-size: 27px
+              - font-weight: 800
+            statut:
+              - justify-self: end
+
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        update_timer: 1min
+        tap_action:
+          action: none
+        triggers_update:
+          - input_boolean.pcha_maintenance_temperature_indisponible
+          - input_boolean.pcha_maintenance_debit_indisponible
+          - input_boolean.pcha_maintenance_puissance_indisponible
+          - input_boolean.pcha_maintenance_luminosite_indisponible
+          - timer.pcha_maintenance
+        view_layout:
+          grid-area: maintenance-alerte
+        custom_fields:
+          contenu: |
+            [[[
+              const tests = [
+                'input_boolean.pcha_maintenance_temperature_indisponible',
+                'input_boolean.pcha_maintenance_debit_indisponible',
+                'input_boolean.pcha_maintenance_puissance_indisponible',
+                'input_boolean.pcha_maintenance_luminosite_indisponible'
+              ].filter(id => states[id]?.state === 'on').length;
+              if (!tests) return '<b>Aucune simulation active.</b> Les capteurs physiques sont utilisés normalement.';
+              const restant = states['timer.pcha_maintenance']?.attributes?.remaining ?? '00:05:00';
+              return `<b>MODE TEST ACTIF — ${tests} capteur${tests > 1 ? 's' : ''} simulé${tests > 1 ? 's' : ''} indisponible${tests > 1 ? 's' : ''}.</b> Arrêt automatique dans ${restant}.`;
+            ]]]
+        styles:
+          card:
+            - background: rgba(56,18,30,.94)
+            - border: 1px solid rgba(251,113,133,.42)
+            - border-radius: 15px
+            - padding: 12px 16px
+          custom_fields:
+            contenu:
+              - justify-self: start
+              - color: '#fecdd3'
+              - font-size: 14px
+
+      - type: heading
+        heading: Vidange contrôlée — passage obligatoire par OFF
+        icon: mdi:water-minus
+        view_layout:
+          grid-area: maintenance-vidange-titre
+
+      - type: tile
+        entity: input_select.pcha_mode_de_fonctionnement
+        name: Mode de fonctionnement
+        icon: mdi:cog-play-outline
+        color: cyan
+        features:
+          - type: select-options
+        view_layout:
+          grid-area: maintenance-mode
+
+      - type: tile
+        entity: input_number.pcha_duree_vidange
+        name: Durée de la vidange
+        icon: mdi:timer-cog-outline
+        color: red
+        features:
+          - type: numeric-input
+            style: slider
+        view_layout:
+          grid-area: maintenance-duree
+
+      - type: tile
+        entity: sensor.pcha_temps_vidange_restant
+        name: Temps de vidange restant
+        icon: mdi:timer-sand
+        color: red
+        view_layout:
+          grid-area: maintenance-restant
+
+      - type: heading
+        heading: Simuler un capteur indisponible — arrêt automatique après 5 minutes
+        icon: mdi:test-tube
+        view_layout:
+          grid-area: maintenance-capteurs-titre
+
+      - type: tile
+        entity: input_boolean.pcha_maintenance_temperature_indisponible
+        name: Température bassin
+        icon: mdi:thermometer-off
+        color: cyan
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: maintenance-temperature
+
+      - type: tile
+        entity: input_boolean.pcha_maintenance_debit_indisponible
+        name: Débit — provoque MES-002
+        icon: mdi:gauge-empty
+        color: red
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: maintenance-debit
+
+      - type: tile
+        entity: input_boolean.pcha_maintenance_puissance_indisponible
+        name: Puissance pompe
+        icon: mdi:flash-off
+        color: purple
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: maintenance-puissance
+
+      - type: tile
+        entity: input_boolean.pcha_maintenance_luminosite_indisponible
+        name: Luminosité
+        icon: mdi:brightness-5
+        color: amber
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: maintenance-luminosite
+
+      - type: entities
+        title: Capteurs physiques
+        view_layout:
+          grid-area: maintenance-physiques
+        entities:
+          - entity: sensor.jardin_esp32_jardin_temperature_bassin
+            name: Température bassin brute
+          - entity: sensor.jardin_esp32_jardin_debit_filtration_piscine
+            name: Débitmètre brut
+          - entity: sensor.prises_exterieur_power
+            name: Puissance brute
+          - entity: sensor.jardin_esp32_jardin_luminosite
+            name: Luminosité brute
+
+      - type: entities
+        title: Valeurs utilisées par PCHA
+        view_layout:
+          grid-area: maintenance-pcha
+        entities:
+          - entity: sensor.pcha_temperature_piscine
+            name: Température bassin
+          - entity: sensor.pcha_debit_filtration
+            name: Débit filtration
+          - entity: sensor.pcha_puissance_pompe_filtration
+            name: Puissance pompe
+          - entity: sensor.pcha_luminosite
+            name: Luminosité
+
+      - type: heading
+        heading: Notifications et sécurités
+        icon: mdi:shield-wrench-outline
+        view_layout:
+          grid-area: maintenance-actions-titre
+
+      - type: tile
+        entity: input_boolean.pcha_acquitter_alarmes
+        name: Effacer les notifications
+        icon: mdi:notification-clear-all
+        color: purple
+        features:
+          - type: toggle
+        view_layout:
+          grid-area: maintenance-effacer
+
+      - type: tile
+        entity: input_button.pcha_rearmer_defaut_debit
+        name: Réarmer PRO-001
+        icon: mdi:shield-refresh
+        color: red
+        tap_action:
+          action: perform-action
+          perform_action: input_button.press
+          target:
+            entity_id: input_button.pcha_rearmer_defaut_debit
+        view_layout:
+          grid-area: maintenance-rearmer
+
+      - type: tile
+        entity: input_button.pcha_arreter_tests_maintenance
+        name: Arrêter tous les tests
+        icon: mdi:stop-circle-outline
+        color: red
+        tap_action:
+          action: perform-action
+          perform_action: input_button.press
+          target:
+            entity_id: input_button.pcha_arreter_tests_maintenance
+        view_layout:
+          grid-area: maintenance-arreter
 
   - title: Historique
     path: historique

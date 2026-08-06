@@ -1,0 +1,154 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# SPEC-006 — Mode VIDANGE
+#
+# Entrées
+#   input_number.pcha_duree_vidange
+#   input_select.pcha_mode_de_fonctionnement
+#   timer.pcha_vidange
+#
+# Sorties
+#   Commande et arrêt sûr du mode VIDANGE
+################################################################################
+
+# La vidange n'est acceptée qu'après un passage explicite par OFF. Cela garantit
+# que la pompe est arrêtée avant toute manipulation de la vanne du filtre.
+- id: pcha_vidange_demarrer
+  alias: PCHA - Vidange - Démarrer
+  description: Démarre une vidange temporisée uniquement depuis le mode OFF.
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      to: VIDANGE
+  actions:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  trigger.from_state is not none
+                  and trigger.from_state.state == 'OFF'
+                  and is_state('switch.pcha_commande_pompe_filtration', 'off')
+                }}
+          sequence:
+            - action: persistent_notification.dismiss
+              data:
+                notification_id: pcha_vidange_refusee
+            - action: timer.start
+              target:
+                entity_id: timer.pcha_vidange
+              data:
+                duration: >
+                  {% set minutes = states('input_number.pcha_duree_vidange') | int(1) %}
+                  {{ '%02d:%02d:00' | format(minutes // 60, minutes % 60) }}
+            - if:
+                - condition: state
+                  entity_id: binary_sensor.pcha_protection_serpentin_requise
+                  state: "on"
+              then:
+                - action: persistent_notification.create
+                  data:
+                    notification_id: pcha_vidange_serpentin
+                    title: PCHA — Vidange sous exposition solaire
+                    message: >
+                      La vidange ne fait pas circuler l'eau dans le serpentin.
+                      Surveillez l'installation pendant cette opération limitée à dix minutes.
+      default:
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.pcha_mode_de_fonctionnement
+          data:
+            option: "OFF"
+        - action: persistent_notification.create
+          data:
+            notification_id: pcha_vidange_refusee
+            title: PCHA — Vidange refusée
+            message: >
+              Placez d'abord le système sur OFF, vérifiez l'arrêt de la pompe,
+              puis positionnez la vanne sur VIDANGE avant de sélectionner ce mode.
+
+- id: pcha_vidange_terminer
+  alias: PCHA - Vidange - Terminer
+  description: Arrête la pompe à l'expiration et impose le retour au mode OFF.
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.pcha_vidange
+  actions:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: pcha_vidange_serpentin
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_mode_de_fonctionnement
+      data:
+        option: "OFF"
+    - action: persistent_notification.create
+      data:
+        notification_id: pcha_vidange_terminee
+        title: PCHA — Vidange terminée
+        message: >
+          La pompe est arrêtée. Remettez la vanne du filtre sur FILTRATION avant
+          de sélectionner AUTO ou un autre mode de circulation.
+    - action: notify.mobile_app_oppo_ben
+      data:
+        title: PCHA — Vidange terminée
+        message: Remettre la vanne sur FILTRATION avant de quitter le mode OFF.
+
+- id: pcha_vidange_annuler
+  alias: PCHA - Vidange - Annuler
+  description: Annule le timer dès que l'utilisateur quitte le mode VIDANGE.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      from: VIDANGE
+  actions:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: pcha_vidange_serpentin
+    - action: timer.cancel
+      target:
+        entity_id: timer.pcha_vidange
+    - if:
+        - condition: template
+          value_template: "{{ trigger.to_state is not none and trigger.to_state.state != 'OFF' }}"
+      then:
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.pcha_mode_de_fonctionnement
+          data:
+            option: "OFF"
+
+- id: pcha_vidange_securiser_demarrage_ha
+  alias: PCHA - Vidange - Sécuriser au démarrage
+  description: Interdit toute reprise automatique d'une vidange après redémarrage.
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: homeassistant
+      event: start
+  actions:
+    - if:
+        - condition: state
+          entity_id: input_select.pcha_mode_de_fonctionnement
+          state: VIDANGE
+      then:
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.pcha_mode_de_fonctionnement
+          data:
+            option: "OFF"
+    - if:
+        - condition: template
+          value_template: "{{ not is_state('timer.pcha_vidange', 'idle') }}"
+      then:
+        - action: timer.cancel
+          target:
+            entity_id: timer.pcha_vidange

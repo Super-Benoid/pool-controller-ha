@@ -15,7 +15,7 @@ Les diagnostics PRO détectent une anomalie réelle du procédé à partir de me
 
 | Identifiant | Diagnostic | Gravité | Réarmement |
 |---|---|---|---|
-| `PRO-001` | Débit critique | `CRITIQUE` | `TEMPORISE` |
+| `PRO-001` | Débit critique | `CRITIQUE` | `MANUEL` |
 | `PRO-002` | Débit insuffisant prolongé | `DEGRADE` | `TEMPORISE` |
 | `PRO-003` | Protection du serpentin impossible | `CRITIQUE` | `AUTOMATIQUE` |
 
@@ -46,9 +46,13 @@ La gravité de PRO-001 est CRITIQUE.
 Le niveau global devient CRITIQUE. SPEC-005 interdit alors le maintien de
 la machine en FILTRATION et provoque l'arrêt immédiat de la pompe.
 
-PRO-001 n'est pas évalué lorsque la pompe est normalement arrêtée.
+Après validation, PRO-001 est mémorisé même lorsque l'arrêt de la pompe fait disparaître la mesure de débit critique. Il ne peut être réarmé que manuellement, avec le mode sur `OFF`, la pompe réellement arrêtée et le débitmètre disponible.
 
-Son réarmement est TEMPORISE conformément à la partie 2 de SPEC-007.
+Ce verrou interdit tout redémarrage cyclique en cas de tuyau percé ou débranché, d'aspiration bouchée ou de manque d'eau. Après réarmement et redémarrage volontaire, une condition toujours présente réactive PRO-001 après la temporisation normale.
+
+PRO-001 n'est pas évalué lorsque la pompe est normalement arrêtée ni pendant le mode `VIDANGE`. Un verrou déjà présent reste mémorisé pendant la vidange et devra être réarmé avant le retour à la filtration.
+
+Son réarmement est `MANUEL` conformément à la partie 2 de SPEC-007.
 
 ## PRO-002 — Débit insuffisant prolongé
 
@@ -86,7 +90,7 @@ Son réarmement est TEMPORISE conformément à la partie 2 de SPEC-007.
 
 ## PRO-003 — Protection du serpentin impossible
 
-PRO-003 est évalué lorsqu'une protection du serpentin est demandée par la SPEC-008.
+PRO-003 est évalué lorsqu'une protection du serpentin est demandée par la SPEC-008, sauf pendant une vidange volontaire limitée à dix minutes. Cette exception produit une alerte dédiée et exige une surveillance locale.
 
 Il devient actif lorsqu'au moins une des conditions observables suivantes est vraie :
 
