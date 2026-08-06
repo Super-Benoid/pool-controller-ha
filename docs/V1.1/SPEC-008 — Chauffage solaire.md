@@ -53,10 +53,14 @@ Si la température extérieure ou la température bassin est indisponible, la so
 
 ```text
 sensor.pcha_source_chauffage_solaire
+sensor.pcha_ecart_temperature_bassin_exterieure      # affichage bassin − extérieur
 sensor.pcha_ecart_temperature_exterieure_bassin
 binary_sensor.pcha_chauffage_solaire_requis
 binary_sensor.pcha_chauffage_solaire_actif
 ```
+
+Le chauffage de secours utilise exclusivement l'écart `extérieur − bassin`. Le
+capteur inverse `bassin − extérieur` est réservé à l'affichage du dashboard.
 
 # 5. Protection du serpentin
 
