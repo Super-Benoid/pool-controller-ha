@@ -1349,9 +1349,6 @@ views:
               overflow: hidden;
             }
 
-  ##############################################################################
-  # Pilotage
-  ##############################################################################
   - title: Pilotage
     path: pilotage
     icon: mdi:tune-variant
@@ -2762,7 +2759,7 @@ views:
             - border-radius: 18px
             - box-shadow: 0 10px 28px rgba(0,0,0,.28)
             - padding: 13px 16px
-            - min-height: 78px
+            - min-height: 110px
           grid:
             - grid-template-areas: '"i n" "i s"'
             - grid-template-columns: 52px 1fr
@@ -2883,7 +2880,7 @@ views:
       - type: custom:button-card
         entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
         name: MES-001 — Température bassin
-        label: Mesure indisponible
+        label: Surveillance de la disponibilité
         icon: mdi:thermometer-alert
         show_state: false
         show_label: true
@@ -2946,7 +2943,7 @@ views:
       - type: custom:button-card
         entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
         name: MES-002 — Débit filtration
-        label: Mesure indisponible
+        label: Surveillance de la disponibilité
         icon: mdi:gauge-empty
         show_state: false
         show_label: true
@@ -2974,7 +2971,7 @@ views:
       - type: custom:button-card
         entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
         name: MES-003 — Puissance pompe
-        label: Mesure indisponible après 60 s
+        label: Déclenche après 60 s d’indisponibilité
         icon: mdi:flash-alert
         show_state: false
         show_label: true
@@ -3190,3 +3187,556 @@ views:
               box-shadow: 0 14px 36px rgba(0,0,0,.30);
               overflow: hidden;
             }
+
+  - title: Historique
+    path: historique
+    icon: mdi:history
+    background: *pcha_background
+    type: custom:grid-layout
+    layout:
+      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-areas: |
+        "header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique"
+        "filtration-jour filtration-jour filtration-jour cycles-jour cycles-jour cycles-jour energie-jour energie-jour energie-jour soleil-jour soleil-jour soleil-jour"
+        "temperature-historique temperature-historique temperature-historique temperature-historique temperature-historique temperature-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique"
+        "debit-historique debit-historique debit-historique debit-historique puissance-historique puissance-historique puissance-historique puissance-historique objectif-historique objectif-historique objectif-historique objectif-historique"
+        "fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre"
+        "fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique"
+        "diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre"
+        "diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique"
+      grid-gap: 12px
+      margin: 12px
+      mediaquery:
+        "(max-width: 1200px)":
+          grid-template-columns: repeat(8, minmax(0, 1fr))
+          grid-template-areas: |
+            "header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique"
+            "filtration-jour filtration-jour filtration-jour filtration-jour cycles-jour cycles-jour cycles-jour cycles-jour"
+            "energie-jour energie-jour energie-jour energie-jour soleil-jour soleil-jour soleil-jour soleil-jour"
+            "temperature-historique temperature-historique temperature-historique temperature-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique"
+            "debit-historique debit-historique debit-historique debit-historique puissance-historique puissance-historique puissance-historique puissance-historique"
+            "objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique"
+            "fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre"
+            "fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique fonctionnement-historique"
+            "diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre diagnostics-historique-titre"
+            "diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique diagnostics-historique"
+        "(max-width: 700px)":
+          grid-template-columns: 1fr
+          grid-template-areas: |
+            "header-historique"
+            "filtration-jour"
+            "cycles-jour"
+            "energie-jour"
+            "soleil-jour"
+            "temperature-historique"
+            "luminosite-historique"
+            "debit-historique"
+            "puissance-historique"
+            "objectif-historique"
+            "fonctionnement-titre"
+            "fonctionnement-historique"
+            "diagnostics-historique-titre"
+            "diagnostics-historique"
+          grid-gap: 10px
+          margin: 8px
+
+    cards:
+      ##########################################################################
+      # En-tête Historique
+      ##########################################################################
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        update_timer: 1min
+        tap_action:
+          action: none
+        triggers_update:
+          - input_select.pcha_niveau_fonctionnement
+          - input_select.pcha_mode_de_fonctionnement
+          - sensor.pcha_progression_objectif_quotidien
+        view_layout:
+          grid-area: header-historique
+        custom_fields:
+          titre: Historique — 24 heures
+          sous_titre: Mesures, fonctionnement et diagnostics
+          heure: |
+            [[[
+              return new Date().toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            ]]]
+          statuts: |
+            [[[
+              const niveau = states['input_select.pcha_niveau_fonctionnement']?.state ?? 'INDISPONIBLE';
+              const mode = states['input_select.pcha_mode_de_fonctionnement']?.state ?? 'INDISPONIBLE';
+              const progression = Number(states['sensor.pcha_progression_objectif_quotidien']?.state);
+              const date = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'short'});
+              const color = niveau === 'CRITIQUE' ? '#fb7185' : niveau === 'DEGRADE' ? '#fbbf24' : '#34d399';
+              const pill = (icon, label, value, c) => `
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid ${c}55;background:${c}14;white-space:nowrap;">
+                  <ha-icon icon="${icon}" style="width:18px;color:${c};"></ha-icon>
+                  <span style="color:#94a3b8;">${label}</span>
+                  <b style="color:${c};">${value}</b>
+                </span>`;
+              return `<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;">
+                ${pill('mdi:calendar-today-outline', 'Jour', date, '#a78bfa')}
+                ${pill('mdi:alpha-a-circle-outline', 'Mode', mode, '#22d3ee')}
+                ${pill('mdi:target', 'Objectif', Number.isFinite(progression) ? `${Math.round(progression)} %` : '—', '#67e8f9')}
+                ${pill('mdi:shield-check-outline', 'Niveau', niveau, color)}
+              </div>`;
+            ]]]
+        styles:
+          card:
+            - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
+            - border: 1px solid rgba(167,139,250,.30)
+            - border-radius: 20px
+            - box-shadow: 0 16px 42px rgba(0,0,0,.32), 0 0 30px rgba(167,139,250,.08)
+            - padding: 15px 22px
+            - min-height: 72px
+          grid:
+            - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts"'
+            - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
+            - grid-template-rows: min-content min-content
+          custom_fields:
+            titre:
+              - justify-self: start
+              - color: '#f8fafc'
+              - font-size: 30px
+              - font-weight: 800
+            sous_titre:
+              - justify-self: start
+              - color: '#94a3b8'
+              - font-size: 14px
+              - padding-top: 5px
+            heure:
+              - justify-self: center
+              - align-self: center
+              - padding: 5px 18px
+              - border-radius: 14px
+              - border: 1px solid rgba(167,139,250,.20)
+              - background: rgba(24,18,54,.58)
+              - color: '#c4b5fd'
+              - font-size: 27px
+              - line-height: 1
+              - font-weight: 800
+            statuts:
+              - justify-self: stretch
+              - align-self: center
+              - font-size: 12px
+
+      ##########################################################################
+      # Indicateurs du jour
+      ##########################################################################
+      - type: custom:button-card
+        entity: sensor.pcha_temps_filtration_realise
+        name: Filtration réalisée
+        icon: mdi:timer-play-outline
+        show_state: false
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: filtration-jour
+        custom_fields:
+          valeur: |
+            [[[
+              const min = Number(entity?.state);
+              if (!Number.isFinite(min)) return 'Indisponible';
+              return `${String(Math.floor(min / 60)).padStart(2, '0')}h${String(Math.round(min % 60)).padStart(2, '0')}`;
+            ]]]
+        styles: &history_kpi_styles
+          card:
+            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
+            - border: 1px solid rgba(34,211,238,.25)
+            - border-radius: 18px
+            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
+            - padding: 14px 17px
+            - min-height: 92px
+          grid:
+            - grid-template-areas: '"i n" "i valeur"'
+            - grid-template-columns: 48px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - color: '#22d3ee'
+            - width: 35px
+          name:
+            - justify-self: start
+            - color: '#cbd5e1'
+            - font-size: 14px
+            - font-weight: 650
+          custom_fields:
+            valeur:
+              - justify-self: start
+              - color: '#67e8f9'
+              - font-size: 24px
+              - font-weight: 820
+
+      - type: custom:button-card
+        entity: sensor.pcha_renouvellements_bassin_du_jour
+        name: Cycles du bassin
+        icon: mdi:sync
+        show_state: false
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: cycles-jour
+        custom_fields:
+          valeur: |
+            [[[
+              const n = Number(entity?.state);
+              return Number.isFinite(n) ? `${n.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1})} x` : 'Indisponible';
+            ]]]
+        styles: *history_kpi_styles
+
+      - type: custom:button-card
+        entity: sensor.pcha_energie_pompe_quotidienne
+        name: Consommation du jour
+        icon: mdi:lightning-bolt-circle
+        show_state: false
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: energie-jour
+        custom_fields:
+          valeur: |
+            [[[
+              const n = Number(entity?.state);
+              return Number.isFinite(n) ? `${n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})} kWh` : 'Indisponible';
+            ]]]
+        styles: *history_kpi_styles
+
+      - type: custom:button-card
+        entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
+        name: Ensoleillement
+        icon: mdi:sun-clock-outline
+        show_state: false
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: soleil-jour
+        custom_fields:
+          valeur: |
+            [[[
+              const min = Number(entity?.state);
+              if (!Number.isFinite(min)) return 'Indisponible';
+              return `${String(Math.floor(min / 60)).padStart(2, '0')}h${String(Math.round(min % 60)).padStart(2, '0')}`;
+            ]]]
+        styles: *history_kpi_styles
+
+      ##########################################################################
+      # Courbes de mesures
+      ##########################################################################
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: temperature-historique
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Températures bassin / extérieur
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_temperature_piscine
+            name: Bassin
+            color: '#22d3ee'
+            stroke_width: 3
+            float_precision: 1
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: avg
+              duration: 10min
+          - entity: sensor.pcha_temperature_exterieure
+            name: Extérieur
+            color: '#e879f9'
+            stroke_width: 3
+            float_precision: 1
+            show:
+              in_header: true
+            group_by:
+              func: avg
+              duration: 10min
+        apex_config: &history_apex_config
+          chart:
+            height: 210
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+          dataLabels:
+            enabled: false
+          legend:
+            show: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            labels:
+              style:
+                colors: '#94a3b8'
+          tooltip:
+            theme: dark
+        card_mod: &history_cyan_chart_mod
+          style: |
+            #header__title { color:#dffaff; font-weight:650; }
+            #header__states { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; width:100%; }
+            #header__states > #states__state:nth-child(2) { text-align:right; }
+            #header__states > #states__state:nth-child(2) #state__value { justify-content:flex-end; }
+            ha-card {
+              background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
+              border: 1px solid rgba(34,211,238,.32);
+              border-radius: 18px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: luminosite-historique
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Luminosité / seuil solaire
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_luminosite
+            name: Luminosité
+            type: area
+            color: '#a78bfa'
+            stroke_width: 3
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: avg
+              duration: 10min
+          - entity: number.pcha_seuil_luminosite_chauffage_klux
+            name: Seuil
+            color: '#fbbf24'
+            stroke_width: 2
+            float_precision: 1
+            show:
+              in_header: true
+        apex_config:
+          <<: *history_apex_config
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.40
+              opacityTo: 0.03
+        card_mod:
+          style: |
+            #header__title { color:#eee8ff; font-weight:650; }
+            #header__states { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; width:100%; }
+            #header__states > #states__state:nth-child(2) { text-align:right; }
+            #header__states > #states__state:nth-child(2) #state__value { justify-content:flex-end; }
+            ha-card {
+              background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(34,22,65,.94));
+              border: 1px solid rgba(167,139,250,.34);
+              border-radius: 18px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: debit-historique
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Débit filtration
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_debit_filtration
+            name: Débit
+            type: area
+            color: '#2dd4bf'
+            stroke_width: 3
+            float_precision: 0
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: avg
+              duration: 5min
+        apex_config: *history_apex_config
+        card_mod: *history_cyan_chart_mod
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: puissance-historique
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Puissance pompe
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_puissance_pompe_filtration
+            name: Puissance
+            type: area
+            color: '#c084fc'
+            stroke_width: 3
+            float_precision: 0
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: avg
+              duration: 5min
+        apex_config: *history_apex_config
+        card_mod:
+          style: |
+            #header__title { color:#eee8ff; font-weight:650; }
+            ha-card {
+              background: linear-gradient(150deg, rgba(20,17,49,.98), rgba(34,22,65,.94));
+              border: 1px solid rgba(167,139,250,.34);
+              border-radius: 18px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28);
+              overflow: hidden;
+            }
+
+      - type: custom:apexcharts-card
+        view_layout:
+          grid-area: objectif-historique
+        graph_span: 24h
+        update_interval: 30s
+        header:
+          show: true
+          title: Progression de l’objectif
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.pcha_progression_objectif_quotidien
+            name: Progression
+            type: area
+            color: '#38bdf8'
+            stroke_width: 3
+            float_precision: 0
+            show:
+              in_header: true
+              extremas: true
+            group_by:
+              func: max
+              duration: 5min
+        apex_config:
+          <<: *history_apex_config
+          yaxis:
+            min: 0
+            max: 100
+            tickAmount: 4
+            labels:
+              style:
+                colors: '#94a3b8'
+          fill:
+            type: gradient
+            gradient:
+              opacityFrom: 0.42
+              opacityTo: 0.04
+        card_mod: *history_cyan_chart_mod
+
+      ##########################################################################
+      # Chronologies
+      ##########################################################################
+      - type: custom:button-card
+        name: Fonctionnement du système
+        icon: mdi:timeline-clock-outline
+        view_layout:
+          grid-area: fonctionnement-titre
+        styles: &history_section_styles
+          card:
+            - background: rgba(5,28,42,.90)
+            - border: 1px solid rgba(34,211,238,.22)
+            - border-radius: 16px
+            - padding: 8px 16px
+          grid:
+            - grid-template-areas: '"i n"'
+            - grid-template-columns: min-content 1fr
+          icon:
+            - color: '#22d3ee'
+            - width: 24px
+          name:
+            - justify-self: start
+            - color: '#f8fafc'
+            - font-size: 18px
+            - font-weight: 750
+
+      - type: history-graph
+        title: Activité du système — 24 heures
+        hours_to_show: 24
+        view_layout:
+          grid-area: fonctionnement-historique
+        entities:
+          - entity: input_select.pcha_mode_de_fonctionnement
+            name: Mode
+          - entity: input_select.pcha_etat_machine
+            name: Machine
+          - entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+          - entity: binary_sensor.pcha_chauffage_solaire_actif
+            name: Chauffage solaire
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau
+        card_mod: &history_timeline_mod
+          style: |
+            ha-card {
+              background: linear-gradient(145deg, rgba(5,22,38,.98), rgba(15,23,42,.98));
+              border: 1px solid rgba(34,211,238,.23);
+              border-radius: 18px;
+              box-shadow: 0 14px 36px rgba(0,0,0,.30);
+              overflow: hidden;
+            }
+
+      - type: custom:button-card
+        name: Diagnostics du système
+        icon: mdi:shield-search-outline
+        view_layout:
+          grid-area: diagnostics-historique-titre
+        styles: *history_section_styles
+
+      - type: history-graph
+        title: Diagnostics — 24 heures
+        hours_to_show: 24
+        view_layout:
+          grid-area: diagnostics-historique
+        entities:
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau global
+          - entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+            name: MES-001
+          - entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+            name: MES-002
+          - entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+            name: MES-003
+          - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+            name: MES-004
+          - entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+            name: COH-001
+          - entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+            name: COH-002
+          - entity: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+            name: PRO-001
+          - entity: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+            name: PRO-002
+          - entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+            name: PRO-003
+        card_mod: *history_timeline_mod
+
+  ##############################################################################
+  # Pilotage
+  ##############################################################################
