@@ -17,6 +17,7 @@
 * restructuration des en-têtes ApexCharts pour contenir valeurs, unités et libellés dans leurs colonnes sans débordement ;
 * suppression de la dernière icône décorative de l’objectif et alignement du titre à gauche.
 * filtrage des microcoupures de puissance : MES-003 s'active après 60 secondes d'indisponibilité et se réarme après 10 secondes stables.
+* correction du compteur de cycles : chargement explicite de l'intégrateur de débit et suppression du faux `0` lorsque sa source n'est pas disponible.
 
 ## V1.1 — 2026-08-04
 
