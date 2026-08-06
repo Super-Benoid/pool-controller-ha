@@ -58,6 +58,7 @@
     - name: PCHA Débit filtration
       unique_id: pcha_debit_filtration
       default_entity_id: sensor.pcha_debit_filtration
+      device_class: volume_flow_rate
       icon: mdi:waves-arrow-right
       unit_of_measurement: "L/h"
       state_class: measurement

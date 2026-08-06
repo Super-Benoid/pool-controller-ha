@@ -81,15 +81,16 @@ Les identifiants historiques `temperature_piscine` sont conservés comme contrat
 # 5. Référence de l'objectif quotidien
 
 ```text
-Température brute valide
+Température calibrée cohérente
         │
-        ├── maximum de minuit à lever du soleil + 30 min
-        ├── ajout du calibrage
+        ├── échantillonnage chaque minute
+        ├── moyenne acceptée après au moins 18 h de mesures valides
+        ├── sinon conservation de la dernière référence fiable
         ▼
 sensor.pcha_temperature_reference_objectif_quotidien
         │
-        ├── calcul de durée
-        └── figement jusqu'au lendemain
+        ├── figement au changement de jour
+        └── calcul de durée selon la référence
         ▼
 sensor.pcha_objectif_filtration_quotidien
 ```

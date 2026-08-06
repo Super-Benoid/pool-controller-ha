@@ -13,6 +13,7 @@ input_boolean: !include ../pool-controller-ha/helpers/input_boolean.yaml
 input_number: !include ../pool-controller-ha/helpers/input_number.yaml
 input_select: !include ../pool-controller-ha/helpers/input_select.yaml
 input_text: !include ../pool-controller-ha/helpers/input_text.yaml
+sensor: !include ../pool-controller-ha/helpers/sensor.yaml
 timer: !include ../pool-controller-ha/helpers/timer.yaml
 utility_meter: !include ../pool-controller-ha/helpers/utility_meter.yaml
 

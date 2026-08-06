@@ -11,10 +11,19 @@
 * fiabilisation du temps restant par arrondi à la minute supérieure.
 * correction des libellés tronqués dans l’en-tête du graphique des températures ;
 * centrage du pourcentage de progression et suppression de l’icône centrale de l’objectif quotidien de filtration ;
-* affichage de la luminosité moyenne au-dessus du seuil dans l’en-tête, sans courbe supplémentaire ;
+* affichage de la luminosité moyenne diurne dans l’en-tête, incluant les passages nuageux sans courbe supplémentaire ;
 * affichage de la consommation électrique quotidienne dans l’en-tête de la puissance, sans courbe supplémentaire.
+* affichage du nombre de cycles de filtration avec une décimale et signalement explicite d'une source de volume indisponible ;
 * restructuration des en-têtes ApexCharts pour contenir valeurs, unités et libellés dans leurs colonnes sans débordement ;
 * suppression de la dernière icône décorative de l’objectif et alignement du titre à gauche.
+* filtrage des microcoupures de puissance : MES-003 s'active après 60 secondes d'indisponibilité et se réarme après 10 secondes stables.
+* correction du compteur de cycles : chargement explicite de l'intégrateur de débit et suppression du faux `0` lorsque sa source n'est pas disponible.
+* ajout de l'onglet Pilotage Concept D : chaîne de décision, commandes de mode et traitement, mesures de fonctionnement, temporisations et historique responsive.
+* rééquilibrage de l'accueil : graphes élargis, objectif quotidien compact et durée d'ensoleillement ajoutée entre la valeur actuelle et la moyenne de luminosité.
+* ajout de l'onglet Solaire Concept D : décision de chauffe, courbes température/luminosité, bilan du jour, réglages et historique responsive.
+* ajout de l'onglet Diagnostics Concept D : synthèse globale, comptage des défauts actifs, familles MES/COH/PRO, gravités, cause MES-004, temporisations et historique 24 heures.
+* harmonisation de la hauteur des cartes de synthèse Diagnostics et reformulation des libellés MES au repos pour éviter toute fausse impression de défaut.
+* ajout de l'onglet Historique Concept D : indicateurs quotidiens, courbes séparées des températures, de la luminosité, du débit, de la puissance et de l'objectif, puis chronologies du fonctionnement et des diagnostics sur 24 heures.
 
 ## V1.1 — 2026-08-04
 
@@ -52,7 +61,7 @@
 * ajout du thème sombre cyan/violet `PCHA Concept D` ;
 * remplacement des simples tuiles de tendance par quatre cartes capteur détaillées avec axes et historique 24 h ;
 * ajout d’un pictogramme coloré avant le titre de chaque graphique (température, luminosité, débit et puissance), avec trois vagues fléchées pour le débit de filtration ;
-* suppression de la légende redondante sous le graphique des températures et affichage centré du delta extérieur − bassin dans son en-tête ;
+* suppression de la légende redondante sous le graphique des températures et affichage centré du delta bassin − extérieur par une entité dédiée, sans inversion de la logique solaire ;
 * ajout des minimums et maximums glissants sur 24 h ;
 * ajout de `sensor.pcha_progression_objectif_quotidien` et d’une jauge de progression ;
 * modernisation de l’anneau de progression avec dégradé cyan, bleu, violet et fuchsia ;

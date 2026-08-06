@@ -53,10 +53,14 @@ Si la température extérieure ou la température bassin est indisponible, la so
 
 ```text
 sensor.pcha_source_chauffage_solaire
+sensor.pcha_ecart_temperature_bassin_exterieure      # affichage bassin − extérieur
 sensor.pcha_ecart_temperature_exterieure_bassin
 binary_sensor.pcha_chauffage_solaire_requis
 binary_sensor.pcha_chauffage_solaire_actif
 ```
+
+Le chauffage de secours utilise exclusivement l'écart `extérieur − bassin`. Le
+capteur inverse `bassin − extérieur` est réservé à l'affichage du dashboard.
 
 # 5. Protection du serpentin
 
@@ -69,12 +73,16 @@ La protection reste distincte du chauffage de confort.
 
 # 6. Bilan solaire
 
-Les compteurs de durée au-dessus du seuil et de luminosité moyenne :
+Le compteur de durée au-dessus du seuil et la luminosité moyenne sont
+échantillonnés une fois par minute et n'interviennent dans aucune décision de
+commande.
 
-* sont échantillonnés une fois par minute ;
-* sont remis à zéro au changement de jour ou de seuil ;
-* sont suspendus pendant MES-004 ;
-* n'interviennent dans aucune décision de commande.
+* Le temps solaire ne retient que les mesures strictement supérieures au seuil
+  et est remis à zéro au changement de jour ou de seuil.
+* La moyenne diurne retient toutes les mesures valides lorsque `sun.sun` est
+  `above_horizon`, y compris les faibles luminosités dues aux nuages. Elle est
+  remise à zéro au changement de jour.
+* Les deux calculs sont suspendus pendant MES-004.
 
 # 7. Critères d'acceptation
 

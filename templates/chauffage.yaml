@@ -16,6 +16,7 @@
 #   binary_sensor.pcha_chauffage_solaire_actif
 #   binary_sensor.pcha_chauffage_solaire_requis
 #   binary_sensor.pcha_protection_serpentin_requise
+#   sensor.pcha_ecart_temperature_bassin_exterieure
 #   sensor.pcha_ecart_temperature_exterieure_bassin
 #   sensor.pcha_source_chauffage_solaire
 #   sensor.pcha_luminosite_moyenne_superieure_seuil_jour
@@ -26,6 +27,27 @@
 # Source de pilotage et écart thermique
 ################################################################################
 - sensor:
+    # Écart positif lorsque l'eau du bassin est plus chaude que l'air.
+    # Cette entité est dédiée à l'affichage du dashboard.
+    - name: PCHA Écart température bassin extérieure
+      unique_id: pcha_ecart_temperature_bassin_exterieure
+      default_entity_id: sensor.pcha_ecart_temperature_bassin_exterieure
+      icon: mdi:thermometer-lines
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >
+        {% set bassin = states('sensor.pcha_temperature_piscine') %}
+        {% set exterieure = states('sensor.pcha_temperature_exterieure') %}
+        {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %}
+        {% set exterieure_valide = state_attr('sensor.pcha_temperature_exterieure', 'source_available') | bool(false) and is_number(exterieure) %}
+        {% if bassin_valide and exterieure_valide %}
+          {{ ((bassin | float(0)) - (exterieure | float(0))) | round(1) }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+
+    # Écart positif lorsque l'air est plus chaud que l'eau.
+    # Cette entité reste la référence métier du chauffage solaire de secours.
     - name: PCHA Écart température extérieure bassin
       unique_id: pcha_ecart_temperature_exterieure_bassin
       default_entity_id: sensor.pcha_ecart_temperature_exterieure_bassin
@@ -188,7 +210,7 @@
         pas_echantillonnage_min: 1
         suspendu_mes004: "{{ is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') }}"
 
-    - name: PCHA Luminosité moyenne supérieure au seuil du jour
+    - name: PCHA Luminosité moyenne diurne du jour
       unique_id: pcha_luminosite_moyenne_superieure_seuil_jour
       default_entity_id: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
       device_class: illuminance
@@ -198,15 +220,15 @@
       state: >
         {% set aujourd_hui = now().date() | string %}
         {% set jour_precedent = this.attributes.jour | default('') %}
-        {% set reinitialiser = jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+        {% set strategie = 'MOYENNE_MESURES_VALIDES_SOLEIL_AU_DESSUS_HORIZON' %}
+        {% set reinitialiser = jour_precedent != aujourd_hui or (this.attributes.strategie_calcul | default('')) != strategie %}
         {% set somme_precedente = 0 if reinitialiser else this.attributes.somme_lux | default(0) | float(0) %}
         {% set echantillons_precedents = 0 if reinitialiser else this.attributes.echantillons | default(0) | int(0) %}
         {% set luminosite = states('sensor.pcha_luminosite') %}
         {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
         {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
-        {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
         {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
-                         and (luminosite | float(0)) > seuil %}
+                         and is_state('sun.sun', 'above_horizon') %}
         {% set somme = somme_precedente + ((luminosite | float(0)) if compter else 0) %}
         {% set echantillons = echantillons_precedents + (1 if compter else 0) %}
         {{ (somme / echantillons) | round(0) if echantillons > 0 else 0 }}
@@ -215,27 +237,28 @@
         somme_lux: >
           {% set aujourd_hui = now().date() | string %}
           {% set jour_precedent = this.attributes.jour | default('') %}
-          {% set reinitialiser = jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+          {% set strategie = 'MOYENNE_MESURES_VALIDES_SOLEIL_AU_DESSUS_HORIZON' %}
+          {% set reinitialiser = jour_precedent != aujourd_hui or (this.attributes.strategie_calcul | default('')) != strategie %}
           {% set somme_precedente = 0 if reinitialiser else this.attributes.somme_lux | default(0) | float(0) %}
           {% set luminosite = states('sensor.pcha_luminosite') %}
           {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
           {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
-          {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
           {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
-                           and (luminosite | float(0)) > seuil %}
+                           and is_state('sun.sun', 'above_horizon') %}
           {{ somme_precedente + ((luminosite | float(0)) if compter else 0) }}
         echantillons: >
           {% set aujourd_hui = now().date() | string %}
           {% set jour_precedent = this.attributes.jour | default('') %}
-          {% set reinitialiser = jour_precedent != aujourd_hui or trigger.id == 'seuil' %}
+          {% set strategie = 'MOYENNE_MESURES_VALIDES_SOLEIL_AU_DESSUS_HORIZON' %}
+          {% set reinitialiser = jour_precedent != aujourd_hui or (this.attributes.strategie_calcul | default('')) != strategie %}
           {% set echantillons_precedents = 0 if reinitialiser else this.attributes.echantillons | default(0) | int(0) %}
           {% set luminosite = states('sensor.pcha_luminosite') %}
           {% set disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
           {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
-          {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
           {% set compter = trigger.id == 'minute' and disponible and not mes004 and is_number(luminosite)
-                           and (luminosite | float(0)) > seuil %}
+                           and is_state('sun.sun', 'above_horizon') %}
           {{ echantillons_precedents + (1 if compter else 0) }}
-        seuil_lux: "{{ states('input_number.pcha_seuil_luminosite_chauffage') | float(0) }}"
+        fenetre_calcul: SOLEIL_AU_DESSUS_HORIZON
+        strategie_calcul: MOYENNE_MESURES_VALIDES_SOLEIL_AU_DESSUS_HORIZON
         pas_echantillonnage_min: 1
         suspendu_mes004: "{{ is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') }}"

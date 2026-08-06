@@ -50,6 +50,15 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
+Après une mise à jour Git du projet, resynchroniser les deux fichiers installés avant de vérifier la configuration :
+
+```bash
+cp /config/pool-controller-ha/installation/packages/piscine.yaml /config/packages/piscine.yaml
+cp /config/pool-controller-ha/installation/packages/piscine_diagnostics.yaml /config/packages/piscine_diagnostics.yaml
+```
+
+Cette étape est indispensable lorsqu'une nouvelle famille d'entités est ajoutée. Le calcul des cycles nécessite notamment le chargement de `helpers/sensor.yaml` par la ligne `sensor:` de `/config/packages/piscine.yaml`.
+
 # 4. Thème et tableau de bord
 
 Fusionner les blocs `frontend:` et `lovelace:` de `installation/configuration_extrait.yaml` dans `/config/configuration.yaml`. Le dossier `themes/` contient le thème sombre **PCHA Concept D** et ses variantes cyan, violette et alerte.
@@ -96,9 +105,10 @@ Le mode initial doit rester `OFF` pendant les contrôles.
 2. Vérifier la configuration Home Assistant.
 3. Redémarrer Home Assistant.
 4. Vérifier les entités `pcha_*`, notamment `sensor.pcha_progression_objectif_quotidien`.
-5. Contrôler le calibrage signé.
-6. Vérifier que les deux états de luminosité distante sont `on`.
-7. Exécuter `RECETTE-V1.1.md`.
+5. Vérifier que `sensor.pcha_volume_filtre_total`, `sensor.pcha_volume_filtre_quotidien` et `sensor.pcha_renouvellements_bassin_du_jour` sont numériques et augmentent pendant la filtration.
+6. Contrôler le calibrage signé.
+7. Vérifier que les deux états de luminosité distante sont `on`.
+8. Exécuter `RECETTE-V1.1.md`.
 
 # 8. Retour arrière
 

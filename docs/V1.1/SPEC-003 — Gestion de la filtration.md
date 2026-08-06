@@ -13,10 +13,9 @@ Cette SPEC définit l'objectif quotidien de filtration et la demande automatique
 
 **Entrées**
 
-* température brute cohérente du bassin ;
-* calibrage signé de la température ;
+* température calibrée cohérente du bassin ;
 * temps de filtration réalisé ;
-* lever et coucher du soleil fournis par Home Assistant.
+* coucher du soleil fourni par Home Assistant.
 
 **Sorties**
 
@@ -30,43 +29,44 @@ binary_sensor.pcha_filtration_requise
 
 # 3. Construction de la référence quotidienne
 
-Une mesure unique prise à minuit n'est pas suffisante, notamment près des seuils de 20, 24 et 27 °C. La V1.1 applique la séquence suivante :
+Une mesure unique prise à minuit n'est pas représentative de la température du bassin. La référence quotidienne est donc construite à partir de la moyenne des températures calibrées cohérentes échantillonnées chaque minute pendant la journée terminée. Cette moyenne n'est acceptée que si au moins 1 080 échantillons valides, soit 18 heures de mesures, ont été reçus.
 
 ```text
-À minuit
-→ démarrage d'une nouvelle candidate
-→ mémorisation de la température brute maximale valide
-→ observation jusqu'à 30 minutes après le lever du soleil
-→ ajout du calibrage signé
-→ calcul et figement de l'objectif jusqu'au lendemain
+Pendant la journée J−1
+→ échantillonnage chaque minute de la température calibrée cohérente
+→ cumul de la somme et du nombre d'échantillons
+→ à minuit, contrôle d'au moins 1 080 échantillons valides
+→ si le seuil est atteint, calcul de la moyenne de J−1
+→ sinon, conservation de la dernière référence fiable en secours
+→ la référence retenue devient la référence figée de J
+→ remise à zéro des accumulateurs pour la journée J
 ```
 
-Avant le figement, l'objectif est **provisoire** et suit uniquement la candidate maximale de la fenêtre. Après le figement, une hausse de température dans l'après-midi ne modifie plus l'objectif.
-
-La référence est calculée ainsi :
+La référence est calculée ainsi au changement de jour :
 
 ```text
-température de référence = maximum brut observé + calibrage
+température de référence du jour J
+= somme des températures calibrées valides de J−1
+  / nombre d'échantillons valides de J−1
 ```
 
-En cas de redémarrage après la fin de la fenêtre, le système reconstitue la décision avec les données restaurées. Si aucune mesure valide n'est disponible, le dernier objectif connu est conservé temporairement ; le figement du jour est effectué dès qu'une mesure cohérente devient disponible.
+Le capteur restaure ses accumulateurs après un redémarrage. Si la couverture de la veille est inférieure à 18 heures ou si aucune moyenne valide n'est disponible, la dernière référence connue est conservée en secours afin de ne pas supprimer l'objectif quotidien.
 
 ## 3.1 Exemples
 
-| Mesures brutes de la fenêtre | Calibrage | Référence | Objectif |
-|---|---:|---:|---:|
-| 23,1 ; 23,4 ; 23,2 °C | +0,1 °C | 23,5 °C | 6 h |
-| 24,7 ; 24,4 ; 23,8 °C | −0,2 °C | 24,5 °C | 8 h |
-| 27,1 ; 27,4 ; 27,2 °C | 0,0 °C | 27,4 °C | 10 h 48 |
+| Moyenne calibrée de la veille | Calcul | Objectif |
+|---:|---|---:|
+| 20 °C | 20 / 5 | 4 h |
+| 25 °C | 25 / 5 | 5 h |
+| 27 °C | 27 / 5 + 2 | 7 h 24 |
+| 30 °C | 30 / 5 + 5 | 11 h |
 
 # 4. Tableau de calcul
 
 | Température de référence | Objectif quotidien |
 |---|---:|
-| < 20 °C | 4 h |
-| 20 °C à < 24 °C | 6 h |
-| 24 °C à < 27 °C | 8 h |
-| ≥ 27 °C | 10 h + 2 h par degré au-dessus de 27 °C |
+| ≤ 25 °C | température / 5 |
+| > 25 °C | température / 5 + 1 h par degré au-dessus de 25 °C |
 
 Toute minute pendant laquelle la machine est en `FILTRATION` compte dans le temps réalisé.
 
@@ -87,8 +87,9 @@ Avant cette heure, une filtration provenant d'une autre demande compte dans le t
 
 # 7. Critères d'acceptation
 
-* L'objectif est provisoire pendant la fenêtre nocturne puis figé.
-* La référence utilise le maximum brut valide et le calibrage en vigueur au figement.
-* L'objectif ne varie plus après le figement.
+* La température calibrée cohérente est échantillonnée chaque minute.
+* À minuit, la moyenne de la journée terminée devient la nouvelle référence uniquement si au moins 1 080 échantillons valides ont été reçus.
+* La référence et l'objectif restent figés pendant toute la nouvelle journée.
+* Si la couverture est inférieure à 18 heures ou en l'absence de moyenne valide, la dernière référence connue est conservée en secours.
 * Les statistiques journalières ne dépendent pas du fonctionnement de la pompe.
 * La planification vise une fin deux heures avant le coucher du soleil.
