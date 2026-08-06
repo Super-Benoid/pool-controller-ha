@@ -33,6 +33,13 @@ docs/V1.1/MIGRATION-V1.0-V1.1.md
 docs/V1.1/RECETTE-V1.1.md
 ```
 
+Après chaque mise à jour de la branche, resynchroniser les packages installés :
+
+```bash
+cp /config/pool-controller-ha/installation/packages/piscine.yaml /config/packages/piscine.yaml
+cp /config/pool-controller-ha/installation/packages/piscine_diagnostics.yaml /config/packages/piscine_diagnostics.yaml
+```
+
 ## Avertissement de migration du calibrage
 
 L'identifiant historique du helper est conservé, mais sa formule change :
