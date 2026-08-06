@@ -433,13 +433,11 @@
       icon: mdi:rotate-3d-variant
       unit_of_measurement: "x"
       state_class: measurement
+      availability: >
+        {{ is_number(states('sensor.pcha_volume_filtre_quotidien')) }}
       state: >
         {% set volume = states('sensor.pcha_volume_filtre_quotidien') %}
-        {% if is_number(volume) %}
-          {{ ((volume | float(0)) / 4) | round(1) }}
-        {% else %}
-          0
-        {% endif %}
+        {{ ((volume | float(0)) / 4) | round(1) }}
       attributes:
         volume_bassin_m3: 4
         volume_filtre_m3: >
