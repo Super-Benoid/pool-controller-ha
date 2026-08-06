@@ -98,7 +98,14 @@ Reprendre les essais V1.0 :
 * tests `OFF`, `AUTO`, `SECURISATION`, `TRAITEMENT`, `MARCHE_FORCEE` ;
 * arrêt immédiat sur niveau `CRITIQUE`.
 
-# 10. Validation finale
+# 10. Temporisation de MES-003
+
+1. Interrompre la remontée de `sensor.prises_exterieur_power` pendant moins de 60 secondes et vérifier que MES-003 reste inactif.
+2. Prolonger l'indisponibilité pendant 60 secondes consécutives et vérifier que MES-003 devient actif avec le niveau `DEGRADE`.
+3. Rétablir une valeur numérique et vérifier que MES-003 reste actif pendant les 10 premières secondes.
+4. Vérifier son réarmement automatique après 10 secondes consécutives de mesure valide.
+
+# 11. Validation finale
 
 La V1.1 est validée lorsque :
 
