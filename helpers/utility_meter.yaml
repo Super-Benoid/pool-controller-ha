@@ -24,4 +24,3 @@ pcha_volume_filtre_quotidien:
   unique_id: pcha_volume_filtre_quotidien
   cycle: daily
   periodically_resetting: false
-  always_available: true
