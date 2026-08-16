@@ -4548,14 +4548,14 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_1_amplitude_temperature_bassin
             name: Amplitude max/min
             color: '#e879f9'
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_brightness_chart
         span:
           start: day
@@ -4576,7 +4576,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_1_ensoleillement
             name: Ensoleillement
             color: '#fbbf24'
@@ -4585,7 +4585,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_flow_chart
         span:
           start: day
@@ -4605,7 +4605,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_1_cycles_bassin
             name: Cycles
             color: '#2dd4bf'
@@ -4613,7 +4613,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_power_chart
         span:
           start: day
@@ -4632,7 +4632,7 @@ views:
             float_precision: 2
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_objective_chart
         span:
           start: day
@@ -4651,7 +4651,7 @@ views:
             float_precision: 0
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_1_objectif_filtration
             name: Objectif du jour
             color: '#22d3ee'
@@ -4659,7 +4659,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_1_temperature_reference_objectif
             name: Référence
             color: '#e879f9'
@@ -4667,7 +4667,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
 
       - type: custom:button-card
         name: Fonctionnement du système
@@ -4829,14 +4829,14 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_2_amplitude_temperature_bassin
             name: Amplitude max/min
             color: '#e879f9'
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_brightness_chart
         span:
           start: day
@@ -4857,7 +4857,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_2_ensoleillement
             name: Ensoleillement
             color: '#fbbf24'
@@ -4866,7 +4866,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_flow_chart
         span:
           start: day
@@ -4886,7 +4886,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_2_cycles_bassin
             name: Cycles
             color: '#2dd4bf'
@@ -4894,7 +4894,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_power_chart
         span:
           start: day
@@ -4913,7 +4913,7 @@ views:
             float_precision: 2
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_objective_chart
         span:
           start: day
@@ -4932,7 +4932,7 @@ views:
             float_precision: 0
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_2_objectif_filtration
             name: Objectif du jour
             color: '#22d3ee'
@@ -4940,7 +4940,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_2_temperature_reference_objectif
             name: Référence
             color: '#e879f9'
@@ -4948,7 +4948,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
 
       - type: custom:button-card
         name: Fonctionnement du système
@@ -5013,14 +5013,14 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_3_amplitude_temperature_bassin
             name: Amplitude max/min
             color: '#e879f9'
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_brightness_chart
         span:
           start: day
@@ -5041,7 +5041,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_3_ensoleillement
             name: Ensoleillement
             color: '#fbbf24'
@@ -5050,7 +5050,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_flow_chart
         span:
           start: day
@@ -5070,7 +5070,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_3_cycles_bassin
             name: Cycles
             color: '#2dd4bf'
@@ -5078,7 +5078,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_power_chart
         span:
           start: day
@@ -5097,7 +5097,7 @@ views:
             float_precision: 2
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
       - <<: *history_objective_chart
         span:
           start: day
@@ -5116,7 +5116,7 @@ views:
             float_precision: 0
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_3_objectif_filtration
             name: Objectif du jour
             color: '#22d3ee'
@@ -5124,7 +5124,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
           - entity: sensor.pcha_historique_j_3_temperature_reference_objectif
             name: Référence
             color: '#e879f9'
@@ -5132,7 +5132,7 @@ views:
             float_precision: 1
             show:
               in_chart: false
-              in_header: true
+              in_header: raw
 
       - type: custom:button-card
         name: Fonctionnement du système
