@@ -4116,7 +4116,7 @@ views:
               - entity: input_select.pcha_mode_de_fonctionnement
                 name: Mode
                 color: '#22d3ee'
-                stroke_width: 5
+                stroke_width: 3
                 curve: stepline
                 extend_to: end
                 transform: |
@@ -4186,7 +4186,7 @@ views:
               - entity: input_select.pcha_etat_machine
                 name: Machine
                 color: '#fbbf24'
-                stroke_width: 5
+                stroke_width: 3
                 curve: stepline
                 extend_to: end
                 transform: |
@@ -4248,14 +4248,14 @@ views:
               - entity: switch.pcha_commande_pompe_filtration
                 name: Pompe
                 color: '#34d399'
-                stroke_width: 5
+                stroke_width: 3
                 curve: stepline
                 extend_to: end
                 transform: "return x === 'on' ? 1 : 0;"
               - entity: binary_sensor.pcha_chauffage_solaire_actif
                 name: Chauffage solaire
                 color: '#fde047'
-                stroke_width: 5
+                stroke_width: 3
                 curve: stepline
                 extend_to: end
                 transform: "return x === 'on' ? 3 : 2;"
@@ -4309,7 +4309,7 @@ views:
               - entity: input_select.pcha_niveau_fonctionnement
                 name: Niveau
                 color: '#60a5fa'
-                stroke_width: 5
+                stroke_width: 3
                 curve: stepline
                 extend_to: end
                 transform: |
