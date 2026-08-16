@@ -36,6 +36,8 @@
     - trigger: event
       event_type: event_template_reloaded
     - trigger: time
+      at: "00:00:10"
+    - trigger: time
       at: "00:05:00"
   actions:
     - action: recorder.get_statistics
@@ -52,11 +54,13 @@
           - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=1) }}"
         end_time: "{{ today_at() }}"
-        period: hour
+        period: day
         types:
           - mean
           - min
           - max
+          - state
+          - change
       response_variable: historique_j_1
     - action: recorder.get_statistics
       data:
@@ -72,11 +76,13 @@
           - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=2) }}"
         end_time: "{{ today_at() - timedelta(days=1) }}"
-        period: hour
+        period: day
         types:
           - mean
           - min
           - max
+          - state
+          - change
       response_variable: historique_j_2
     - action: recorder.get_statistics
       data:
@@ -92,22 +98,24 @@
           - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=3) }}"
         end_time: "{{ today_at() - timedelta(days=2) }}"
-        period: hour
+        period: day
         types:
           - mean
           - min
           - max
+          - state
+          - change
       response_variable: historique_j_3
   sensor:
     - name: PCHA Historique J-1 filtration réalisée
       unique_id: pcha_historique_j_1_filtration_realisee
       default_entity_id: sensor.pcha_historique_j_1_filtration_realisee
       icon: mdi:timer-play-outline
-      unit_of_measurement: min
+      unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
         {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-1 cycles du bassin
       unique_id: pcha_historique_j_1_cycles_bassin
@@ -126,18 +134,19 @@
       unit_of_measurement: kWh
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
-        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(2) if valeurs | count > 0 else none }}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
 
     - name: PCHA Historique J-1 ensoleillement
       unique_id: pcha_historique_j_1_ensoleillement
       default_entity_id: sensor.pcha_historique_j_1_ensoleillement
       icon: mdi:sun-clock-outline
-      unit_of_measurement: min
+      unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
         {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-1 température bassin moyenne
       unique_id: pcha_historique_j_1_temperature_bassin_moyenne
@@ -147,14 +156,8 @@
       unit_of_measurement: "°C"
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
-        {% set ns = namespace(somme=0, nombre=0) %}
-        {% for ligne in lignes %}
-          {% if ligne.mean is not none %}
-            {% set ns.somme = ns.somme + (ligne.mean | float(0)) %}
-            {% set ns.nombre = ns.nombre + 1 %}
-          {% endif %}
-        {% endfor %}
-        {{ (ns.somme / ns.nombre) | round(1) if ns.nombre > 0 else none }}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-1 amplitude température bassin
       unique_id: pcha_historique_j_1_amplitude_temperature_bassin
@@ -172,12 +175,11 @@
       unique_id: pcha_historique_j_1_luminosite_moyenne_diurne
       default_entity_id: sensor.pcha_historique_j_1_luminosite_moyenne_diurne
       icon: mdi:sun-compass
-      device_class: illuminance
-      unit_of_measurement: lx
+      unit_of_measurement: klux
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(0) if valeurs | count > 0 else none }}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-1 progression objectif
       unique_id: pcha_historique_j_1_progression_objectif
@@ -196,7 +198,7 @@
       unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
         {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-1 température référence objectif
@@ -207,18 +209,18 @@
       unit_of_measurement: "°C"
       state: >-
         {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
         {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-2 filtration réalisée
       unique_id: pcha_historique_j_2_filtration_realisee
       default_entity_id: sensor.pcha_historique_j_2_filtration_realisee
       icon: mdi:timer-play-outline
-      unit_of_measurement: min
+      unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
         {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-2 cycles du bassin
       unique_id: pcha_historique_j_2_cycles_bassin
@@ -237,18 +239,19 @@
       unit_of_measurement: kWh
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
-        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(2) if valeurs | count > 0 else none }}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
 
     - name: PCHA Historique J-2 ensoleillement
       unique_id: pcha_historique_j_2_ensoleillement
       default_entity_id: sensor.pcha_historique_j_2_ensoleillement
       icon: mdi:sun-clock-outline
-      unit_of_measurement: min
+      unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
         {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-2 température bassin moyenne
       unique_id: pcha_historique_j_2_temperature_bassin_moyenne
@@ -258,14 +261,8 @@
       unit_of_measurement: "°C"
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
-        {% set ns = namespace(somme=0, nombre=0) %}
-        {% for ligne in lignes %}
-          {% if ligne.mean is not none %}
-            {% set ns.somme = ns.somme + (ligne.mean | float(0)) %}
-            {% set ns.nombre = ns.nombre + 1 %}
-          {% endif %}
-        {% endfor %}
-        {{ (ns.somme / ns.nombre) | round(1) if ns.nombre > 0 else none }}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-2 amplitude température bassin
       unique_id: pcha_historique_j_2_amplitude_temperature_bassin
@@ -283,12 +280,11 @@
       unique_id: pcha_historique_j_2_luminosite_moyenne_diurne
       default_entity_id: sensor.pcha_historique_j_2_luminosite_moyenne_diurne
       icon: mdi:sun-compass
-      device_class: illuminance
-      unit_of_measurement: lx
+      unit_of_measurement: klux
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(0) if valeurs | count > 0 else none }}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-2 progression objectif
       unique_id: pcha_historique_j_2_progression_objectif
@@ -307,7 +303,7 @@
       unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
         {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-2 température référence objectif
@@ -318,18 +314,18 @@
       unit_of_measurement: "°C"
       state: >-
         {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
         {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-3 filtration réalisée
       unique_id: pcha_historique_j_3_filtration_realisee
       default_entity_id: sensor.pcha_historique_j_3_filtration_realisee
       icon: mdi:timer-play-outline
-      unit_of_measurement: min
+      unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
         {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-3 cycles du bassin
       unique_id: pcha_historique_j_3_cycles_bassin
@@ -348,18 +344,19 @@
       unit_of_measurement: kWh
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
-        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(2) if valeurs | count > 0 else none }}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
 
     - name: PCHA Historique J-3 ensoleillement
       unique_id: pcha_historique_j_3_ensoleillement
       default_entity_id: sensor.pcha_historique_j_3_ensoleillement
       icon: mdi:sun-clock-outline
-      unit_of_measurement: min
+      unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
         {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
-        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-3 température bassin moyenne
       unique_id: pcha_historique_j_3_temperature_bassin_moyenne
@@ -369,14 +366,8 @@
       unit_of_measurement: "°C"
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
-        {% set ns = namespace(somme=0, nombre=0) %}
-        {% for ligne in lignes %}
-          {% if ligne.mean is not none %}
-            {% set ns.somme = ns.somme + (ligne.mean | float(0)) %}
-            {% set ns.nombre = ns.nombre + 1 %}
-          {% endif %}
-        {% endfor %}
-        {{ (ns.somme / ns.nombre) | round(1) if ns.nombre > 0 else none }}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-3 amplitude température bassin
       unique_id: pcha_historique_j_3_amplitude_temperature_bassin
@@ -394,12 +385,11 @@
       unique_id: pcha_historique_j_3_luminosite_moyenne_diurne
       default_entity_id: sensor.pcha_historique_j_3_luminosite_moyenne_diurne
       icon: mdi:sun-compass
-      device_class: illuminance
-      unit_of_measurement: lx
+      unit_of_measurement: klux
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(0) if valeurs | count > 0 else none }}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-3 progression objectif
       unique_id: pcha_historique_j_3_progression_objectif
@@ -418,7 +408,7 @@
       unit_of_measurement: h
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
         {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
 
     - name: PCHA Historique J-3 température référence objectif
@@ -429,5 +419,5 @@
       unit_of_measurement: "°C"
       state: >-
         {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
-        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeurs = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
         {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
