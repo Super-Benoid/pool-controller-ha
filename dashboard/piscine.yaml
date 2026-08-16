@@ -3572,7 +3572,7 @@ views:
     icon: mdi:history
     background: *pcha_background
     type: custom:grid-layout
-    layout:
+    layout: &history_layout
       grid-template-columns: repeat(12, minmax(0, 1fr))
       grid-template-areas: |
         "header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique"
@@ -3638,6 +3638,57 @@ views:
         custom_fields:
           titre: Historique — 24 heures
           sous_titre: Mesures, fonctionnement et diagnostics
+          jours:
+            card:
+              type: horizontal-stack
+              cards:
+                - type: custom:button-card
+                  name: J
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique
+                  styles: &history_day_active_styles
+                    card:
+                      - min-width: 52px
+                      - height: 30px
+                      - padding: 0 12px
+                      - border-radius: 10px
+                      - border: 1px solid rgba(34,211,238,.65)
+                      - background: linear-gradient(135deg, rgba(34,211,238,.28), rgba(167,139,250,.22))
+                      - box-shadow: 0 0 16px rgba(34,211,238,.15)
+                    name:
+                      - color: '#e0fbff'
+                      - font-size: 13px
+                      - font-weight: 800
+                - type: custom:button-card
+                  name: J-1
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique-j-1
+                  styles: &history_day_inactive_styles
+                    card:
+                      - min-width: 52px
+                      - height: 30px
+                      - padding: 0 12px
+                      - border-radius: 10px
+                      - border: 1px solid rgba(148,163,184,.22)
+                      - background: rgba(15,23,42,.62)
+                    name:
+                      - color: '#94a3b8'
+                      - font-size: 13px
+                      - font-weight: 750
+                - type: custom:button-card
+                  name: J-2
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique-j-2
+                  styles: *history_day_inactive_styles
+                - type: custom:button-card
+                  name: J-3
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique-j-3
+                  styles: *history_day_inactive_styles
           heure: |
             [[[
               return new Date().toLocaleTimeString('fr-FR', {
@@ -3665,7 +3716,7 @@ views:
                 ${pill('mdi:shield-check-outline', 'Niveau', niveau, color)}
               </div>`;
             ]]]
-        styles:
+        styles: &history_header_styles
           card:
             - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
             - border: 1px solid rgba(167,139,250,.30)
@@ -3674,9 +3725,9 @@ views:
             - padding: 15px 22px
             - min-height: 72px
           grid:
-            - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts"'
+            - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts" "jours heure statuts"'
             - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
-            - grid-template-rows: min-content min-content
+            - grid-template-rows: min-content min-content min-content
           custom_fields:
             titre:
               - justify-self: start
@@ -3688,6 +3739,10 @@ views:
               - color: '#94a3b8'
               - font-size: 14px
               - padding-top: 5px
+            jours:
+              - justify-self: start
+              - width: 248px
+              - padding-top: 9px
             heure:
               - justify-self: center
               - align-self: center
@@ -3707,7 +3762,8 @@ views:
       ##########################################################################
       # Indicateurs du jour
       ##########################################################################
-      - type: custom:button-card
+      - &history_kpi_filtration_card
+        type: custom:button-card
         entity: sensor.pcha_temps_filtration_realise
         name: Filtration réalisée
         icon: mdi:timer-play-outline
@@ -3750,7 +3806,8 @@ views:
               - font-size: 24px
               - font-weight: 820
 
-      - type: custom:button-card
+      - &history_kpi_cycles_card
+        type: custom:button-card
         entity: sensor.pcha_renouvellements_bassin_du_jour
         name: Cycles du bassin
         icon: mdi:sync
@@ -3767,7 +3824,8 @@ views:
             ]]]
         styles: *history_kpi_styles
 
-      - type: custom:button-card
+      - &history_kpi_energy_card
+        type: custom:button-card
         entity: sensor.pcha_energie_pompe_quotidienne
         name: Consommation du jour
         icon: mdi:lightning-bolt-circle
@@ -3784,7 +3842,8 @@ views:
             ]]]
         styles: *history_kpi_styles
 
-      - type: custom:button-card
+      - &history_kpi_sun_card
+        type: custom:button-card
         entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
         name: Ensoleillement
         icon: mdi:sun-clock-outline
@@ -3805,7 +3864,8 @@ views:
       ##########################################################################
       # Courbes de mesures
       ##########################################################################
-      - type: custom:apexcharts-card
+      - &history_temperature_chart
+        type: custom:apexcharts-card
         view_layout:
           grid-area: temperature-historique
         graph_span: 24h
@@ -3876,7 +3936,8 @@ views:
               overflow: hidden;
             }
 
-      - type: custom:apexcharts-card
+      - &history_brightness_chart
+        type: custom:apexcharts-card
         view_layout:
           grid-area: luminosite-historique
         graph_span: 24h
@@ -3929,7 +3990,8 @@ views:
               overflow: hidden;
             }
 
-      - type: custom:apexcharts-card
+      - &history_flow_chart
+        type: custom:apexcharts-card
         view_layout:
           grid-area: debit-historique
         graph_span: 24h
@@ -3955,7 +4017,8 @@ views:
         apex_config: *history_apex_config
         card_mod: *history_cyan_chart_mod
 
-      - type: custom:apexcharts-card
+      - &history_power_chart
+        type: custom:apexcharts-card
         view_layout:
           grid-area: puissance-historique
         graph_span: 24h
@@ -3990,7 +4053,8 @@ views:
               overflow: hidden;
             }
 
-      - type: custom:apexcharts-card
+      - &history_objective_chart
+        type: custom:apexcharts-card
         view_layout:
           grid-area: objectif-historique
         graph_span: 24h
@@ -4115,6 +4179,533 @@ views:
           - entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
             name: PRO-003
         card_mod: *history_timeline_mod
+
+  ##############################################################################
+  # Historique J-1
+  ##############################################################################
+  - title: Historique J-1
+    path: historique-j-1
+    icon: mdi:calendar-arrow-left
+    subview: true
+    background: *pcha_background
+    type: custom:grid-layout
+    layout: *history_layout
+    cards:
+      - &history_past_header
+        type: custom:button-card
+        show_icon: false
+        show_name: false
+        update_timer: 1min
+        tap_action:
+          action: none
+        view_layout:
+          grid-area: header-historique
+        custom_fields:
+          titre: |
+            [[[
+              const match = window.location.pathname.match(/historique-j-(\d)$/);
+              return `Historique — J-${match ? match[1] : '1'}`;
+            ]]]
+          sous_titre: |
+            [[[
+              const match = window.location.pathname.match(/historique-j-(\d)$/);
+              const recul = Number(match?.[1] ?? 1);
+              const date = new Date();
+              date.setDate(date.getDate() - recul);
+              return `${date.toLocaleDateString('fr-FR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'})} · journée complète`;
+            ]]]
+          jours:
+            card:
+              type: horizontal-stack
+              cards:
+                - type: custom:button-card
+                  name: J
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique
+                  styles: *history_day_inactive_styles
+                - type: custom:button-card
+                  name: J-1
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique-j-1
+                  styles:
+                    card:
+                      - min-width: 52px
+                      - height: 30px
+                      - padding: 0 12px
+                      - border-radius: 10px
+                      - border: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-1') ? '1px solid rgba(34,211,238,.65)' : '1px solid rgba(148,163,184,.22)'; ]]]
+                      - background: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-1') ? 'linear-gradient(135deg, rgba(34,211,238,.28), rgba(167,139,250,.22))' : 'rgba(15,23,42,.62)'; ]]]
+                    name:
+                      - color: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-1') ? '#e0fbff' : '#94a3b8'; ]]]
+                      - font-size: 13px
+                      - font-weight: 800
+                - type: custom:button-card
+                  name: J-2
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique-j-2
+                  styles:
+                    card:
+                      - min-width: 52px
+                      - height: 30px
+                      - padding: 0 12px
+                      - border-radius: 10px
+                      - border: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-2') ? '1px solid rgba(34,211,238,.65)' : '1px solid rgba(148,163,184,.22)'; ]]]
+                      - background: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-2') ? 'linear-gradient(135deg, rgba(34,211,238,.28), rgba(167,139,250,.22))' : 'rgba(15,23,42,.62)'; ]]]
+                    name:
+                      - color: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-2') ? '#e0fbff' : '#94a3b8'; ]]]
+                      - font-size: 13px
+                      - font-weight: 800
+                - type: custom:button-card
+                  name: J-3
+                  tap_action:
+                    action: navigate
+                    navigation_path: /pcha-validation/historique-j-3
+                  styles:
+                    card:
+                      - min-width: 52px
+                      - height: 30px
+                      - padding: 0 12px
+                      - border-radius: 10px
+                      - border: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-3') ? '1px solid rgba(34,211,238,.65)' : '1px solid rgba(148,163,184,.22)'; ]]]
+                      - background: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-3') ? 'linear-gradient(135deg, rgba(34,211,238,.28), rgba(167,139,250,.22))' : 'rgba(15,23,42,.62)'; ]]]
+                    name:
+                      - color: >-
+                          [[[ return window.location.pathname.endsWith('historique-j-3') ? '#e0fbff' : '#94a3b8'; ]]]
+                      - font-size: 13px
+                      - font-weight: 800
+          heure: 00:00–23:59
+          statuts: |
+            [[[
+              const match = window.location.pathname.match(/historique-j-(\d)$/);
+              const recul = Number(match?.[1] ?? 1);
+              const date = new Date();
+              date.setDate(date.getDate() - recul);
+              const libelle = date.toLocaleDateString('fr-FR', {day:'2-digit', month:'short'});
+              return `<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid #a78bfa55;background:#a78bfa14;white-space:nowrap;">
+                  <ha-icon icon="mdi:calendar-clock-outline" style="width:18px;color:#a78bfa;"></ha-icon>
+                  <span style="color:#94a3b8;">Journée</span><b style="color:#c4b5fd;">${libelle}</b>
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid #22d3ee55;background:#22d3ee14;white-space:nowrap;">
+                  <ha-icon icon="mdi:database-clock-outline" style="width:18px;color:#22d3ee;"></ha-icon>
+                  <b style="color:#67e8f9;">Données Recorder</b>
+                </span>
+              </div>`;
+            ]]]
+        styles: *history_header_styles
+
+      - <<: *history_kpi_filtration_card
+        entity: sensor.pcha_historique_j_1_filtration_realisee
+      - <<: *history_kpi_cycles_card
+        entity: sensor.pcha_historique_j_1_cycles_bassin
+      - <<: *history_kpi_energy_card
+        entity: sensor.pcha_historique_j_1_consommation_pompe
+      - <<: *history_kpi_sun_card
+        entity: sensor.pcha_historique_j_1_ensoleillement
+
+      - <<: *history_temperature_chart
+        span:
+          start: day
+          offset: -1d
+        header:
+          show: true
+          title: Températures bassin / extérieur
+          show_states: false
+      - <<: *history_brightness_chart
+        span:
+          start: day
+          offset: -1d
+        header:
+          show: true
+          title: Luminosité / seuil solaire
+          show_states: false
+      - <<: *history_flow_chart
+        span:
+          start: day
+          offset: -1d
+        header:
+          show: true
+          title: Débit filtration
+          show_states: false
+      - <<: *history_power_chart
+        span:
+          start: day
+          offset: -1d
+        header:
+          show: true
+          title: Puissance pompe
+          show_states: false
+      - <<: *history_objective_chart
+        span:
+          start: day
+          offset: -1d
+        header:
+          show: true
+          title: Progression de l’objectif
+          show_states: false
+
+      - type: custom:button-card
+        name: Fonctionnement du système
+        icon: mdi:timeline-clock-outline
+        view_layout:
+          grid-area: fonctionnement-titre
+        styles: *history_section_styles
+
+      - &history_past_operation_chart
+        type: custom:apexcharts-card
+        graph_span: 24h
+        span:
+          start: day
+          offset: -1d
+        view_layout:
+          grid-area: fonctionnement-historique
+        header:
+          show: true
+          title: Activité du système — journée sélectionnée
+          show_states: false
+        series:
+          - entity: input_select.pcha_mode_de_fonctionnement
+            name: Mode
+            color: '#fb7185'
+            stroke_width: 3
+            transform: |
+              const valeurs = {OFF:0, SECURISATION:0.2, AUTO:0.4, TRAITEMENT:0.6, MARCHE_FORCEE:0.8, VIDANGE:1};
+              return 8 + (valeurs[x] ?? 0);
+          - entity: input_select.pcha_etat_machine
+            name: Machine
+            color: '#fbbf24'
+            stroke_width: 3
+            transform: |
+              const valeurs = {INITIALISATION:0, ATTENTE:0.3, FILTRATION:0.7, VIDANGE:1};
+              return 6 + (valeurs[x] ?? 0);
+          - entity: switch.pcha_commande_pompe_filtration
+            name: Pompe
+            color: '#34d399'
+            stroke_width: 3
+            transform: "return 4 + (x === 'on' ? 0.8 : 0);"
+          - entity: binary_sensor.pcha_chauffage_solaire_actif
+            name: Chauffage solaire
+            color: '#fde047'
+            stroke_width: 3
+            transform: "return 2 + (x === 'on' ? 0.8 : 0);"
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau
+            color: '#60a5fa'
+            stroke_width: 3
+            transform: |
+              const valeurs = {NORMAL:0, INFORMATIF:0.25, DEGRADE:0.55, CRITIQUE:0.9};
+              return valeurs[x] ?? 0;
+        apex_config: &history_past_state_apex
+          chart:
+            height: 245
+            toolbar:
+              show: false
+          stroke:
+            curve: stepline
+          markers:
+            size: 0
+          dataLabels:
+            enabled: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            min: 0
+            max: 9
+            tickAmount: 9
+            labels:
+              style:
+                colors: '#94a3b8'
+              formatter: |
+                EVAL:function(value) {
+                  const labels = {0:'Niveau',2:'Solaire',4:'Pompe',6:'Machine',8:'Mode'};
+                  return labels[Math.round(value)] || '';
+                }
+          legend:
+            show: true
+            labels:
+              colors: '#cbd5e1'
+          tooltip:
+            enabled: false
+        card_mod: *history_timeline_mod
+
+      - type: custom:button-card
+        name: Diagnostics du système
+        icon: mdi:shield-search-outline
+        view_layout:
+          grid-area: diagnostics-historique-titre
+        styles: *history_section_styles
+
+      - &history_past_diagnostics_chart
+        type: custom:apexcharts-card
+        graph_span: 24h
+        span:
+          start: day
+          offset: -1d
+        view_layout:
+          grid-area: diagnostics-historique
+        header:
+          show: true
+          title: Diagnostics — journée sélectionnée
+          show_states: false
+        series:
+          - entity: input_select.pcha_niveau_fonctionnement
+            name: Niveau global
+            color: '#60a5fa'
+            stroke_width: 2
+            transform: "return 9 + (x === 'NORMAL' ? 0 : 0.7);"
+          - entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
+            name: MES-001
+            color: '#fb7185'
+            stroke_width: 2
+            transform: "return 8 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
+            name: MES-002
+            color: '#fb7185'
+            stroke_width: 2
+            transform: "return 7 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+            name: MES-003
+            color: '#fb7185'
+            stroke_width: 2
+            transform: "return 6 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+            name: MES-004
+            color: '#fb7185'
+            stroke_width: 2
+            transform: "return 5 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+            name: COH-001
+            color: '#fbbf24'
+            stroke_width: 2
+            transform: "return 4 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
+            name: COH-002
+            color: '#fbbf24'
+            stroke_width: 2
+            transform: "return 3 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_pro_001_debit_critique
+            name: PRO-001
+            color: '#f97316'
+            stroke_width: 2
+            transform: "return 2 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
+            name: PRO-002
+            color: '#f97316'
+            stroke_width: 2
+            transform: "return 1 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+            name: PRO-003
+            color: '#f97316'
+            stroke_width: 2
+            transform: "return x === 'on' ? 0.7 : 0;"
+        apex_config:
+          <<: *history_past_state_apex
+          chart:
+            height: 330
+            toolbar:
+              show: false
+          yaxis:
+            min: 0
+            max: 10
+            tickAmount: 10
+            labels:
+              style:
+                colors: '#94a3b8'
+              formatter: |
+                EVAL:function(value) {
+                  const labels = {0:'PRO-003',1:'PRO-002',2:'PRO-001',3:'COH-002',4:'COH-001',5:'MES-004',6:'MES-003',7:'MES-002',8:'MES-001',9:'Niveau'};
+                  return labels[Math.round(value)] || '';
+                }
+          legend:
+            show: false
+        card_mod: *history_timeline_mod
+
+  ##############################################################################
+  # Historique J-2
+  ##############################################################################
+  - title: Historique J-2
+    path: historique-j-2
+    icon: mdi:calendar-arrow-left
+    subview: true
+    background: *pcha_background
+    type: custom:grid-layout
+    layout: *history_layout
+    cards:
+      - *history_past_header
+
+      - <<: *history_kpi_filtration_card
+        entity: sensor.pcha_historique_j_2_filtration_realisee
+      - <<: *history_kpi_cycles_card
+        entity: sensor.pcha_historique_j_2_cycles_bassin
+      - <<: *history_kpi_energy_card
+        entity: sensor.pcha_historique_j_2_consommation_pompe
+      - <<: *history_kpi_sun_card
+        entity: sensor.pcha_historique_j_2_ensoleillement
+
+      - <<: *history_temperature_chart
+        span:
+          start: day
+          offset: -2d
+        header:
+          show: true
+          title: Températures bassin / extérieur
+          show_states: false
+      - <<: *history_brightness_chart
+        span:
+          start: day
+          offset: -2d
+        header:
+          show: true
+          title: Luminosité / seuil solaire
+          show_states: false
+      - <<: *history_flow_chart
+        span:
+          start: day
+          offset: -2d
+        header:
+          show: true
+          title: Débit filtration
+          show_states: false
+      - <<: *history_power_chart
+        span:
+          start: day
+          offset: -2d
+        header:
+          show: true
+          title: Puissance pompe
+          show_states: false
+      - <<: *history_objective_chart
+        span:
+          start: day
+          offset: -2d
+        header:
+          show: true
+          title: Progression de l’objectif
+          show_states: false
+
+      - type: custom:button-card
+        name: Fonctionnement du système
+        icon: mdi:timeline-clock-outline
+        view_layout:
+          grid-area: fonctionnement-titre
+        styles: *history_section_styles
+      - <<: *history_past_operation_chart
+        span:
+          start: day
+          offset: -2d
+
+      - type: custom:button-card
+        name: Diagnostics du système
+        icon: mdi:shield-search-outline
+        view_layout:
+          grid-area: diagnostics-historique-titre
+        styles: *history_section_styles
+      - <<: *history_past_diagnostics_chart
+        span:
+          start: day
+          offset: -2d
+
+  ##############################################################################
+  # Historique J-3
+  ##############################################################################
+  - title: Historique J-3
+    path: historique-j-3
+    icon: mdi:calendar-arrow-left
+    subview: true
+    background: *pcha_background
+    type: custom:grid-layout
+    layout: *history_layout
+    cards:
+      - *history_past_header
+
+      - <<: *history_kpi_filtration_card
+        entity: sensor.pcha_historique_j_3_filtration_realisee
+      - <<: *history_kpi_cycles_card
+        entity: sensor.pcha_historique_j_3_cycles_bassin
+      - <<: *history_kpi_energy_card
+        entity: sensor.pcha_historique_j_3_consommation_pompe
+      - <<: *history_kpi_sun_card
+        entity: sensor.pcha_historique_j_3_ensoleillement
+
+      - <<: *history_temperature_chart
+        span:
+          start: day
+          offset: -3d
+        header:
+          show: true
+          title: Températures bassin / extérieur
+          show_states: false
+      - <<: *history_brightness_chart
+        span:
+          start: day
+          offset: -3d
+        header:
+          show: true
+          title: Luminosité / seuil solaire
+          show_states: false
+      - <<: *history_flow_chart
+        span:
+          start: day
+          offset: -3d
+        header:
+          show: true
+          title: Débit filtration
+          show_states: false
+      - <<: *history_power_chart
+        span:
+          start: day
+          offset: -3d
+        header:
+          show: true
+          title: Puissance pompe
+          show_states: false
+      - <<: *history_objective_chart
+        span:
+          start: day
+          offset: -3d
+        header:
+          show: true
+          title: Progression de l’objectif
+          show_states: false
+
+      - type: custom:button-card
+        name: Fonctionnement du système
+        icon: mdi:timeline-clock-outline
+        view_layout:
+          grid-area: fonctionnement-titre
+        styles: *history_section_styles
+      - <<: *history_past_operation_chart
+        span:
+          start: day
+          offset: -3d
+
+      - type: custom:button-card
+        name: Diagnostics du système
+        icon: mdi:shield-search-outline
+        view_layout:
+          grid-area: diagnostics-historique-titre
+        styles: *history_section_styles
+      - <<: *history_past_diagnostics_chart
+        span:
+          start: day
+          offset: -3d
 
   ##############################################################################
   # Pilotage

@@ -1,0 +1,163 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# Historique journalier J-1 à J-3
+#
+# Les valeurs de synthèse sont relues dans les statistiques Recorder. Elles sont
+# rafraîchies au démarrage puis chaque jour après le changement de date.
+################################################################################
+
+- triggers:
+    - trigger: homeassistant
+      event: start
+    - trigger: event
+      event_type: event_template_reloaded
+    - trigger: time
+      at: "00:05:00"
+  actions:
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+        start_time: "{{ today_at() - timedelta(days=1) }}"
+        end_time: "{{ today_at() }}"
+        period: day
+        types:
+          - max
+      response_variable: historique_j_1
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+        start_time: "{{ today_at() - timedelta(days=2) }}"
+        end_time: "{{ today_at() - timedelta(days=1) }}"
+        period: day
+        types:
+          - max
+      response_variable: historique_j_2
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+        start_time: "{{ today_at() - timedelta(days=3) }}"
+        end_time: "{{ today_at() - timedelta(days=2) }}"
+        period: day
+        types:
+          - max
+      response_variable: historique_j_3
+  sensor:
+    - name: PCHA Historique J-1 filtration réalisée
+      unique_id: pcha_historique_j_1_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_1_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: min
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {{ lignes[0].max | round(0) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-1 cycles du bassin
+      unique_id: pcha_historique_j_1_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_1_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {{ lignes[0].max | round(1) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-1 consommation pompe
+      unique_id: pcha_historique_j_1_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_1_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {{ lignes[0].max | round(2) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-1 ensoleillement
+      unique_id: pcha_historique_j_1_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_1_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: min
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {{ lignes[0].max | round(0) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-2 filtration réalisée
+      unique_id: pcha_historique_j_2_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_2_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: min
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {{ lignes[0].max | round(0) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-2 cycles du bassin
+      unique_id: pcha_historique_j_2_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_2_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {{ lignes[0].max | round(1) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-2 consommation pompe
+      unique_id: pcha_historique_j_2_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_2_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {{ lignes[0].max | round(2) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-2 ensoleillement
+      unique_id: pcha_historique_j_2_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_2_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: min
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {{ lignes[0].max | round(0) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-3 filtration réalisée
+      unique_id: pcha_historique_j_3_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_3_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: min
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {{ lignes[0].max | round(0) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-3 cycles du bassin
+      unique_id: pcha_historique_j_3_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_3_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {{ lignes[0].max | round(1) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-3 consommation pompe
+      unique_id: pcha_historique_j_3_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_3_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {{ lignes[0].max | round(2) if lignes | count > 0 and lignes[0].max is not none else none }}
+
+    - name: PCHA Historique J-3 ensoleillement
+      unique_id: pcha_historique_j_3_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_3_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: min
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {{ lignes[0].max | round(0) if lignes | count > 0 and lignes[0].max is not none else none }}
