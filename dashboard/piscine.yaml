@@ -3767,7 +3767,7 @@ views:
               extremas: true
             group_by:
               func: avg
-              duration: 10min
+              duration: 5min
           - &history_temperature_outdoor_series
             entity: sensor.pcha_temperature_exterieure
             name: Extérieur
@@ -3778,7 +3778,7 @@ views:
               in_header: false
             group_by:
               func: avg
-              duration: 10min
+              duration: 5min
           - entity: sensor.pcha_temperature_bassin_moyenne_du_jour
             name: Moy. bassin
             color: '#22d3ee'
@@ -3788,7 +3788,7 @@ views:
               in_header: true
           - entity: sensor.pcha_amplitude_temperature_bassin_du_jour
             name: Amplitude max/min
-            color: '#e879f9'
+            color: '#22d3ee'
             float_precision: 1
             show:
               in_chart: false
@@ -4551,7 +4551,7 @@ views:
               in_header: raw
           - entity: sensor.pcha_historique_j_1_amplitude_temperature_bassin
             name: Amplitude max/min
-            color: '#e879f9'
+            color: '#22d3ee'
             float_precision: 1
             show:
               in_chart: false
@@ -4829,7 +4829,7 @@ views:
               in_header: raw
           - entity: sensor.pcha_historique_j_2_amplitude_temperature_bassin
             name: Amplitude max/min
-            color: '#e879f9'
+            color: '#22d3ee'
             float_precision: 1
             show:
               in_chart: false
@@ -5010,7 +5010,7 @@ views:
               in_header: raw
           - entity: sensor.pcha_historique_j_3_amplitude_temperature_bassin
             name: Amplitude max/min
-            color: '#e879f9'
+            color: '#22d3ee'
             float_precision: 1
             show:
               in_chart: false
