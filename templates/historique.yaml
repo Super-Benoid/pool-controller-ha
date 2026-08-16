@@ -50,8 +50,6 @@
           - sensor.pcha_temperature_piscine
           - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
           - sensor.pcha_progression_objectif_quotidien
-          - sensor.pcha_objectif_filtration_quotidien
-          - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=1) }}"
         end_time: "{{ today_at() }}"
         period: day
@@ -72,8 +70,6 @@
           - sensor.pcha_temperature_piscine
           - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
           - sensor.pcha_progression_objectif_quotidien
-          - sensor.pcha_objectif_filtration_quotidien
-          - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=2) }}"
         end_time: "{{ today_at() - timedelta(days=1) }}"
         period: day
@@ -94,8 +90,6 @@
           - sensor.pcha_temperature_piscine
           - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
           - sensor.pcha_progression_objectif_quotidien
-          - sensor.pcha_objectif_filtration_quotidien
-          - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=3) }}"
         end_time: "{{ today_at() - timedelta(days=2) }}"
         period: day
@@ -109,12 +103,18 @@
     # Les séries détaillées utilisent les agrégats courts de 5 minutes :
     # - la moyenne et l'amplitude restent cohérentes avec la courbe affichée ;
     # - la dernière valeur de la moyenne lumineuse cumulée correspond au bilan
-    #   final de la journée, contrairement à sa moyenne sur toute la journée.
+    #   final de la journée, contrairement à sa moyenne sur toute la journée ;
+    # - la première valeur stabilisée après minuit de l'objectif et de sa
+    #   référence correspond à la valeur figée pour la journée, avant la
+    #   bascule de minuit suivante. Le second créneau évite qu'une transition
+    #   exactement à 00:00 ne mélange l'ancienne et la nouvelle valeur.
     - action: recorder.get_statistics
       data:
         statistic_ids:
           - sensor.pcha_temperature_piscine
           - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=1) }}"
         end_time: "{{ today_at() }}"
         period: 5minute
@@ -126,6 +126,8 @@
         statistic_ids:
           - sensor.pcha_temperature_piscine
           - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=2) }}"
         end_time: "{{ today_at() - timedelta(days=1) }}"
         period: 5minute
@@ -137,6 +139,8 @@
         statistic_ids:
           - sensor.pcha_temperature_piscine
           - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
         start_time: "{{ today_at() - timedelta(days=3) }}"
         end_time: "{{ today_at() - timedelta(days=2) }}"
         period: 5minute
@@ -233,9 +237,10 @@
       icon: mdi:target
       unit_of_measurement: h
       state: >-
-        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
         {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
 
     - name: PCHA Historique J-1 température référence objectif
       unique_id: pcha_historique_j_1_temperature_reference_objectif
@@ -244,9 +249,10 @@
       device_class: temperature
       unit_of_measurement: "°C"
       state: >-
-        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
         {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
 
     - name: PCHA Historique J-2 filtration réalisée
       unique_id: pcha_historique_j_2_filtration_realisee
@@ -337,9 +343,10 @@
       icon: mdi:target
       unit_of_measurement: h
       state: >-
-        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
         {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
 
     - name: PCHA Historique J-2 température référence objectif
       unique_id: pcha_historique_j_2_temperature_reference_objectif
@@ -348,9 +355,10 @@
       device_class: temperature
       unit_of_measurement: "°C"
       state: >-
-        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
         {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
 
     - name: PCHA Historique J-3 filtration réalisée
       unique_id: pcha_historique_j_3_filtration_realisee
@@ -441,9 +449,10 @@
       icon: mdi:target
       unit_of_measurement: h
       state: >-
-        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
         {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
 
     - name: PCHA Historique J-3 température référence objectif
       unique_id: pcha_historique_j_3_temperature_reference_objectif
@@ -452,6 +461,7 @@
       device_class: temperature
       unit_of_measurement: "°C"
       state: >-
-        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
         {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
-        {{ (valeurs | last) | round(1) if valeurs | count > 0 else none }}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
