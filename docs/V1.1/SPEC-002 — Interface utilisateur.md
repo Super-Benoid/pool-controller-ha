@@ -69,8 +69,10 @@ bassin pour les températures, moyenne lumineuse et durée d'ensoleillement,
 temps de filtration et cycles du bassin, puis consommation totale de la pompe.
 Le graphe de progression complète sa courbe avec la durée de l'objectif de la
 journée et la température de référence utilisée pour son calcul.
-L'activité du système est présentée sous forme de cinq bandes horizontales
-libellées (mode, machine, pompe, solaire et niveau), sans légende numérique.
+Pour `J`, l'activité du système utilise la chronologie native de Home Assistant.
+Pour `J-1` à `J-3`, elle conserve cinq bandes horizontales (mode, machine,
+pompe, solaire et niveau), sans libellés superposés ; l'état précis est affiché
+au survol de la bande.
 
 # 7. Paramètres modifiables
 
