@@ -4101,22 +4101,159 @@ views:
             - font-size: 18px
             - font-weight: 750
 
-      - type: history-graph
-        title: Activité du système — 24 heures
-        hours_to_show: 24
+      - &history_operation_timeline
+        type: custom:apexcharts-card
+        graph_span: 24h
         view_layout:
           grid-area: fonctionnement-historique
-        entities:
+        header:
+          show: true
+          title: Activité du système — 24 heures
+          show_states: false
+        series:
           - entity: input_select.pcha_mode_de_fonctionnement
             name: Mode
+            color: '#22d3ee'
+            stroke_width: 14
+            curve: stepline
+            extend_to: end
+            show:
+              datalabels: true
+            transform: |
+              const valeurs = {OFF:0, SECURISATION:0.06, AUTO:0.12, TRAITEMENT:0.18, MARCHE_FORCEE:0.24, VIDANGE:0.30};
+              return 8 + (valeurs[x] ?? 0);
           - entity: input_select.pcha_etat_machine
             name: Machine
+            color: '#fbbf24'
+            stroke_width: 14
+            curve: stepline
+            extend_to: end
+            show:
+              datalabels: true
+            transform: |
+              const valeurs = {INITIALISATION:0, ATTENTE:0.10, FILTRATION:0.20, VIDANGE:0.30};
+              return 6 + (valeurs[x] ?? 0);
           - entity: switch.pcha_commande_pompe_filtration
             name: Pompe
+            color: '#34d399'
+            stroke_width: 14
+            curve: stepline
+            extend_to: end
+            show:
+              datalabels: true
+            transform: "return 4 + (x === 'on' ? 0.25 : 0);"
           - entity: binary_sensor.pcha_chauffage_solaire_actif
             name: Chauffage solaire
+            color: '#fde047'
+            stroke_width: 14
+            curve: stepline
+            extend_to: end
+            show:
+              datalabels: true
+            transform: "return 2 + (x === 'on' ? 0.25 : 0);"
           - entity: input_select.pcha_niveau_fonctionnement
             name: Niveau
+            color: '#60a5fa'
+            stroke_width: 14
+            curve: stepline
+            extend_to: end
+            show:
+              datalabels: true
+            transform: |
+              const valeurs = {NORMAL:0, INFORMATIF:0.10, DEGRADE:0.20, CRITIQUE:0.30};
+              return valeurs[x] ?? 0;
+        apex_config: &history_operation_apex
+          chart:
+            height: 280
+            toolbar:
+              show: false
+          stroke:
+            curve: stepline
+            lineCap: butt
+          markers:
+            size: 0
+          dataLabels:
+            enabled: true
+            offsetY: -13
+            formatter: |
+              EVAL:function(value) {
+                if (value >= 7.5) {
+                  const codes = {0:'OFF',6:'SÉCURISATION',12:'AUTO',18:'TRAITEMENT',24:'MARCHE FORCÉE',30:'VIDANGE'};
+                  return codes[Math.round((value - 8) * 100)] || '';
+                }
+                if (value >= 5.5) {
+                  const codes = {0:'INITIALISATION',10:'ATTENTE',20:'FILTRATION',30:'VIDANGE'};
+                  return codes[Math.round((value - 6) * 100)] || '';
+                }
+                if (value >= 3.5) return value >= 4.20 ? 'ACTIVÉE' : 'ARRÊTÉE';
+                if (value >= 1.5) return value >= 2.20 ? 'ACTIF' : 'INACTIF';
+                const codes = {0:'NORMAL',10:'INFORMATIF',20:'DÉGRADÉ',30:'CRITIQUE'};
+                return codes[Math.round(value * 100)] || '';
+              }
+            style:
+              fontSize: 10px
+              fontWeight: 700
+              colors:
+                - '#f8fafc'
+            background:
+              enabled: true
+              foreColor: '#f8fafc'
+              borderRadius: 4
+              borderWidth: 0
+              opacity: 0.72
+              padding: 3
+          grid:
+            borderColor: rgba(148,163,184,.16)
+            strokeDashArray: 3
+            row:
+              colors:
+                - rgba(30,41,59,.18)
+                - transparent
+              opacity: 1
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
+          yaxis:
+            min: -0.5
+            max: 8.5
+            tickAmount: 4
+            labels:
+              minWidth: 112
+              maxWidth: 112
+              style:
+                colors: '#cbd5e1'
+                fontSize: 12px
+                fontWeight: 650
+              formatter: |
+                EVAL:function(value) {
+                  const labels = {0:'Niveau',2:'Solaire',4:'Pompe',6:'Machine',8:'Mode'};
+                  return labels[Math.round(value)] || '';
+                }
+          legend:
+            show: false
+          tooltip:
+            shared: false
+            intersect: false
+            theme: dark
+            y:
+              formatter: |
+                EVAL:function(value) {
+                  if (value >= 7.5) {
+                    const codes = {0:'OFF',6:'SÉCURISATION',12:'AUTO',18:'TRAITEMENT',24:'MARCHE FORCÉE',30:'VIDANGE'};
+                    return codes[Math.round((value - 8) * 100)] || '—';
+                  }
+                  if (value >= 5.5) {
+                    const codes = {0:'INITIALISATION',10:'ATTENTE',20:'FILTRATION',30:'VIDANGE'};
+                    return codes[Math.round((value - 6) * 100)] || '—';
+                  }
+                  if (value >= 3.5) return value >= 4.20 ? 'ACTIVÉE' : 'ARRÊTÉE';
+                  if (value >= 1.5) return value >= 2.20 ? 'ACTIF' : 'INACTIF';
+                  const codes = {0:'NORMAL',10:'INFORMATIF',20:'DÉGRADÉ',30:'CRITIQUE'};
+                  return codes[Math.round(value * 100)] || '—';
+                }
         card_mod: &history_timeline_mod
           style: |
             ha-card {
@@ -4434,87 +4571,14 @@ views:
         styles: *history_section_styles
 
       - &history_past_operation_chart
-        type: custom:apexcharts-card
-        graph_span: 24h
+        <<: *history_operation_timeline
         span:
           start: day
           offset: -1d
-        view_layout:
-          grid-area: fonctionnement-historique
         header:
           show: true
           title: Activité du système — journée sélectionnée
           show_states: false
-        series:
-          - entity: input_select.pcha_mode_de_fonctionnement
-            name: Mode
-            color: '#fb7185'
-            stroke_width: 3
-            transform: |
-              const valeurs = {OFF:0, SECURISATION:0.2, AUTO:0.4, TRAITEMENT:0.6, MARCHE_FORCEE:0.8, VIDANGE:1};
-              return 8 + (valeurs[x] ?? 0);
-          - entity: input_select.pcha_etat_machine
-            name: Machine
-            color: '#fbbf24'
-            stroke_width: 3
-            transform: |
-              const valeurs = {INITIALISATION:0, ATTENTE:0.3, FILTRATION:0.7, VIDANGE:1};
-              return 6 + (valeurs[x] ?? 0);
-          - entity: switch.pcha_commande_pompe_filtration
-            name: Pompe
-            color: '#34d399'
-            stroke_width: 3
-            transform: "return 4 + (x === 'on' ? 0.8 : 0);"
-          - entity: binary_sensor.pcha_chauffage_solaire_actif
-            name: Chauffage solaire
-            color: '#fde047'
-            stroke_width: 3
-            transform: "return 2 + (x === 'on' ? 0.8 : 0);"
-          - entity: input_select.pcha_niveau_fonctionnement
-            name: Niveau
-            color: '#60a5fa'
-            stroke_width: 3
-            transform: |
-              const valeurs = {NORMAL:0, INFORMATIF:0.25, DEGRADE:0.55, CRITIQUE:0.9};
-              return valeurs[x] ?? 0;
-        apex_config: &history_past_state_apex
-          chart:
-            height: 245
-            toolbar:
-              show: false
-          stroke:
-            curve: stepline
-          markers:
-            size: 0
-          dataLabels:
-            enabled: false
-          grid:
-            borderColor: rgba(148,163,184,.14)
-          xaxis:
-            type: datetime
-            labels:
-              datetimeUTC: false
-              style:
-                colors: '#94a3b8'
-          yaxis:
-            min: 0
-            max: 9
-            tickAmount: 9
-            labels:
-              style:
-                colors: '#94a3b8'
-              formatter: |
-                EVAL:function(value) {
-                  const labels = {0:'Niveau',2:'Solaire',4:'Pompe',6:'Machine',8:'Mode'};
-                  return labels[Math.round(value)] || '';
-                }
-          legend:
-            show: true
-            labels:
-              colors: '#cbd5e1'
-          tooltip:
-            enabled: false
-        card_mod: *history_timeline_mod
 
       - type: custom:button-card
         name: Diagnostics du système
@@ -4587,11 +4651,24 @@ views:
             stroke_width: 2
             transform: "return x === 'on' ? 0.7 : 0;"
         apex_config:
-          <<: *history_past_state_apex
           chart:
             height: 330
             toolbar:
               show: false
+          stroke:
+            curve: stepline
+          markers:
+            size: 0
+          dataLabels:
+            enabled: false
+          grid:
+            borderColor: rgba(148,163,184,.14)
+          xaxis:
+            type: datetime
+            labels:
+              datetimeUTC: false
+              style:
+                colors: '#94a3b8'
           yaxis:
             min: 0
             max: 10
@@ -4606,6 +4683,8 @@ views:
                 }
           legend:
             show: false
+          tooltip:
+            enabled: false
         card_mod: *history_timeline_mod
 
   ##############################################################################

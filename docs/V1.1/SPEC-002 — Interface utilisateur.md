@@ -69,6 +69,8 @@ bassin pour les températures, moyenne lumineuse et durée d'ensoleillement,
 temps de filtration et cycles du bassin, puis consommation totale de la pompe.
 Le graphe de progression complète sa courbe avec la durée de l'objectif de la
 journée et la température de référence utilisée pour son calcul.
+L'activité du système est présentée sous forme de cinq bandes horizontales
+libellées (mode, machine, pompe, solaire et niveau), sans légende numérique.
 
 # 7. Paramètres modifiables
 
