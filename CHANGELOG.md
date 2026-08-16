@@ -2,6 +2,12 @@
 
 ## Maintenance après V2.0
 
+* ajout de la sélection J à J-7 dans l'onglet Historique, avec synchronisation de toute la page sur la journée choisie ;
+* regroupement des synthèses journalières dans les en-têtes des graphes Historique : moyenne et amplitude de température, moyenne lumineuse et ensoleillement, filtration et cycles, consommation électrique ;
+* correction des synthèses J-1 à J-7 : statistiques Recorder agrégées par journée, détails de température et luminosité sur 5 minutes, rafraîchissement au changement de date et unités d'affichage cohérentes ;
+* suppression de la rangée d'indicateurs journaliers redondante de l'onglet Historique ;
+* simplification du bandeau Historique et ajout de l'objectif de filtration ainsi que de sa température de référence dans le graphe de progression ;
+* remplacement de la chronologie d'activité par quatre couloirs indépendants dont les états sont lisibles directement sur les axes, y compris lors de transitions rapprochées ;
 * ajout du mode VIDANGE temporisé de 1 à 10 minutes, sans comptabilisation comme filtration et avec retour obligatoire sur OFF ;
 * réarmement automatique de MES-002 après 60 secondes de retour stable du débitmètre ;
 * mémorisation de PRO-001 jusqu'à un réarmement manuel effectué pompe arrêtée et en mode OFF ;

@@ -1,0 +1,1023 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# Historique journalier J-1 à J-7
+#
+# Les valeurs de synthèse sont relues dans les statistiques Recorder. Elles sont
+# rafraîchies au démarrage puis chaque jour après le changement de date.
+################################################################################
+
+- sensor:
+    - name: PCHA Température bassin moyenne du jour
+      unique_id: pcha_temperature_bassin_moyenne_du_jour
+      default_entity_id: sensor.pcha_temperature_bassin_moyenne_du_jour
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >-
+        {% set moyenne = state_attr('sensor.pcha_objectif_filtration_quotidien', 'temperature_moyenne_jour_en_cours') %}
+        {{ moyenne | float(0) | round(1) if is_number(moyenne) else none }}
+
+    - name: PCHA Amplitude température bassin du jour
+      unique_id: pcha_amplitude_temperature_bassin_du_jour
+      default_entity_id: sensor.pcha_amplitude_temperature_bassin_du_jour
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      state: >-
+        {% set minimum = states('sensor.pcha_temperature_piscine_min_jour') %}
+        {% set maximum = states('sensor.pcha_temperature_piscine_max_jour') %}
+        {{ ((maximum | float(0)) - (minimum | float(0))) | round(1) if is_number(minimum) and is_number(maximum) else none }}
+
+- triggers:
+    - trigger: homeassistant
+      event: start
+    - trigger: event
+      event_type: event_template_reloaded
+    - trigger: time
+      at: "00:00:10"
+    - trigger: time
+      at: "00:05:00"
+  actions:
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=1) }}"
+        end_time: "{{ today_at() }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_1
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=2) }}"
+        end_time: "{{ today_at() - timedelta(days=1) }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_2
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=3) }}"
+        end_time: "{{ today_at() - timedelta(days=2) }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_3
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=4) }}"
+        end_time: "{{ today_at() - timedelta(days=3) }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_4
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=5) }}"
+        end_time: "{{ today_at() - timedelta(days=4) }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_5
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=6) }}"
+        end_time: "{{ today_at() - timedelta(days=5) }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_6
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temps_filtration_realise
+          - sensor.pcha_renouvellements_bassin_du_jour
+          - sensor.pcha_energie_pompe_quotidienne
+          - sensor.pcha_temps_luminosite_superieure_seuil_jour
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_progression_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=7) }}"
+        end_time: "{{ today_at() - timedelta(days=6) }}"
+        period: day
+        types:
+          - mean
+          - min
+          - max
+          - state
+          - change
+      response_variable: historique_j_7
+    # Les séries détaillées utilisent les agrégats courts de 5 minutes :
+    # - la moyenne et l'amplitude restent cohérentes avec la courbe affichée ;
+    # - la dernière valeur de la moyenne lumineuse cumulée correspond au bilan
+    #   final de la journée, contrairement à sa moyenne sur toute la journée ;
+    # - la première valeur stabilisée après minuit de l'objectif et de sa
+    #   référence correspond à la valeur figée pour la journée, avant la
+    #   bascule de minuit suivante. Le second créneau évite qu'une transition
+    #   exactement à 00:00 ne mélange l'ancienne et la nouvelle valeur.
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=1) }}"
+        end_time: "{{ today_at() }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_1
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=2) }}"
+        end_time: "{{ today_at() - timedelta(days=1) }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_2
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=3) }}"
+        end_time: "{{ today_at() - timedelta(days=2) }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_3
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=4) }}"
+        end_time: "{{ today_at() - timedelta(days=3) }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_4
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=5) }}"
+        end_time: "{{ today_at() - timedelta(days=4) }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_5
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=6) }}"
+        end_time: "{{ today_at() - timedelta(days=5) }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_6
+    - action: recorder.get_statistics
+      data:
+        statistic_ids:
+          - sensor.pcha_temperature_piscine
+          - sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+          - sensor.pcha_objectif_filtration_quotidien
+          - sensor.pcha_temperature_reference_objectif_quotidien
+        start_time: "{{ today_at() - timedelta(days=7) }}"
+        end_time: "{{ today_at() - timedelta(days=6) }}"
+        period: 5minute
+        types:
+          - mean
+      response_variable: historique_detail_j_7
+  sensor:
+    - name: PCHA Historique J-1 filtration réalisée
+      unique_id: pcha_historique_j_1_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_1_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 cycles du bassin
+      unique_id: pcha_historique_j_1_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_1_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 consommation pompe
+      unique_id: pcha_historique_j_1_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_1_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-1 ensoleillement
+      unique_id: pcha_historique_j_1_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_1_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 température bassin moyenne
+      unique_id: pcha_historique_j_1_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_1_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 amplitude température bassin
+      unique_id: pcha_historique_j_1_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_1_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 luminosité moyenne diurne
+      unique_id: pcha_historique_j_1_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_1_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 progression objectif
+      unique_id: pcha_historique_j_1_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_1_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_1.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-1 objectif filtration
+      unique_id: pcha_historique_j_1_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_1_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-1 température référence objectif
+      unique_id: pcha_historique_j_1_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_1_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_1.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-2 filtration réalisée
+      unique_id: pcha_historique_j_2_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_2_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 cycles du bassin
+      unique_id: pcha_historique_j_2_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_2_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 consommation pompe
+      unique_id: pcha_historique_j_2_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_2_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-2 ensoleillement
+      unique_id: pcha_historique_j_2_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_2_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 température bassin moyenne
+      unique_id: pcha_historique_j_2_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_2_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 amplitude température bassin
+      unique_id: pcha_historique_j_2_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_2_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 luminosité moyenne diurne
+      unique_id: pcha_historique_j_2_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_2_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 progression objectif
+      unique_id: pcha_historique_j_2_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_2_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_2.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-2 objectif filtration
+      unique_id: pcha_historique_j_2_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_2_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-2 température référence objectif
+      unique_id: pcha_historique_j_2_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_2_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_2.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-3 filtration réalisée
+      unique_id: pcha_historique_j_3_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_3_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 cycles du bassin
+      unique_id: pcha_historique_j_3_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_3_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 consommation pompe
+      unique_id: pcha_historique_j_3_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_3_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-3 ensoleillement
+      unique_id: pcha_historique_j_3_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_3_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 température bassin moyenne
+      unique_id: pcha_historique_j_3_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_3_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 amplitude température bassin
+      unique_id: pcha_historique_j_3_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_3_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 luminosité moyenne diurne
+      unique_id: pcha_historique_j_3_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_3_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 progression objectif
+      unique_id: pcha_historique_j_3_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_3_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_3.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-3 objectif filtration
+      unique_id: pcha_historique_j_3_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_3_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-3 température référence objectif
+      unique_id: pcha_historique_j_3_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_3_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_3.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-4 filtration réalisée
+      unique_id: pcha_historique_j_4_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_4_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_4.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 cycles du bassin
+      unique_id: pcha_historique_j_4_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_4_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_4.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 consommation pompe
+      unique_id: pcha_historique_j_4_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_4_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_4.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-4 ensoleillement
+      unique_id: pcha_historique_j_4_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_4_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_4.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 température bassin moyenne
+      unique_id: pcha_historique_j_4_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_4_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_4.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 amplitude température bassin
+      unique_id: pcha_historique_j_4_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_4_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_4.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 luminosité moyenne diurne
+      unique_id: pcha_historique_j_4_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_4_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_4.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 progression objectif
+      unique_id: pcha_historique_j_4_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_4_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_4.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-4 objectif filtration
+      unique_id: pcha_historique_j_4_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_4_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_4.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-4 température référence objectif
+      unique_id: pcha_historique_j_4_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_4_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_4.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-5 filtration réalisée
+      unique_id: pcha_historique_j_5_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_5_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_5.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 cycles du bassin
+      unique_id: pcha_historique_j_5_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_5_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_5.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 consommation pompe
+      unique_id: pcha_historique_j_5_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_5_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_5.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-5 ensoleillement
+      unique_id: pcha_historique_j_5_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_5_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_5.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 température bassin moyenne
+      unique_id: pcha_historique_j_5_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_5_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_5.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 amplitude température bassin
+      unique_id: pcha_historique_j_5_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_5_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_5.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 luminosité moyenne diurne
+      unique_id: pcha_historique_j_5_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_5_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_5.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 progression objectif
+      unique_id: pcha_historique_j_5_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_5_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_5.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-5 objectif filtration
+      unique_id: pcha_historique_j_5_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_5_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_5.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-5 température référence objectif
+      unique_id: pcha_historique_j_5_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_5_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_5.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-6 filtration réalisée
+      unique_id: pcha_historique_j_6_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_6_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_6.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 cycles du bassin
+      unique_id: pcha_historique_j_6_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_6_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_6.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 consommation pompe
+      unique_id: pcha_historique_j_6_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_6_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_6.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-6 ensoleillement
+      unique_id: pcha_historique_j_6_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_6_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_6.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 température bassin moyenne
+      unique_id: pcha_historique_j_6_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_6_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_6.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 amplitude température bassin
+      unique_id: pcha_historique_j_6_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_6_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_6.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 luminosité moyenne diurne
+      unique_id: pcha_historique_j_6_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_6_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_6.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 progression objectif
+      unique_id: pcha_historique_j_6_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_6_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_6.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-6 objectif filtration
+      unique_id: pcha_historique_j_6_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_6_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_6.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-6 température référence objectif
+      unique_id: pcha_historique_j_6_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_6_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_6.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-7 filtration réalisée
+      unique_id: pcha_historique_j_7_filtration_realisee
+      default_entity_id: sensor.pcha_historique_j_7_filtration_realisee
+      icon: mdi:timer-play-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_7.get('statistics', {}).get('sensor.pcha_temps_filtration_realise', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 cycles du bassin
+      unique_id: pcha_historique_j_7_cycles_bassin
+      default_entity_id: sensor.pcha_historique_j_7_cycles_bassin
+      icon: mdi:sync
+      unit_of_measurement: x
+      state: >-
+        {% set lignes = historique_j_7.get('statistics', {}).get('sensor.pcha_renouvellements_bassin_du_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 consommation pompe
+      unique_id: pcha_historique_j_7_consommation_pompe
+      default_entity_id: sensor.pcha_historique_j_7_consommation_pompe
+      icon: mdi:lightning-bolt-circle
+      unit_of_measurement: kWh
+      state: >-
+        {% set lignes = historique_j_7.get('statistics', {}).get('sensor.pcha_energie_pompe_quotidienne', []) %}
+        {% set variations = lignes | map(attribute='change', default=none) | reject('eq', none) | list %}
+        {% set etats = lignes | map(attribute='state', default=none) | reject('eq', none) | list %}
+        {{ (variations | sum) | round(2) if variations | count > 0 else (etats | max) | round(2) if etats | count > 0 else none }}
+
+    - name: PCHA Historique J-7 ensoleillement
+      unique_id: pcha_historique_j_7_ensoleillement
+      default_entity_id: sensor.pcha_historique_j_7_ensoleillement
+      icon: mdi:sun-clock-outline
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_j_7.get('statistics', {}).get('sensor.pcha_temps_luminosite_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ ((valeurs | max) / 60) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 température bassin moyenne
+      unique_id: pcha_historique_j_7_temperature_bassin_moyenne
+      default_entity_id: sensor.pcha_historique_j_7_temperature_bassin_moyenne
+      icon: mdi:thermometer-lines
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_7.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | sum) / (valeurs | count)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 amplitude température bassin
+      unique_id: pcha_historique_j_7_amplitude_temperature_bassin
+      default_entity_id: sensor.pcha_historique_j_7_amplitude_temperature_bassin
+      icon: mdi:arrow-expand-vertical
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_7.get('statistics', {}).get('sensor.pcha_temperature_piscine', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | max) - (valeurs | min)) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 luminosité moyenne diurne
+      unique_id: pcha_historique_j_7_luminosite_moyenne_diurne
+      default_entity_id: sensor.pcha_historique_j_7_luminosite_moyenne_diurne
+      icon: mdi:sun-compass
+      unit_of_measurement: klux
+      state: >-
+        {% set lignes = historique_detail_j_7.get('statistics', {}).get('sensor.pcha_luminosite_moyenne_superieure_seuil_jour', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {{ ((valeurs | last) / 1000) | round(1) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 progression objectif
+      unique_id: pcha_historique_j_7_progression_objectif
+      default_entity_id: sensor.pcha_historique_j_7_progression_objectif
+      icon: mdi:progress-clock
+      unit_of_measurement: "%"
+      state: >-
+        {% set lignes = historique_j_7.get('statistics', {}).get('sensor.pcha_progression_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='max') | reject('eq', none) | list %}
+        {{ valeurs | max | round(0) if valeurs | count > 0 else none }}
+
+    - name: PCHA Historique J-7 objectif filtration
+      unique_id: pcha_historique_j_7_objectif_filtration
+      default_entity_id: sensor.pcha_historique_j_7_objectif_filtration
+      icon: mdi:target
+      unit_of_measurement: h
+      state: >-
+        {% set lignes = historique_detail_j_7.get('statistics', {}).get('sensor.pcha_objectif_filtration_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}
+
+    - name: PCHA Historique J-7 température référence objectif
+      unique_id: pcha_historique_j_7_temperature_reference_objectif
+      default_entity_id: sensor.pcha_historique_j_7_temperature_reference_objectif
+      icon: mdi:thermometer-check
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state: >-
+        {% set lignes = historique_detail_j_7.get('statistics', {}).get('sensor.pcha_temperature_reference_objectif_quotidien', []) %}
+        {% set valeurs = lignes | map(attribute='mean') | reject('eq', none) | list %}
+        {% set valeur = valeurs[1] if valeurs | count > 1 else (valeurs | first if valeurs | count > 0 else none) %}
+        {{ valeur | round(1) if valeur is not none else none }}

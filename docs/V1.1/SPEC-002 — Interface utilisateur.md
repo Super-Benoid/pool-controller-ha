@@ -23,6 +23,7 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 | Pilotage | Filtration, performances hydrauliques, énergie, temporisations AUTO et mode traitement |
 | Solaire | Températures, chaîne solaire, luminosité distante, bilan solaire du jour et historique solaire |
 | Diagnostics | Niveau global, diagnostics MES/COH/PRO, délais de validation et historique des défauts |
+| Historique | Vue actuelle sur 24 heures et consultation des journées complètes J-1 à J-7 |
 
 # 4. Affichage de l'objectif quotidien
 
@@ -56,6 +57,23 @@ Les graphes numériques principaux utilisent la carte native `tile` avec la fonc
 | Puissance de la pompe | `sensor.pcha_puissance_pompe_filtration` | Filtration |
 
 Les graphes multi-états et les historiques de diagnostics restent sur des cartes `history-graph`.
+
+La vue Historique conserve sa période glissante de 24 heures pour `J`. Un
+sélecteur placé dans le bandeau supérieur donne accès à `J-1` jusqu'à `J-7`.
+Pour ces journées passées, tous les graphes de mesures, états de fonctionnement
+et diagnostics couvrent la même période calendaire de `00:00` à `23:59`.
+
+Les synthèses journalières sont regroupées dans les en-têtes des graphes afin
+d'éviter une rangée de cartes redondante : moyenne et amplitude max/min du
+bassin pour les températures, moyenne lumineuse et durée d'ensoleillement,
+temps de filtration et cycles du bassin, puis consommation totale de la pompe.
+Le graphe de progression complète sa courbe avec la durée de l'objectif de la
+journée et la température de référence utilisée pour son calcul.
+L'activité du système est organisée en quatre couloirs indépendants : mode de
+fonctionnement, état de la machine, commandes pompe/solaire et niveau de
+fonctionnement. Chaque couloir possède une échelle d'états explicitement
+libellée sur son axe vertical. Cette représentation reste lisible sans survol et
+évite tout chevauchement lors de transitions rapprochées.
 
 # 7. Paramètres modifiables
 
