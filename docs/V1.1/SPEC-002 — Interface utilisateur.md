@@ -23,7 +23,7 @@ Cette SPEC définit les informations, commandes et paramètres accessibles à l'
 | Pilotage | Filtration, performances hydrauliques, énergie, temporisations AUTO et mode traitement |
 | Solaire | Températures, chaîne solaire, luminosité distante, bilan solaire du jour et historique solaire |
 | Diagnostics | Niveau global, diagnostics MES/COH/PRO, délais de validation et historique des défauts |
-| Historique | Vue actuelle sur 24 heures et consultation des journées complètes J-1 à J-3 |
+| Historique | Vue actuelle sur 24 heures et consultation des journées complètes J-1 à J-7 |
 
 # 4. Affichage de l'objectif quotidien
 
@@ -59,7 +59,7 @@ Les graphes numériques principaux utilisent la carte native `tile` avec la fonc
 Les graphes multi-états et les historiques de diagnostics restent sur des cartes `history-graph`.
 
 La vue Historique conserve sa période glissante de 24 heures pour `J`. Un
-sélecteur placé dans le bandeau supérieur donne accès à `J-1`, `J-2` et `J-3`.
+sélecteur placé dans le bandeau supérieur donne accès à `J-1` jusqu'à `J-7`.
 Pour ces journées passées, tous les graphes de mesures, états de fonctionnement
 et diagnostics couvrent la même période calendaire de `00:00` à `23:59`.
 
