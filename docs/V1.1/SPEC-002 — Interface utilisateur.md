@@ -58,10 +58,15 @@ Les graphes numériques principaux utilisent la carte native `tile` avec la fonc
 
 Les graphes multi-états et les historiques de diagnostics restent sur des cartes `history-graph`.
 
-La vue Historique conserve sa présentation actuelle pour `J`. Un sélecteur placé
-dans le bandeau supérieur donne accès à `J-1`, `J-2` et `J-3`. Pour ces journées
-passées, tous les indicateurs, graphes de mesures, états de fonctionnement et
-diagnostics couvrent la même période calendaire de `00:00` à `23:59`.
+La vue Historique conserve sa période glissante de 24 heures pour `J`. Un
+sélecteur placé dans le bandeau supérieur donne accès à `J-1`, `J-2` et `J-3`.
+Pour ces journées passées, tous les graphes de mesures, états de fonctionnement
+et diagnostics couvrent la même période calendaire de `00:00` à `23:59`.
+
+Les synthèses journalières sont regroupées dans les en-têtes des graphes afin
+d'éviter une rangée de cartes redondante : moyenne et amplitude max/min du
+bassin pour les températures, moyenne lumineuse et durée d'ensoleillement,
+temps de filtration et cycles du bassin, puis consommation totale de la pompe.
 
 # 7. Paramètres modifiables
 

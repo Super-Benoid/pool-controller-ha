@@ -3576,7 +3576,6 @@ views:
       grid-template-columns: repeat(12, minmax(0, 1fr))
       grid-template-areas: |
         "header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique"
-        "filtration-jour filtration-jour filtration-jour cycles-jour cycles-jour cycles-jour energie-jour energie-jour energie-jour soleil-jour soleil-jour soleil-jour"
         "temperature-historique temperature-historique temperature-historique temperature-historique temperature-historique temperature-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique"
         "debit-historique debit-historique debit-historique debit-historique puissance-historique puissance-historique puissance-historique puissance-historique objectif-historique objectif-historique objectif-historique objectif-historique"
         "fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre fonctionnement-titre"
@@ -3590,8 +3589,6 @@ views:
           grid-template-columns: repeat(8, minmax(0, 1fr))
           grid-template-areas: |
             "header-historique header-historique header-historique header-historique header-historique header-historique header-historique header-historique"
-            "filtration-jour filtration-jour filtration-jour filtration-jour cycles-jour cycles-jour cycles-jour cycles-jour"
-            "energie-jour energie-jour energie-jour energie-jour soleil-jour soleil-jour soleil-jour soleil-jour"
             "temperature-historique temperature-historique temperature-historique temperature-historique luminosite-historique luminosite-historique luminosite-historique luminosite-historique"
             "debit-historique debit-historique debit-historique debit-historique puissance-historique puissance-historique puissance-historique puissance-historique"
             "objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique objectif-historique"
@@ -3603,10 +3600,6 @@ views:
           grid-template-columns: 1fr
           grid-template-areas: |
             "header-historique"
-            "filtration-jour"
-            "cycles-jour"
-            "energie-jour"
-            "soleil-jour"
             "temperature-historique"
             "luminosite-historique"
             "debit-historique"
@@ -3760,108 +3753,6 @@ views:
               - font-size: 12px
 
       ##########################################################################
-      # Indicateurs du jour
-      ##########################################################################
-      - &history_kpi_filtration_card
-        type: custom:button-card
-        entity: sensor.pcha_temps_filtration_realise
-        name: Filtration réalisée
-        icon: mdi:timer-play-outline
-        show_state: false
-        tap_action:
-          action: more-info
-        view_layout:
-          grid-area: filtration-jour
-        custom_fields:
-          valeur: |
-            [[[
-              const min = Number(entity?.state);
-              if (!Number.isFinite(min)) return 'Indisponible';
-              return `${String(Math.floor(min / 60)).padStart(2, '0')}h${String(Math.round(min % 60)).padStart(2, '0')}`;
-            ]]]
-        styles: &history_kpi_styles
-          card:
-            - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
-            - border: 1px solid rgba(34,211,238,.25)
-            - border-radius: 18px
-            - box-shadow: 0 10px 28px rgba(0,0,0,.28)
-            - padding: 14px 17px
-            - min-height: 92px
-          grid:
-            - grid-template-areas: '"i n" "i valeur"'
-            - grid-template-columns: 48px 1fr
-            - grid-template-rows: min-content min-content
-          icon:
-            - color: '#22d3ee'
-            - width: 35px
-          name:
-            - justify-self: start
-            - color: '#cbd5e1'
-            - font-size: 14px
-            - font-weight: 650
-          custom_fields:
-            valeur:
-              - justify-self: start
-              - color: '#67e8f9'
-              - font-size: 24px
-              - font-weight: 820
-
-      - &history_kpi_cycles_card
-        type: custom:button-card
-        entity: sensor.pcha_renouvellements_bassin_du_jour
-        name: Cycles du bassin
-        icon: mdi:sync
-        show_state: false
-        tap_action:
-          action: more-info
-        view_layout:
-          grid-area: cycles-jour
-        custom_fields:
-          valeur: |
-            [[[
-              const n = Number(entity?.state);
-              return Number.isFinite(n) ? `${n.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1})} x` : 'Indisponible';
-            ]]]
-        styles: *history_kpi_styles
-
-      - &history_kpi_energy_card
-        type: custom:button-card
-        entity: sensor.pcha_energie_pompe_quotidienne
-        name: Consommation du jour
-        icon: mdi:lightning-bolt-circle
-        show_state: false
-        tap_action:
-          action: more-info
-        view_layout:
-          grid-area: energie-jour
-        custom_fields:
-          valeur: |
-            [[[
-              const n = Number(entity?.state);
-              return Number.isFinite(n) ? `${n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})} kWh` : 'Indisponible';
-            ]]]
-        styles: *history_kpi_styles
-
-      - &history_kpi_sun_card
-        type: custom:button-card
-        entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
-        name: Ensoleillement
-        icon: mdi:sun-clock-outline
-        show_state: false
-        tap_action:
-          action: more-info
-        view_layout:
-          grid-area: soleil-jour
-        custom_fields:
-          valeur: |
-            [[[
-              const min = Number(entity?.state);
-              if (!Number.isFinite(min)) return 'Indisponible';
-              return `${String(Math.floor(min / 60)).padStart(2, '0')}h${String(Math.round(min % 60)).padStart(2, '0')}`;
-            ]]]
-        styles: *history_kpi_styles
-
-      ##########################################################################
       # Courbes de mesures
       ##########################################################################
       - &history_temperature_chart
@@ -3876,27 +3767,43 @@ views:
           show_states: true
           colorize_states: true
         series:
-          - entity: sensor.pcha_temperature_piscine
+          - &history_temperature_pool_series
+            entity: sensor.pcha_temperature_piscine
             name: Bassin
             color: '#22d3ee'
             stroke_width: 3
             float_precision: 1
             show:
-              in_header: true
+              in_header: false
               extremas: true
             group_by:
               func: avg
               duration: 10min
-          - entity: sensor.pcha_temperature_exterieure
+          - &history_temperature_outdoor_series
+            entity: sensor.pcha_temperature_exterieure
             name: Extérieur
             color: '#e879f9'
             stroke_width: 3
             float_precision: 1
             show:
-              in_header: true
+              in_header: false
             group_by:
               func: avg
               duration: 10min
+          - entity: sensor.pcha_temperature_bassin_moyenne_du_jour
+            name: Moy. bassin
+            color: '#22d3ee'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_amplitude_temperature_bassin_du_jour
+            name: Amplitude max/min
+            color: '#e879f9'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
         apex_config: &history_apex_config
           chart:
             height: 210
@@ -3948,7 +3855,8 @@ views:
           show_states: true
           colorize_states: true
         series:
-          - entity: sensor.pcha_luminosite
+          - &history_brightness_measure_series
+            entity: sensor.pcha_luminosite
             name: Luminosité
             type: area
             color: '#a78bfa'
@@ -3957,17 +3865,36 @@ views:
             transform: "return Number(x) / 1000;"
             float_precision: 1
             show:
-              in_header: true
+              in_header: false
               extremas: true
             group_by:
               func: avg
               duration: 10min
-          - entity: number.pcha_seuil_luminosite_chauffage_klux
+          - &history_brightness_threshold_series
+            entity: number.pcha_seuil_luminosite_chauffage_klux
             name: Seuil
             color: '#fbbf24'
             stroke_width: 2
             float_precision: 1
             show:
+              in_header: false
+          - entity: sensor.pcha_luminosite_moyenne_superieure_seuil_jour
+            name: Moy. journée
+            color: '#a78bfa'
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_temps_luminosite_superieure_seuil_jour
+            name: Ensoleillement
+            color: '#fbbf24'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
               in_header: true
         apex_config:
           <<: *history_apex_config
@@ -4002,18 +3929,36 @@ views:
           show_states: true
           colorize_states: true
         series:
-          - entity: sensor.pcha_debit_filtration
+          - &history_flow_measure_series
+            entity: sensor.pcha_debit_filtration
             name: Débit
             type: area
             color: '#2dd4bf'
             stroke_width: 3
             float_precision: 0
             show:
-              in_header: true
+              in_header: false
               extremas: true
             group_by:
               func: avg
               duration: 5min
+          - entity: sensor.pcha_temps_filtration_realise
+            name: Filtration réalisée
+            color: '#22d3ee'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_renouvellements_bassin_du_jour
+            name: Cycles
+            color: '#2dd4bf'
+            unit: x
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
         apex_config: *history_apex_config
         card_mod: *history_cyan_chart_mod
 
@@ -4029,18 +3974,27 @@ views:
           show_states: true
           colorize_states: true
         series:
-          - entity: sensor.pcha_puissance_pompe_filtration
+          - &history_power_measure_series
+            entity: sensor.pcha_puissance_pompe_filtration
             name: Puissance
             type: area
             color: '#c084fc'
             stroke_width: 3
             float_precision: 0
             show:
-              in_header: true
+              in_header: false
               extremas: true
             group_by:
               func: avg
               duration: 5min
+          - entity: sensor.pcha_energie_pompe_quotidienne
+            name: Consommation totale
+            color: '#e879f9'
+            unit: kWh
+            float_precision: 2
+            show:
+              in_chart: false
+              in_header: true
         apex_config: *history_apex_config
         card_mod:
           style: |
@@ -4305,15 +4259,6 @@ views:
             ]]]
         styles: *history_header_styles
 
-      - <<: *history_kpi_filtration_card
-        entity: sensor.pcha_historique_j_1_filtration_realisee
-      - <<: *history_kpi_cycles_card
-        entity: sensor.pcha_historique_j_1_cycles_bassin
-      - <<: *history_kpi_energy_card
-        entity: sensor.pcha_historique_j_1_consommation_pompe
-      - <<: *history_kpi_sun_card
-        entity: sensor.pcha_historique_j_1_ensoleillement
-
       - <<: *history_temperature_chart
         span:
           start: day
@@ -4321,7 +4266,25 @@ views:
         header:
           show: true
           title: Températures bassin / extérieur
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_temperature_pool_series
+          - *history_temperature_outdoor_series
+          - entity: sensor.pcha_historique_j_1_temperature_bassin_moyenne
+            name: Moy. bassin
+            color: '#22d3ee'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_1_amplitude_temperature_bassin
+            name: Amplitude max/min
+            color: '#e879f9'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_brightness_chart
         span:
           start: day
@@ -4329,7 +4292,29 @@ views:
         header:
           show: true
           title: Luminosité / seuil solaire
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_brightness_measure_series
+          - *history_brightness_threshold_series
+          - entity: sensor.pcha_historique_j_1_luminosite_moyenne_diurne
+            name: Moy. journée
+            color: '#a78bfa'
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_1_ensoleillement
+            name: Ensoleillement
+            color: '#fbbf24'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_flow_chart
         span:
           start: day
@@ -4337,7 +4322,27 @@ views:
         header:
           show: true
           title: Débit filtration
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_flow_measure_series
+          - entity: sensor.pcha_historique_j_1_filtration_realisee
+            name: Filtration réalisée
+            color: '#22d3ee'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_1_cycles_bassin
+            name: Cycles
+            color: '#2dd4bf'
+            unit: x
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_power_chart
         span:
           start: day
@@ -4345,7 +4350,18 @@ views:
         header:
           show: true
           title: Puissance pompe
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_power_measure_series
+          - entity: sensor.pcha_historique_j_1_consommation_pompe
+            name: Consommation totale
+            color: '#e879f9'
+            unit: kWh
+            float_precision: 2
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_objective_chart
         span:
           start: day
@@ -4550,15 +4566,6 @@ views:
     cards:
       - *history_past_header
 
-      - <<: *history_kpi_filtration_card
-        entity: sensor.pcha_historique_j_2_filtration_realisee
-      - <<: *history_kpi_cycles_card
-        entity: sensor.pcha_historique_j_2_cycles_bassin
-      - <<: *history_kpi_energy_card
-        entity: sensor.pcha_historique_j_2_consommation_pompe
-      - <<: *history_kpi_sun_card
-        entity: sensor.pcha_historique_j_2_ensoleillement
-
       - <<: *history_temperature_chart
         span:
           start: day
@@ -4566,7 +4573,25 @@ views:
         header:
           show: true
           title: Températures bassin / extérieur
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_temperature_pool_series
+          - *history_temperature_outdoor_series
+          - entity: sensor.pcha_historique_j_2_temperature_bassin_moyenne
+            name: Moy. bassin
+            color: '#22d3ee'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_2_amplitude_temperature_bassin
+            name: Amplitude max/min
+            color: '#e879f9'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_brightness_chart
         span:
           start: day
@@ -4574,7 +4599,29 @@ views:
         header:
           show: true
           title: Luminosité / seuil solaire
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_brightness_measure_series
+          - *history_brightness_threshold_series
+          - entity: sensor.pcha_historique_j_2_luminosite_moyenne_diurne
+            name: Moy. journée
+            color: '#a78bfa'
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_2_ensoleillement
+            name: Ensoleillement
+            color: '#fbbf24'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_flow_chart
         span:
           start: day
@@ -4582,7 +4629,27 @@ views:
         header:
           show: true
           title: Débit filtration
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_flow_measure_series
+          - entity: sensor.pcha_historique_j_2_filtration_realisee
+            name: Filtration réalisée
+            color: '#22d3ee'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_2_cycles_bassin
+            name: Cycles
+            color: '#2dd4bf'
+            unit: x
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_power_chart
         span:
           start: day
@@ -4590,7 +4657,18 @@ views:
         header:
           show: true
           title: Puissance pompe
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_power_measure_series
+          - entity: sensor.pcha_historique_j_2_consommation_pompe
+            name: Consommation totale
+            color: '#e879f9'
+            unit: kWh
+            float_precision: 2
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_objective_chart
         span:
           start: day
@@ -4635,15 +4713,6 @@ views:
     cards:
       - *history_past_header
 
-      - <<: *history_kpi_filtration_card
-        entity: sensor.pcha_historique_j_3_filtration_realisee
-      - <<: *history_kpi_cycles_card
-        entity: sensor.pcha_historique_j_3_cycles_bassin
-      - <<: *history_kpi_energy_card
-        entity: sensor.pcha_historique_j_3_consommation_pompe
-      - <<: *history_kpi_sun_card
-        entity: sensor.pcha_historique_j_3_ensoleillement
-
       - <<: *history_temperature_chart
         span:
           start: day
@@ -4651,7 +4720,25 @@ views:
         header:
           show: true
           title: Températures bassin / extérieur
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_temperature_pool_series
+          - *history_temperature_outdoor_series
+          - entity: sensor.pcha_historique_j_3_temperature_bassin_moyenne
+            name: Moy. bassin
+            color: '#22d3ee'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_3_amplitude_temperature_bassin
+            name: Amplitude max/min
+            color: '#e879f9'
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_brightness_chart
         span:
           start: day
@@ -4659,7 +4746,29 @@ views:
         header:
           show: true
           title: Luminosité / seuil solaire
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_brightness_measure_series
+          - *history_brightness_threshold_series
+          - entity: sensor.pcha_historique_j_3_luminosite_moyenne_diurne
+            name: Moy. journée
+            color: '#a78bfa'
+            unit: klux
+            transform: "return Number(x) / 1000;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_3_ensoleillement
+            name: Ensoleillement
+            color: '#fbbf24'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_flow_chart
         span:
           start: day
@@ -4667,7 +4776,27 @@ views:
         header:
           show: true
           title: Débit filtration
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_flow_measure_series
+          - entity: sensor.pcha_historique_j_3_filtration_realisee
+            name: Filtration réalisée
+            color: '#22d3ee'
+            unit: h
+            transform: "return Number(x) / 60;"
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_3_cycles_bassin
+            name: Cycles
+            color: '#2dd4bf'
+            unit: x
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_power_chart
         span:
           start: day
@@ -4675,7 +4804,18 @@ views:
         header:
           show: true
           title: Puissance pompe
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_power_measure_series
+          - entity: sensor.pcha_historique_j_3_consommation_pompe
+            name: Consommation totale
+            color: '#e879f9'
+            unit: kWh
+            float_precision: 2
+            show:
+              in_chart: false
+              in_header: true
       - <<: *history_objective_chart
         span:
           start: day
