@@ -3622,10 +3622,6 @@ views:
         update_timer: 1min
         tap_action:
           action: none
-        triggers_update:
-          - input_select.pcha_niveau_fonctionnement
-          - input_select.pcha_mode_de_fonctionnement
-          - sensor.pcha_progression_objectif_quotidien
         view_layout:
           grid-area: header-historique
         custom_fields:
@@ -3691,11 +3687,7 @@ views:
             ]]]
           statuts: |
             [[[
-              const niveau = states['input_select.pcha_niveau_fonctionnement']?.state ?? 'INDISPONIBLE';
-              const mode = states['input_select.pcha_mode_de_fonctionnement']?.state ?? 'INDISPONIBLE';
-              const progression = Number(states['sensor.pcha_progression_objectif_quotidien']?.state);
               const date = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'short'});
-              const color = niveau === 'CRITIQUE' ? '#fb7185' : niveau === 'DEGRADE' ? '#fbbf24' : '#34d399';
               const pill = (icon, label, value, c) => `
                 <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid ${c}55;background:${c}14;white-space:nowrap;">
                   <ha-icon icon="${icon}" style="width:18px;color:${c};"></ha-icon>
@@ -3704,9 +3696,6 @@ views:
                 </span>`;
               return `<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;">
                 ${pill('mdi:calendar-today-outline', 'Jour', date, '#a78bfa')}
-                ${pill('mdi:alpha-a-circle-outline', 'Mode', mode, '#22d3ee')}
-                ${pill('mdi:target', 'Objectif', Number.isFinite(progression) ? `${Math.round(progression)} %` : '—', '#67e8f9')}
-                ${pill('mdi:shield-check-outline', 'Niveau', niveau, color)}
               </div>`;
             ]]]
         styles: &history_header_styles
@@ -3851,7 +3840,7 @@ views:
         update_interval: 30s
         header:
           show: true
-          title: Luminosité / seuil solaire
+          title: Luminosité
           show_states: true
           colorize_states: true
         series:
@@ -4019,18 +4008,43 @@ views:
           show_states: true
           colorize_states: true
         series:
-          - entity: sensor.pcha_progression_objectif_quotidien
+          - &history_objective_progress_series
+            entity: sensor.pcha_progression_objectif_quotidien
             name: Progression
             type: area
             color: '#38bdf8'
             stroke_width: 3
             float_precision: 0
             show:
-              in_header: true
+              in_header: false
               extremas: true
             group_by:
               func: max
               duration: 5min
+          - entity: sensor.pcha_progression_objectif_quotidien
+            name: Progression
+            color: '#38bdf8'
+            unit: '%'
+            float_precision: 0
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_objectif_filtration_quotidien
+            name: Objectif du jour
+            color: '#22d3ee'
+            unit: h
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_temperature_reference_objectif_quotidien
+            name: Référence
+            color: '#e879f9'
+            unit: °C
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
         apex_config:
           <<: *history_apex_config
           yaxis:
@@ -4045,7 +4059,21 @@ views:
             gradient:
               opacityFrom: 0.42
               opacityTo: 0.04
-        card_mod: *history_cyan_chart_mod
+        card_mod:
+          style: |
+            #header__title { color:#dffaff; font-weight:650; }
+            #header__states { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; }
+            #header__states > #states__state:nth-child(2) { text-align:center; }
+            #header__states > #states__state:nth-child(2) #state__value { justify-content:center; }
+            #header__states > #states__state:nth-child(3) { text-align:right; }
+            #header__states > #states__state:nth-child(3) #state__value { justify-content:flex-end; }
+            ha-card {
+              background: linear-gradient(150deg, rgba(5,24,40,.98), rgba(9,35,51,.94));
+              border: 1px solid rgba(34,211,238,.32);
+              border-radius: 18px;
+              box-shadow: 0 12px 30px rgba(0,0,0,.28);
+              overflow: hidden;
+            }
 
       ##########################################################################
       # Chronologies
@@ -4291,7 +4319,7 @@ views:
           offset: -1d
         header:
           show: true
-          title: Luminosité / seuil solaire
+          title: Luminosité
           show_states: true
           colorize_states: true
         series:
@@ -4369,7 +4397,34 @@ views:
         header:
           show: true
           title: Progression de l’objectif
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_objective_progress_series
+          - entity: sensor.pcha_historique_j_1_progression_objectif
+            name: Progression
+            color: '#38bdf8'
+            unit: '%'
+            float_precision: 0
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_1_objectif_filtration
+            name: Objectif du jour
+            color: '#22d3ee'
+            unit: h
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_1_temperature_reference_objectif
+            name: Référence
+            color: '#e879f9'
+            unit: °C
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
 
       - type: custom:button-card
         name: Fonctionnement du système
@@ -4598,7 +4653,7 @@ views:
           offset: -2d
         header:
           show: true
-          title: Luminosité / seuil solaire
+          title: Luminosité
           show_states: true
           colorize_states: true
         series:
@@ -4676,7 +4731,34 @@ views:
         header:
           show: true
           title: Progression de l’objectif
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_objective_progress_series
+          - entity: sensor.pcha_historique_j_2_progression_objectif
+            name: Progression
+            color: '#38bdf8'
+            unit: '%'
+            float_precision: 0
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_2_objectif_filtration
+            name: Objectif du jour
+            color: '#22d3ee'
+            unit: h
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_2_temperature_reference_objectif
+            name: Référence
+            color: '#e879f9'
+            unit: °C
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
 
       - type: custom:button-card
         name: Fonctionnement du système
@@ -4745,7 +4827,7 @@ views:
           offset: -3d
         header:
           show: true
-          title: Luminosité / seuil solaire
+          title: Luminosité
           show_states: true
           colorize_states: true
         series:
@@ -4823,7 +4905,34 @@ views:
         header:
           show: true
           title: Progression de l’objectif
-          show_states: false
+          show_states: true
+          colorize_states: true
+        series:
+          - *history_objective_progress_series
+          - entity: sensor.pcha_historique_j_3_progression_objectif
+            name: Progression
+            color: '#38bdf8'
+            unit: '%'
+            float_precision: 0
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_3_objectif_filtration
+            name: Objectif du jour
+            color: '#22d3ee'
+            unit: h
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
+          - entity: sensor.pcha_historique_j_3_temperature_reference_objectif
+            name: Référence
+            color: '#e879f9'
+            unit: °C
+            float_precision: 1
+            show:
+              in_chart: false
+              in_header: true
 
       - type: custom:button-card
         name: Fonctionnement du système

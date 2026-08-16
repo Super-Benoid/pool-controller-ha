@@ -67,6 +67,8 @@ Les synthèses journalières sont regroupées dans les en-têtes des graphes afi
 d'éviter une rangée de cartes redondante : moyenne et amplitude max/min du
 bassin pour les températures, moyenne lumineuse et durée d'ensoleillement,
 temps de filtration et cycles du bassin, puis consommation totale de la pompe.
+Le graphe de progression complète sa courbe avec la durée de l'objectif de la
+journée et la température de référence utilisée pour son calcul.
 
 # 7. Paramètres modifiables
 
