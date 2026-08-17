@@ -1,0 +1,482 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# V3.0 — Vue Paramètres
+#
+# Réglages métier : modifiables dans les bornes définies par les helpers.
+# Paramètres diagnostics / sécurité : lecture seule depuis cette vue.
+################################################################################
+
+title: Paramètres
+path: parametres
+icon: mdi:tune-vertical-variant
+background: "linear-gradient(135deg, #031522 0%, #0f172a 55%, #21143d 100%) fixed"
+type: custom:grid-layout
+layout:
+  grid-template-columns: repeat(12, minmax(0, 1fr))
+  grid-template-areas: |
+    "header-param header-param header-param header-param header-param header-param header-param header-param header-param header-param header-param header-param"
+    "filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre"
+    "coef-base coef-base coef-base seuil-acc seuil-acc seuil-acc coef-acc coef-acc coef-acc marge-coucher marge-coucher marge-coucher"
+    "thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre"
+    "consigne consigne consigne consigne consigne consigne calibrage calibrage calibrage calibrage calibrage calibrage"
+    "solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre"
+    "seuil-solaire seuil-solaire seuil-solaire seuil-solaire seuil-solaire seuil-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
+    "fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre"
+    "duree-traitement duree-traitement duree-traitement duree-vidange duree-vidange duree-vidange marche-min marche-min marche-min arret-min arret-min arret-min"
+    "avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre"
+    "validation-debit validation-debit validation-debit validation-lum validation-lum validation-lum validation-temp validation-temp validation-temp verrou-pro verrou-pro verrou-pro"
+  grid-gap: 12px
+  margin: 12px
+  mediaquery:
+    "(max-width: 1200px)":
+      grid-template-columns: repeat(8, minmax(0, 1fr))
+      grid-template-areas: |
+        "header-param header-param header-param header-param header-param header-param header-param header-param"
+        "filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre"
+        "coef-base coef-base coef-base coef-base seuil-acc seuil-acc seuil-acc seuil-acc"
+        "coef-acc coef-acc coef-acc coef-acc marge-coucher marge-coucher marge-coucher marge-coucher"
+        "thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre"
+        "consigne consigne consigne consigne calibrage calibrage calibrage calibrage"
+        "solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre"
+        "seuil-solaire seuil-solaire seuil-solaire seuil-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
+        "fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre"
+        "duree-traitement duree-traitement duree-traitement duree-traitement duree-vidange duree-vidange duree-vidange duree-vidange"
+        "marche-min marche-min marche-min marche-min arret-min arret-min arret-min arret-min"
+        "avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre"
+        "validation-debit validation-debit validation-debit validation-debit validation-lum validation-lum validation-lum validation-lum"
+        "validation-temp validation-temp validation-temp validation-temp verrou-pro verrou-pro verrou-pro verrou-pro"
+    "(max-width: 700px)":
+      grid-template-columns: 1fr
+      grid-template-areas: |
+        "header-param"
+        "filtration-titre"
+        "coef-base"
+        "seuil-acc"
+        "coef-acc"
+        "marge-coucher"
+        "thermique-titre"
+        "consigne"
+        "calibrage"
+        "solaire-titre"
+        "seuil-solaire"
+        "contexte-solaire"
+        "fonction-titre"
+        "duree-traitement"
+        "duree-vidange"
+        "marche-min"
+        "arret-min"
+        "avance-titre"
+        "validation-debit"
+        "validation-lum"
+        "validation-temp"
+        "verrou-pro"
+      grid-gap: 10px
+      margin: 8px
+
+cards:
+  ##########################################################################
+  # En-tête
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    update_timer: 1min
+    tap_action:
+      action: none
+    triggers_update:
+      - sensor.pcha_objectif_filtration_quotidien
+      - sensor.pcha_heure_atteinte_objectif
+      - sensor.pcha_potentiel_thermique_jour
+    view_layout:
+      grid-area: header-param
+    custom_fields:
+      titre: Paramètres PCHA V3.0
+      sous_titre: Réglages de la stratégie et du fonctionnement
+      heure: |
+        [[[
+          return new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        ]]]
+      statuts: |
+        [[[
+          const objectif = states['sensor.pcha_objectif_filtration_quotidien']?.state ?? '—';
+          const cible = states['sensor.pcha_heure_atteinte_objectif']?.state ?? '—';
+          const potentiel = states['sensor.pcha_potentiel_thermique_jour']?.state ?? '—';
+          const pill=(icon,label,value,color)=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid ${color}55;background:${color}14;white-space:nowrap;"><ha-icon icon="${icon}" style="width:17px;color:${color};"></ha-icon><span style="color:#94a3b8;">${label}</span><b style="color:${color};">${value}</b></span>`;
+          return `<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">${pill('mdi:target','Objectif',objectif + ' h','#22d3ee')}${pill('mdi:clock-check-outline','Cible',cible,'#34d399')}${pill('mdi:white-balance-sunny','Potentiel',potentiel,'#e879f9')}</div>`;
+        ]]]
+    styles:
+      card:
+        - background: linear-gradient(135deg, rgba(5,22,38,.98), rgba(24,18,54,.97))
+        - border: 1px solid rgba(34,211,238,.30)
+        - border-radius: 20px
+        - box-shadow: 0 16px 42px rgba(0,0,0,.32), 0 0 30px rgba(34,211,238,.08)
+        - padding: 15px 22px
+        - min-height: 72px
+      grid:
+        - grid-template-areas: '"titre heure statuts" "sous_titre heure statuts"'
+        - grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)
+        - grid-template-rows: min-content min-content
+      custom_fields:
+        titre:
+          - justify-self: start
+          - color: '#f8fafc'
+          - font-size: 28px
+          - font-weight: 800
+        sous_titre:
+          - justify-self: start
+          - color: '#94a3b8'
+          - font-size: 14px
+          - padding-top: 5px
+        heure:
+          - justify-self: center
+          - align-self: center
+          - padding: 5px 18px
+          - border-radius: 14px
+          - border: 1px solid rgba(103,232,249,.18)
+          - background: rgba(8,28,46,.58)
+          - color: '#67e8f9'
+          - font-size: 27px
+          - font-weight: 800
+        statuts:
+          - justify-self: stretch
+          - align-self: center
+          - font-size: 12px
+
+  ##########################################################################
+  # Filtration
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    tap_action: {action: none}
+    view_layout: {grid-area: filtration-titre}
+    custom_fields:
+      titre: Filtration — calcul de l’objectif quotidien
+      aide: Les coefficients déterminent combien d’heures de filtration sont demandées selon la température de référence.
+    styles: &section_title_styles
+      card:
+        - background: linear-gradient(90deg, rgba(5,28,42,.96), rgba(15,23,42,.96))
+        - border: 1px solid rgba(34,211,238,.22)
+        - border-radius: 15px
+        - padding: 9px 16px
+      grid:
+        - grid-template-areas: '"titre aide"'
+        - grid-template-columns: minmax(0,1fr) minmax(0,2fr)
+      custom_fields:
+        titre:
+          - justify-self: start
+          - color: '#f8fafc'
+          - font-size: 17px
+          - font-weight: 750
+        aide:
+          - justify-self: end
+          - color: '#64748b'
+          - font-size: 11px
+          - text-align: right
+
+  - type: tile
+    entity: input_number.pcha_coefficient_filtration_base
+    name: Coefficient de base
+    icon: mdi:chart-line
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: coef-base}
+    card_mod: &editable_card_mod
+      style: |
+        ha-card {
+          background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98));
+          border: 1px solid rgba(34,211,238,.25);
+          border-radius: 18px;
+          min-height: 105px;
+          box-shadow: 0 10px 28px rgba(0,0,0,.24);
+        }
+
+  - type: tile
+    entity: input_number.pcha_temperature_seuil_acceleration_filtration
+    name: Seuil d’accélération
+    icon: mdi:thermometer-chevron-up
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: seuil-acc}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_coefficient_filtration_acceleration
+    name: Coefficient d’accélération
+    icon: mdi:chart-line-variant
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: coef-acc}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_marge_objectif_avant_coucher
+    name: Marge avant coucher
+    icon: mdi:weather-sunset-down
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: marge-coucher}
+    card_mod: *editable_card_mod
+
+  ##########################################################################
+  # Régulation thermique
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    tap_action: {action: none}
+    view_layout: {grid-area: thermique-titre}
+    custom_fields:
+      titre: Régulation thermique
+      aide: Consigne de confort et calibrage de la mesure du bassin.
+    styles: *section_title_styles
+
+  - type: tile
+    entity: input_number.pcha_temperature_de_consigne
+    name: Température de consigne
+    icon: mdi:thermometer-water
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: consigne}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_correction_temperature_piscine
+    name: Calibrage température bassin
+    icon: mdi:tune-vertical
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: calibrage}
+    card_mod: *editable_card_mod
+
+  ##########################################################################
+  # Solaire
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    tap_action: {action: none}
+    view_layout: {grid-area: solaire-titre}
+    custom_fields:
+      titre: Chauffage solaire
+      aide: Seuil d’activation solaire présenté en klux pour faciliter le réglage.
+    styles: *section_title_styles
+
+  - type: tile
+    entity: number.pcha_seuil_luminosite_chauffage_klux
+    name: Seuil de luminosité chauffage
+    icon: mdi:white-balance-sunny
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: seuil-solaire}
+    card_mod: *editable_card_mod
+
+  - type: custom:button-card
+    entity: sensor.pcha_potentiel_thermique_jour
+    name: Potentiel thermique actuel
+    icon: mdi:solar-power-variant
+    show_state: true
+    tap_action:
+      action: more-info
+    view_layout: {grid-area: contexte-solaire}
+    styles:
+      card:
+        - background: linear-gradient(145deg, rgba(30,18,55,.98), rgba(15,23,42,.98))
+        - border: 1px solid rgba(192,132,252,.28)
+        - border-radius: 18px
+        - min-height: 105px
+        - padding: 13px 18px
+      grid:
+        - grid-template-areas: '"i n" "i s"'
+        - grid-template-columns: 50px 1fr
+      icon:
+        - color: '#fbbf24'
+        - width: 35px
+      name:
+        - justify-self: start
+        - color: '#cbd5e1'
+        - font-size: 14px
+      state:
+        - justify-self: start
+        - color: '#f0abfc'
+        - font-size: 23px
+        - font-weight: 800
+
+  ##########################################################################
+  # Fonctionnement
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    tap_action: {action: none}
+    view_layout: {grid-area: fonction-titre}
+    custom_fields:
+      titre: Fonctionnement
+      aide: Durées utilisateur et protections contre les cycles trop courts de la pompe.
+    styles: *section_title_styles
+
+  - type: tile
+    entity: input_number.pcha_duree_traitement
+    name: Durée du traitement
+    icon: mdi:timer-cog-outline
+    color: purple
+    features:
+      - type: numeric-input
+        style: slider
+    view_layout: {grid-area: duree-traitement}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_duree_vidange
+    name: Durée de la vidange
+    icon: mdi:water-minus
+    color: red
+    features:
+      - type: numeric-input
+        style: slider
+    view_layout: {grid-area: duree-vidange}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_temps_marche_pompe_min
+    name: Marche minimale
+    icon: mdi:timer-play-outline
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: marche-min}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_temps_arret_pompe_min
+    name: Arrêt minimal
+    icon: mdi:timer-stop-outline
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: arret-min}
+    card_mod: *editable_card_mod
+
+  ##########################################################################
+  # Avancé / sécurité — lecture seule
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    tap_action: {action: none}
+    view_layout: {grid-area: avance-titre}
+    custom_fields:
+      titre: Avancé / sécurité — lecture seule
+      aide: Ces valeurs participent aux diagnostics ou aux protections. Aucun contrôle de modification n’est exposé ici.
+    styles:
+      card:
+        - background: linear-gradient(90deg, rgba(45,20,28,.96), rgba(15,23,42,.96))
+        - border: 1px solid rgba(251,113,133,.26)
+        - border-radius: 15px
+        - padding: 9px 16px
+      grid:
+        - grid-template-areas: '"titre aide"'
+        - grid-template-columns: minmax(0,1fr) minmax(0,2fr)
+      custom_fields:
+        titre:
+          - justify-self: start
+          - color: '#fecdd3'
+          - font-size: 17px
+          - font-weight: 750
+        aide:
+          - justify-self: end
+          - color: '#94a3b8'
+          - font-size: 11px
+          - text-align: right
+
+  - type: custom:button-card
+    entity: input_number.pcha_temps_validation_debit
+    name: Validation débit
+    icon: mdi:timer-alert-outline
+    show_state: true
+    state_display: &state_with_unit |
+      [[[
+        const u=entity?.attributes?.unit_of_measurement ?? '';
+        return `${entity?.state ?? '—'} ${u}`.trim();
+      ]]]
+    tap_action: {action: none}
+    hold_action: {action: none}
+    double_tap_action: {action: none}
+    view_layout: {grid-area: validation-debit}
+    styles: &readonly_card_styles
+      card:
+        - background: linear-gradient(145deg, rgba(36,22,30,.96), rgba(15,23,42,.98))
+        - border: 1px solid rgba(251,113,133,.22)
+        - border-radius: 18px
+        - min-height: 96px
+        - padding: 13px 16px
+      grid:
+        - grid-template-areas: '"i n" "i s"'
+        - grid-template-columns: 46px 1fr
+      icon:
+        - color: '#fb7185'
+        - width: 31px
+      name:
+        - justify-self: start
+        - color: '#cbd5e1'
+        - font-size: 13px
+      state:
+        - justify-self: start
+        - color: '#fda4af'
+        - font-size: 20px
+        - font-weight: 800
+
+  - type: custom:button-card
+    entity: input_number.pcha_temps_validation_luminosite
+    name: Validation luminosité
+    icon: mdi:brightness-5
+    show_state: true
+    state_display: *state_with_unit
+    tap_action: {action: none}
+    hold_action: {action: none}
+    double_tap_action: {action: none}
+    view_layout: {grid-area: validation-lum}
+    styles: *readonly_card_styles
+
+  - type: custom:button-card
+    entity: input_number.pcha_temps_validation_temperature_piscine
+    name: Validation température
+    icon: mdi:thermometer-alert
+    show_state: true
+    state_display: *state_with_unit
+    tap_action: {action: none}
+    hold_action: {action: none}
+    double_tap_action: {action: none}
+    view_layout: {grid-area: validation-temp}
+    styles: *readonly_card_styles
+
+  - type: custom:button-card
+    entity: input_boolean.pcha_verrou_pro_001
+    name: Verrou débit critique PRO-001
+    icon: mdi:lock-alert
+    show_state: true
+    state_display: |
+      [[[
+        return entity?.state === 'on' ? 'ACTIF' : 'INACTIF';
+      ]]]
+    tap_action: {action: none}
+    hold_action: {action: none}
+    double_tap_action: {action: none}
+    view_layout: {grid-area: verrou-pro}
+    styles: *readonly_card_styles
