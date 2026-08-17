@@ -1,5 +1,45 @@
 # Changelog
 
+## V3.0 — 2026-08-18
+
+### Objectif quotidien paramétrable
+
+* remplacement des constantes de durée par trois paramètres : coefficient de base, seuil d'accélération et coefficient d'accélération ;
+* conservation des valeurs historiques `0,20 h/°C`, `25 °C` et `1,00 h/°C` comme configuration de référence ;
+* ajout d'une marge avant coucher du soleil configurable.
+
+### Météo et potentiel thermique
+
+* ajout d'une abstraction météo quotidienne J/J+1 ;
+* ajout des prévisions horaires utilisées uniquement derrière les entités PCHA ;
+* ajout d'un score de potentiel thermique journalier et des niveaux `FAIBLE`, `MOYEN`, `BON`, `EXCELLENT` ;
+* prise en compte de l'état du ciel et de la température extérieure prévue sur la fenêtre utile de la journée.
+
+### Planification météo-adaptative active
+
+* ajout de `sensor.pcha_heure_cible_objectif` pour distinguer la durée quotidienne de son heure cible ;
+* adaptation de la cible selon l'écart à la consigne, le potentiel thermique et la tendance J+1 près de l'équilibre ;
+* décalage borné entre −120 et +90 minutes par rapport à la cible standard ;
+* ajout de `binary_sensor.pcha_filtration_requise_v3` et `sensor.pcha_heure_atteinte_objectif_v3` ;
+* activation de la filtration V3 dans la demande consolidée du mode `AUTO` ;
+* conservation des demandes indépendantes de chauffage solaire et de protection du serpentin ;
+* maintien des anciennes entités de filtration requise et d'heure d'atteinte comme interfaces de compatibilité avec repli historique ;
+* alignement des métadonnées de stratégie sur `PLANIFICATION_V3` active.
+
+### Dashboard V3
+
+* correction de l'objectif quotidien pour afficher la cible réellement utilisée par V3 ;
+* ajout des cartes météo Aujourd'hui / Demain ;
+* ajout du potentiel thermique, de son score, de la stratégie et de la cible filtration ;
+* ajout d'une vue **Paramètres PCHA V3.0** regroupant les paramètres métier ;
+* séparation explicite des informations avancées et de sécurité en lecture seule.
+
+### Documentation
+
+* passage du README et de l'architecture à V3.0 ;
+* ajout de `docs/V3.0/README.md` comme référence fonctionnelle de la planification météo-adaptative ;
+* conservation de `docs/V1.1/` comme référence historique détaillée des fondations du moteur.
+
 ## Maintenance après V2.0
 
 * ajout de la sélection J à J-7 dans l'onglet Historique, avec synchronisation de toute la page sur la journée choisie ;
@@ -26,21 +66,21 @@
 * affichage conditionnel du temps de traitement restant, avec format heures/minutes et indication de pause ;
 * remplacement des boutons répétitifs de durée par un curseur de 5 à 1 440 minutes ;
 * saisie exacte toujours accessible en ouvrant la carte de durée ;
-* fiabilisation du temps restant par arrondi à la minute supérieure.
+* fiabilisation du temps restant par arrondi à la minute supérieure ;
 * correction des libellés tronqués dans l’en-tête du graphique des températures ;
 * centrage du pourcentage de progression et suppression de l’icône centrale de l’objectif quotidien de filtration ;
 * affichage de la luminosité moyenne diurne dans l’en-tête, incluant les passages nuageux sans courbe supplémentaire ;
-* affichage de la consommation électrique quotidienne dans l’en-tête de la puissance, sans courbe supplémentaire.
+* affichage de la consommation électrique quotidienne dans l’en-tête de la puissance, sans courbe supplémentaire ;
 * affichage du nombre de cycles de filtration avec une décimale et signalement explicite d'une source de volume indisponible ;
 * restructuration des en-têtes ApexCharts pour contenir valeurs, unités et libellés dans leurs colonnes sans débordement ;
-* suppression de la dernière icône décorative de l’objectif et alignement du titre à gauche.
-* filtrage des microcoupures de puissance : MES-003 s'active après 60 secondes d'indisponibilité et se réarme après 10 secondes stables.
-* correction du compteur de cycles : chargement explicite de l'intégrateur de débit et suppression du faux `0` lorsque sa source n'est pas disponible.
-* ajout de l'onglet Pilotage Concept D : chaîne de décision, commandes de mode et traitement, mesures de fonctionnement, temporisations et historique responsive.
-* rééquilibrage de l'accueil : graphes élargis, objectif quotidien compact et durée d'ensoleillement ajoutée entre la valeur actuelle et la moyenne de luminosité.
-* ajout de l'onglet Solaire Concept D : décision de chauffe, courbes température/luminosité, bilan du jour, réglages et historique responsive.
-* ajout de l'onglet Diagnostics Concept D : synthèse globale, comptage des défauts actifs, familles MES/COH/PRO, gravités, cause MES-004, temporisations et historique 24 heures.
-* harmonisation de la hauteur des cartes de synthèse Diagnostics et reformulation des libellés MES au repos pour éviter toute fausse impression de défaut.
+* suppression de la dernière icône décorative de l’objectif et alignement du titre à gauche ;
+* filtrage des microcoupures de puissance : MES-003 s'active après 60 secondes d'indisponibilité et se réarme après 10 secondes stables ;
+* correction du compteur de cycles : chargement explicite de l'intégrateur de débit et suppression du faux `0` lorsque sa source n'est pas disponible ;
+* ajout de l'onglet Pilotage Concept D : chaîne de décision, commandes de mode et traitement, mesures de fonctionnement, temporisations et historique responsive ;
+* rééquilibrage de l'accueil : graphes élargis, objectif quotidien compact et durée d'ensoleillement ajoutée entre la valeur actuelle et la moyenne de luminosité ;
+* ajout de l'onglet Solaire Concept D : décision de chauffe, courbes température/luminosité, bilan du jour, réglages et historique responsive ;
+* ajout de l'onglet Diagnostics Concept D : synthèse globale, comptage des défauts actifs, familles MES/COH/PRO, gravités, cause MES-004, temporisations et historique 24 heures ;
+* harmonisation de la hauteur des cartes de synthèse Diagnostics et reformulation des libellés MES au repos pour éviter toute fausse impression de défaut ;
 * ajout de l'onglet Historique Concept D : indicateurs quotidiens, courbes séparées des températures, de la luminosité, du débit, de la puissance et de l'objectif, puis chronologies du fonctionnement et des diagnostics sur 24 heures.
 
 ## V1.1 — 2026-08-04
@@ -56,8 +96,8 @@
 
 * candidate maximale de minuit à trente minutes après le lever du soleil ;
 * référence calibrée et objectif figé jusqu'au lendemain ;
-* affichage de la référence et de son statut dans le dashboard.
-* centralisation de l'heure prévisionnelle dans `sensor.pcha_heure_atteinte_objectif` ;
+* affichage de la référence et de son statut dans le dashboard ;
+* centralisation de l'heure prévisionnelle dans `sensor.pcha_heure_atteinte_objectif`.
 
 ### Luminosité et solaire
 
@@ -66,13 +106,13 @@
 * secours thermique extérieur/bassin avec hystérésis `2 °C / 1 °C` ;
 * compteurs solaires suspendus pendant MES-004 ;
 * graphe de luminosité ajouté à Supervision.
+
 ### Dashboard
 
 * refonte du dashboard avec une organisation plus moderne ;
 * nouvelle page d'accueil de synthèse ;
 * regroupement des cartes par usage : Pilotage, Solaire, Diagnostics ;
 * conservation des cartes natives `tile` avec `trend-graph` sur 24 heures pour les mesures principales.
-
 
 ## V1.1 — Concept D
 
