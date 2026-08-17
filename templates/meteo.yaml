@@ -1,0 +1,162 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# V3.0 — Prévisions météo J / J+1
+#
+# Entrée physique / externe
+#   weather.forecast_maison
+#
+# Sorties PCHA
+#   sensor.pcha_previsions_meteo
+#   sensor.pcha_meteo_aujourd_hui
+#   sensor.pcha_meteo_demain
+#
+# Principe d'architecture
+#   Seul ce fichier accède directement à l'entité weather externe. Les futurs
+#   calculs de stratégie PCHA doivent utiliser les entités PCHA ci-dessus.
+################################################################################
+
+################################################################################
+# Acquisition des prévisions journalières.
+#
+# Home Assistant fournit les prévisions via l'action weather.get_forecasts.
+# Le résultat brut est conservé dans deux attributs sélectionnés par date afin
+# de ne pas dépendre aveuglément de la position [0] / [1] dans la réponse.
+################################################################################
+- triggers:
+    - trigger: homeassistant
+      event: start
+      id: demarrage
+    - trigger: time_pattern
+      minutes: "7"
+      seconds: "0"
+      id: horaire
+  actions:
+    - wait_template: >
+        {{ states('weather.forecast_maison') not in ['unknown', 'unavailable'] }}
+      timeout: "00:02:00"
+      continue_on_timeout: false
+    - action: weather.get_forecasts
+      target:
+        entity_id: weather.forecast_maison
+      data:
+        type: daily
+      response_variable: pcha_previsions_meteo_brutes
+  sensor:
+    - name: PCHA Prévisions météo
+      unique_id: pcha_previsions_meteo
+      default_entity_id: sensor.pcha_previsions_meteo
+      icon: mdi:weather-partly-cloudy
+      device_class: timestamp
+      state: "{{ now().isoformat() }}"
+      attributes:
+        source: weather.forecast_maison
+        nombre_previsions: >
+          {% set source = pcha_previsions_meteo_brutes.get('weather.forecast_maison', {}) %}
+          {{ source.get('forecast', []) | count }}
+        aujourd_hui: >
+          {% set source = pcha_previsions_meteo_brutes.get('weather.forecast_maison', {}) %}
+          {% set previsions = source.get('forecast', []) %}
+          {% set cible = now().date() %}
+          {% set ns = namespace(valeur={}) %}
+          {% for prevision in previsions %}
+            {% set brut = prevision.get('datetime') if prevision is mapping else none %}
+            {% set horodatage = as_local(as_datetime(brut)) if brut else none %}
+            {% if horodatage is not none and horodatage.date() == cible %}
+              {% set ns.valeur = prevision %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.valeur }}
+        demain: >
+          {% set source = pcha_previsions_meteo_brutes.get('weather.forecast_maison', {}) %}
+          {% set previsions = source.get('forecast', []) %}
+          {% set cible = now().date() + timedelta(days=1) %}
+          {% set ns = namespace(valeur={}) %}
+          {% for prevision in previsions %}
+            {% set brut = prevision.get('datetime') if prevision is mapping else none %}
+            {% set horodatage = as_local(as_datetime(brut)) if brut else none %}
+            {% if horodatage is not none and horodatage.date() == cible %}
+              {% set ns.valeur = prevision %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.valeur }}
+
+################################################################################
+# Entités métier J / J+1.
+# Les champs absents chez le fournisseur météo restent à null sans rendre le
+# capteur entier indisponible. Température max et min sont les champs utiles
+# prioritaires pour la future stratégie thermique V3.0.
+################################################################################
+- sensor:
+    - name: PCHA Météo aujourd'hui
+      unique_id: pcha_meteo_aujourd_hui
+      default_entity_id: sensor.pcha_meteo_aujourd_hui
+      icon: mdi:weather-partly-cloudy
+      availability: >
+        {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+        {{ p is mapping and (p | count) > 0 }}
+      state: >
+        {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+        {{ p.get('condition', 'unknown') if p is mapping else 'unknown' }}
+      attributes:
+        date: "{{ now().date() }}"
+        temperature_max: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('temperature') if p is mapping else none }}
+        temperature_min: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('templow', p.get('temperature_low')) if p is mapping else none }}
+        precipitation_probability: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('precipitation_probability') if p is mapping else none }}
+        precipitation: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('precipitation') if p is mapping else none }}
+        cloud_coverage: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('cloud_coverage') if p is mapping else none }}
+        humidity: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('humidity') if p is mapping else none }}
+        wind_speed: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'aujourd_hui') %}
+          {{ p.get('wind_speed') if p is mapping else none }}
+        temperature_unit: "{{ state_attr('weather.forecast_maison', 'temperature_unit') }}"
+        precipitation_unit: "{{ state_attr('weather.forecast_maison', 'precipitation_unit') }}"
+        wind_speed_unit: "{{ state_attr('weather.forecast_maison', 'wind_speed_unit') }}"
+
+    - name: PCHA Météo demain
+      unique_id: pcha_meteo_demain
+      default_entity_id: sensor.pcha_meteo_demain
+      icon: mdi:weather-partly-cloudy
+      availability: >
+        {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+        {{ p is mapping and (p | count) > 0 }}
+      state: >
+        {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+        {{ p.get('condition', 'unknown') if p is mapping else 'unknown' }}
+      attributes:
+        date: "{{ (now().date() + timedelta(days=1)) }}"
+        temperature_max: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('temperature') if p is mapping else none }}
+        temperature_min: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('templow', p.get('temperature_low')) if p is mapping else none }}
+        precipitation_probability: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('precipitation_probability') if p is mapping else none }}
+        precipitation: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('precipitation') if p is mapping else none }}
+        cloud_coverage: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('cloud_coverage') if p is mapping else none }}
+        humidity: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('humidity') if p is mapping else none }}
+        wind_speed: >
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('wind_speed') if p is mapping else none }}
+        temperature_unit: "{{ state_attr('weather.forecast_maison', 'temperature_unit') }}"
+        precipitation_unit: "{{ state_attr('weather.forecast_maison', 'precipitation_unit') }}"
+        wind_speed_unit: "{{ state_attr('weather.forecast_maison', 'wind_speed_unit') }}"
