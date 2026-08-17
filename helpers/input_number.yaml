@@ -23,7 +23,8 @@
 ################################################################################
 
 # Paramètres V3.0 du calcul de l'objectif quotidien de filtration.
-# Les valeurs initiales reproduisent exactement le comportement V2 actuel.
+# Aucun champ initial n'est défini afin que Home Assistant restaure les valeurs
+# modifiées depuis le dashboard après un redémarrage.
 pcha_coefficient_filtration_acceleration:
   name: Coefficient accélération filtration
   icon: mdi:chart-line-variant
@@ -32,7 +33,6 @@ pcha_coefficient_filtration_acceleration:
   step: 0.1
   unit_of_measurement: "h/°C"
   mode: box
-  initial: 1.0
 
 pcha_coefficient_filtration_base:
   name: Coefficient filtration de base
@@ -42,7 +42,6 @@ pcha_coefficient_filtration_base:
   step: 0.01
   unit_of_measurement: "h/°C"
   mode: box
-  initial: 0.20
 
 # L'identifiant historique est conservé pour éviter de casser les tableaux de
 # bord et automatisations. En V1.1 il s'agit d'un calibrage signé ajouté à la
@@ -82,7 +81,6 @@ pcha_marge_objectif_avant_coucher:
   step: 15
   unit_of_measurement: "min"
   mode: box
-  initial: 120
 
 pcha_seuil_luminosite_chauffage:
   name: Seuil de luminosité chauffage
@@ -110,7 +108,6 @@ pcha_temperature_seuil_acceleration_filtration:
   step: 0.5
   unit_of_measurement: "°C"
   mode: box
-  initial: 25
 
 pcha_temps_arret_pompe_min:
   name: Temps minimum d'arrêt
