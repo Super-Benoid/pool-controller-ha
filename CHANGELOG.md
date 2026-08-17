@@ -2,6 +2,7 @@
 
 ## Maintenance après V2.0
 
+* affichage explicite de `Pool Controller Home Assistant V2.0` dans le titre de la page d'accueil et alignement des documents actifs sur la version V2.0 ;
 * ajout de la sélection J à J-7 dans l'onglet Historique, avec synchronisation de toute la page sur la journée choisie ;
 * regroupement des synthèses journalières dans les en-têtes des graphes Historique : moyenne et amplitude de température, moyenne lumineuse et ensoleillement, filtration et cycles, consommation électrique ;
 * correction des synthèses J-1 à J-7 : statistiques Recorder agrégées par journée, détails de température et luminosité sur 5 minutes, rafraîchissement au changement de date et unités d'affichage cohérentes ;
