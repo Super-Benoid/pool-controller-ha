@@ -7,6 +7,8 @@
 #   input_number.pcha_temperature_de_consigne
 #   sensor.pcha_meteo_aujourd_hui
 #   sensor.pcha_meteo_demain
+#   sensor.pcha_potentiel_thermique_jour
+#   sensor.pcha_score_potentiel_thermique_jour
 #   sensor.pcha_temperature_piscine
 #   sensor.pcha_temps_filtration_restant
 #   sun.sun
@@ -14,8 +16,8 @@
 # Sortie
 #   sensor.pcha_heure_cible_objectif
 #
-# Cette première version est uniquement consultative : elle ne modifie pas
-# binary_sensor.pcha_filtration_requise et ne commande donc jamais la pompe.
+# Cette version reste uniquement consultative : elle ne modifie pas
+# binary_sensor.pcha_filtration_requise et ne commande jamais la pompe.
 ################################################################################
 
 - sensor:
@@ -43,27 +45,29 @@
           {% set bassin = bassin_brut | float(0) %}
           {% set consigne = consigne_brut | float(0) %}
           {% set ecart = bassin - consigne if bassin_valide and consigne_valide else 0 %}
-
-          {% set condition_j = states('sensor.pcha_meteo_aujourd_hui') %}
-          {% set solaire_favorable = condition_j in ['sunny', 'partlycloudy'] %}
+          {% set potentiel = states('sensor.pcha_potentiel_thermique_jour') %}
 
           {% set tmax_j = state_attr('sensor.pcha_meteo_aujourd_hui', 'temperature_max') %}
           {% set tmin_j = state_attr('sensor.pcha_meteo_aujourd_hui', 'temperature_min') %}
           {% set tmax_j1 = state_attr('sensor.pcha_meteo_demain', 'temperature_max') %}
           {% set tmin_j1 = state_attr('sensor.pcha_meteo_demain', 'temperature_min') %}
-          {% set moyenne_j_valide = is_number(tmax_j) and is_number(tmin_j) %}
-          {% set moyenne_j1_valide = is_number(tmax_j1) and is_number(tmin_j1) %}
-          {% set moyenne_j = ((tmax_j | float(0)) + (tmin_j | float(0))) / 2 if moyenne_j_valide else none %}
-          {% set moyenne_j1 = ((tmax_j1 | float(0)) + (tmin_j1 | float(0))) / 2 if moyenne_j1_valide else none %}
+          {% set moyenne_j = (((tmax_j | float(0)) + (tmin_j | float(0))) / 2) if is_number(tmax_j) and is_number(tmin_j) else none %}
+          {% set moyenne_j1 = (((tmax_j1 | float(0)) + (tmin_j1 | float(0))) / 2) if is_number(tmax_j1) and is_number(tmin_j1) else none %}
           {% set tendance = (moyenne_j1 - moyenne_j) if moyenne_j is not none and moyenne_j1 is not none else none %}
 
-          {# Décalage thermique principal par rapport à la consigne. #}
+          {# Sous la consigne : retarder selon le potentiel thermique restant. #}
           {% set decalage = 0 %}
           {% if bassin_valide and consigne_valide %}
-            {% if ecart <= -1.0 and solaire_favorable %}
-              {% set decalage = 60 %}
-            {% elif ecart <= -0.3 and solaire_favorable %}
-              {% set decalage = 30 %}
+            {% if ecart <= -0.3 %}
+              {% if potentiel == 'EXCELLENT' %}
+                {% set decalage = 90 %}
+              {% elif potentiel == 'BON' %}
+                {% set decalage = 60 %}
+              {% elif potentiel == 'MOYEN' %}
+                {% set decalage = 30 %}
+              {% else %}
+                {% set decalage = 0 %}
+              {% endif %}
             {% elif ecart >= 1.0 %}
               {% set decalage = -90 %}
             {% elif ecart >= 0.3 %}
@@ -71,11 +75,11 @@
             {% endif %}
           {% endif %}
 
-          {# Anticipation douce de J+1 : au maximum +/- 30 minutes. #}
-          {% if tendance is not none and bassin_valide and consigne_valide %}
-            {% if tendance <= -2.0 and ecart <= 0.5 and solaire_favorable %}
+          {# Anticipation J+1 uniquement autour de l'équilibre de consigne. #}
+          {% if tendance is not none and bassin_valide and consigne_valide and ecart > -0.3 and ecart < 0.3 %}
+            {% if tendance <= -2.0 and potentiel in ['BON', 'EXCELLENT'] %}
               {% set decalage = decalage + 30 %}
-            {% elif tendance >= 2.0 and ecart >= -0.5 %}
+            {% elif tendance >= 2.0 %}
               {% set decalage = decalage - 30 %}
             {% endif %}
           {% endif %}
@@ -84,7 +88,7 @@
           {% set decalage = [[decalage, -120] | max, 90] | min %}
           {% set cible_calculee = cible_standard + timedelta(minutes=decalage) %}
 
-          {# La cible ne doit jamais dépasser les 15 dernières minutes de jour. #}
+          {# La cible ne dépasse jamais les 15 dernières minutes de jour. #}
           {% set cible_max = coucher - timedelta(minutes=15) %}
           {% set cible = [cible_calculee, cible_max] | min %}
           {{ cible.isoformat() }}
@@ -105,8 +109,7 @@
           {% set bassin = bassin_brut | float(0) %}
           {% set consigne = consigne_brut | float(0) %}
           {% set ecart = bassin - consigne if bassin_valide and consigne_valide else 0 %}
-          {% set condition_j = states('sensor.pcha_meteo_aujourd_hui') %}
-          {% set solaire_favorable = condition_j in ['sunny', 'partlycloudy'] %}
+          {% set potentiel = states('sensor.pcha_potentiel_thermique_jour') %}
           {% set tmax_j = state_attr('sensor.pcha_meteo_aujourd_hui', 'temperature_max') %}
           {% set tmin_j = state_attr('sensor.pcha_meteo_aujourd_hui', 'temperature_min') %}
           {% set tmax_j1 = state_attr('sensor.pcha_meteo_demain', 'temperature_max') %}
@@ -116,19 +119,22 @@
           {% set tendance = (moyenne_j1 - moyenne_j) if moyenne_j is not none and moyenne_j1 is not none else none %}
           {% set decalage = 0 %}
           {% if bassin_valide and consigne_valide %}
-            {% if ecart <= -1.0 and solaire_favorable %}
-              {% set decalage = 60 %}
-            {% elif ecart <= -0.3 and solaire_favorable %}
-              {% set decalage = 30 %}
+            {% if ecart <= -0.3 %}
+              {% if potentiel == 'EXCELLENT' %}
+                {% set decalage = 90 %}
+              {% elif potentiel == 'BON' %}
+                {% set decalage = 60 %}
+              {% elif potentiel == 'MOYEN' %}
+                {% set decalage = 30 %}
+              {% endif %}
             {% elif ecart >= 1.0 %}
               {% set decalage = -90 %}
             {% elif ecart >= 0.3 %}
               {% set decalage = -45 %}
-            {% endif %}
-            {% if tendance is not none %}
-              {% if tendance <= -2.0 and ecart <= 0.5 and solaire_favorable %}
+            {% elif tendance is not none and ecart > -0.3 and ecart < 0.3 %}
+              {% if tendance <= -2.0 and potentiel in ['BON', 'EXCELLENT'] %}
                 {% set decalage = decalage + 30 %}
-              {% elif tendance >= 2.0 and ecart >= -0.5 %}
+              {% elif tendance >= 2.0 %}
                 {% set decalage = decalage - 30 %}
               {% endif %}
             {% endif %}
@@ -137,20 +143,25 @@
         strategie: >
           {% set bassin_brut = states('sensor.pcha_temperature_piscine') %}
           {% set consigne_brut = states('input_number.pcha_temperature_de_consigne') %}
+          {% set potentiel = states('sensor.pcha_potentiel_thermique_jour') %}
           {% if not is_number(bassin_brut) or not is_number(consigne_brut) %}
             STANDARD_SECOURS
           {% else %}
             {% set ecart = (bassin_brut | float(0)) - (consigne_brut | float(0)) %}
-            {% set condition_j = states('sensor.pcha_meteo_aujourd_hui') %}
-            {% set solaire_favorable = condition_j in ['sunny', 'partlycloudy'] %}
-            {% if ecart <= -0.3 and solaire_favorable %}
+            {% if ecart <= -0.3 and potentiel in ['MOYEN', 'BON', 'EXCELLENT'] %}
               CHAUFFAGE_SOLAIRE_PRIORITAIRE
+            {% elif ecart <= -0.3 %}
+              SOUS_CONSIGNE_POTENTIEL_FAIBLE
             {% elif ecart >= 0.3 %}
               LIMITATION_RECHAUFFEMENT
             {% else %}
               EQUILIBRE_CONSIGNE
             {% endif %}
           {% endif %}
+        potentiel_thermique_jour: "{{ states('sensor.pcha_potentiel_thermique_jour') }}"
+        score_potentiel_thermique_jour: >
+          {% set v = states('sensor.pcha_score_potentiel_thermique_jour') %}
+          {{ v | float(0) | round(0) if is_number(v) else none }}
         temperature_bassin: >
           {% set v = states('sensor.pcha_temperature_piscine') %}
           {{ v | float(0) | round(1) if is_number(v) else none }}
@@ -161,7 +172,6 @@
           {% set bassin = states('sensor.pcha_temperature_piscine') %}
           {% set consigne = states('input_number.pcha_temperature_de_consigne') %}
           {{ ((bassin | float(0)) - (consigne | float(0))) | round(1) if is_number(bassin) and is_number(consigne) else none }}
-        condition_meteo_aujourd_hui: "{{ states('sensor.pcha_meteo_aujourd_hui') }}"
         moyenne_temperature_prevue_aujourd_hui: >
           {% set maxi = state_attr('sensor.pcha_meteo_aujourd_hui', 'temperature_max') %}
           {% set mini = state_attr('sensor.pcha_meteo_aujourd_hui', 'temperature_min') %}
