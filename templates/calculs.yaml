@@ -3,6 +3,10 @@
 # SPEC-003 — Calculs de filtration V1.1
 #
 # Entrées
+#   input_number.pcha_coefficient_filtration_acceleration
+#   input_number.pcha_coefficient_filtration_base
+#   input_number.pcha_marge_objectif_avant_coucher
+#   input_number.pcha_temperature_seuil_acceleration_filtration
 #   input_select.pcha_etat_machine
 #   sensor.pcha_temperature_piscine
 #   sun.sun
@@ -78,11 +82,11 @@
         {% endif %}
         {% if reference is not none and reference > 10 and reference < 50 %}
           {% set t = reference | float(0) %}
-          {% if t <= 25 %}
-            {{ (t / 5) | round(2) }}
-          {% else %}
-            {{ ((t / 5) + (t - 25)) | round(2) }}
-          {% endif %}
+          {% set coefficient_base = states('input_number.pcha_coefficient_filtration_base') | float(0.20) %}
+          {% set seuil_acceleration = states('input_number.pcha_temperature_seuil_acceleration_filtration') | float(25) %}
+          {% set coefficient_acceleration = states('input_number.pcha_coefficient_filtration_acceleration') | float(1.0) %}
+          {% set depassement = [t - seuil_acceleration, 0] | max %}
+          {{ ((t * coefficient_base) + (depassement * coefficient_acceleration)) | round(2) }}
         {% elif is_number(this.state) %}
           {{ this.state | float(0) }}
         {% else %}
@@ -266,10 +270,11 @@
           {% else %}
             {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
             {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+            {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
             {% if is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
               {% set fin = now() + timedelta(minutes=restant) %}
             {% elif coucher is not none and coucher.date() == now().date() %}
-              {% set echeance = coucher - timedelta(hours=2) %}
+              {% set echeance = coucher - timedelta(minutes=marge) %}
               {% set depart = echeance - timedelta(minutes=restant) %}
               {% set fin = echeance if now() < depart else now() + timedelta(minutes=restant) %}
             {% else %}
@@ -309,13 +314,14 @@
           {% set restant = restant_brut | float(0) %}
           {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
           {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+          {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
           {% if coucher is none %}
             true
           {% elif coucher.date() != now().date() %}
             true
           {% else %}
-            {# L'objectif quotidien doit être terminé 2 h avant le coucher. #}
-            {% set echeance = coucher - timedelta(hours=2) %}
+            {# L'objectif quotidien doit être terminé avant le coucher selon la marge paramétrable. #}
+            {% set echeance = coucher - timedelta(minutes=marge) %}
             {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
             {{ now() >= depart_au_plus_tard }}
           {% endif %}
