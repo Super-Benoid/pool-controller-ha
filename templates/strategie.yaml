@@ -16,8 +16,8 @@
 # Sortie
 #   sensor.pcha_heure_cible_objectif
 #
-# Cette version reste uniquement consultative : elle ne modifie pas
-# binary_sensor.pcha_filtration_requise et ne commande jamais la pompe.
+# Cette cible est active : templates/planification_v3.yaml la consomme pour
+# déterminer la demande de filtration V3 utilisée en mode AUTO.
 ################################################################################
 
 - sensor:
@@ -94,8 +94,8 @@
           {{ cible.isoformat() }}
         {% endif %}
       attributes:
-        mode: RECOMMANDATION_V3
-        active_sur_commande_pompe: false
+        mode: PLANIFICATION_V3
+        active_sur_commande_pompe: true
         cible_standard: >
           {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
           {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
