@@ -1,5 +1,10 @@
 # Maintenance et tests PCHA
 
+**Version :** V2.0
+**Statut :** Courante
+
+---
+
 ## Vidange
 
 1. Sélectionner `OFF` et vérifier l'arrêt réel de la pompe.

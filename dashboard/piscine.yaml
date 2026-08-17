@@ -84,7 +84,7 @@ views:
         view_layout:
           grid-area: header
         custom_fields:
-          titre: Pool Controller Home Assistant
+          titre: Pool Controller Home Assistant V2.0
           sous_titre: Synthèse décisionnelle en temps réel
           heure: |
             [[[

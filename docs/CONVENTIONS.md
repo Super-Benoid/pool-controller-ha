@@ -2,8 +2,8 @@
 
 Pool Controller Home Assistant (PCHA)
 
-Version : V1.1
-Statut : Figé
+Version : V2.0
+Statut : Courante
 
 ---
 

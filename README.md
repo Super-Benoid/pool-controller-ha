@@ -12,7 +12,8 @@ Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique p
 * défaut de débit critique mémorisé jusqu'à un réarmement manuel contrôlé ;
 * onglet Maintenance avec simulations temporaires des capteurs.
 
-Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du moteur de filtration.
+Les documents actifs placés directement dans `docs/` correspondent à la V2.0.
+Le dossier `docs/V1.1/` reste la référence fonctionnelle détaillée de la base du moteur de filtration.
 
 Le dashboard V2.0 actif est :
 
@@ -64,7 +65,8 @@ Une ancienne correction `+2,0 °C` doit donc devenir un calibrage `−2,0 °C`.
 
 * architecture : `docs/ARCHITECTURE.md` ;
 * conventions : `docs/CONVENTIONS.md` ;
-* documentation courante : `docs/V1.1/` ;
+* documentation courante V2.0 : fichiers placés directement dans `docs/` ;
+* base fonctionnelle du moteur V1.1 : `docs/V1.1/` ;
 * exemples ESPHome : `esphome/`.
 * maintenance et tests : `docs/MAINTENANCE.md`.
 
