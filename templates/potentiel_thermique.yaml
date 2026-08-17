@@ -1,0 +1,189 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# V3.0 — Potentiel thermique prévisionnel
+#
+# Entrées PCHA
+#   sensor.pcha_previsions_meteo_horaires
+#   sensor.pcha_temperature_piscine
+#   sun.sun
+#
+# Sorties
+#   sensor.pcha_score_potentiel_thermique_jour
+#   sensor.pcha_potentiel_thermique_jour
+#
+# Cette couche reste consultative. Elle ne commande pas la pompe.
+################################################################################
+
+################################################################################
+# Score prévisionnel de 0 à 100 sur la fenêtre utile restante de la journée.
+#
+# Le serpentin n'étant réellement exposé qu'à partir d'environ 10 h, les
+# heures antérieures ne sont pas retenues. La condition météo pèse 80 % du
+# score et la température extérieure prévue 20 %. Le soleil reste donc le
+# facteur dominant, la température ne servant qu'à nuancer le rendement.
+################################################################################
+- sensor:
+    - name: PCHA Score potentiel thermique jour
+      unique_id: pcha_score_potentiel_thermique_jour
+      default_entity_id: sensor.pcha_score_potentiel_thermique_jour
+      icon: mdi:white-balance-sunny
+      unit_of_measurement: "%"
+      state_class: measurement
+      availability: >
+        {% set previsions = state_attr('sensor.pcha_previsions_meteo_horaires', 'aujourd_hui') %}
+        {{ previsions is iterable and previsions is not string }}
+      state: >
+        {% set previsions = state_attr('sensor.pcha_previsions_meteo_horaires', 'aujourd_hui') or [] %}
+        {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+        {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+        {% set debut_fenetre = now().replace(hour=10, minute=0, second=0, microsecond=0) %}
+        {% set debut = [now(), debut_fenetre] | max %}
+        {% set bassin_brut = states('sensor.pcha_temperature_piscine') %}
+        {% set bassin_valide = is_number(bassin_brut) %}
+        {% set bassin = bassin_brut | float(0) %}
+        {% set ns = namespace(total=0, nombre=0) %}
+
+        {% if coucher is not none and coucher.date() == now().date() and now() < coucher %}
+          {% for prevision in previsions %}
+            {% if prevision is mapping %}
+              {% set brut = prevision.get('datetime') %}
+              {% set h = as_local(as_datetime(brut)) if brut else none %}
+              {% if h is not none and h >= debut and h <= coucher %}
+                {% set condition = prevision.get('condition', 'unknown') %}
+                {% if condition == 'sunny' %}
+                  {% set score_ciel = 100 %}
+                {% elif condition == 'partlycloudy' %}
+                  {% set score_ciel = 75 %}
+                {% elif condition in ['windy', 'windy-variant'] %}
+                  {% set score_ciel = 50 %}
+                {% elif condition == 'cloudy' %}
+                  {% set score_ciel = 35 %}
+                {% elif condition == 'fog' %}
+                  {% set score_ciel = 20 %}
+                {% elif condition == 'rainy' %}
+                  {% set score_ciel = 10 %}
+                {% elif condition in ['pouring', 'lightning', 'lightning-rainy', 'hail', 'snowy', 'snowy-rainy'] %}
+                  {% set score_ciel = 0 %}
+                {% else %}
+                  {% set score_ciel = 25 %}
+                {% endif %}
+
+                {% set temperature = prevision.get('temperature') %}
+                {% if not bassin_valide or not is_number(temperature) %}
+                  {% set score_temperature = 50 %}
+                {% else %}
+                  {% set delta = (temperature | float(0)) - bassin %}
+                  {% if delta >= -1 %}
+                    {% set score_temperature = 100 %}
+                  {% elif delta >= -4 %}
+                    {% set score_temperature = 75 %}
+                  {% elif delta >= -7 %}
+                    {% set score_temperature = 50 %}
+                  {% else %}
+                    {% set score_temperature = 25 %}
+                  {% endif %}
+                {% endif %}
+
+                {% set ns.total = ns.total + (score_ciel * 0.8) + (score_temperature * 0.2) %}
+                {% set ns.nombre = ns.nombre + 1 %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+
+        {{ (ns.total / ns.nombre) | round(0) if ns.nombre > 0 else 0 }}
+      attributes:
+        version_algorithme: V3.0-POTENTIEL-1
+        actif_sur_commande_pompe: false
+        poids_condition_meteo: 0.8
+        poids_temperature: 0.2
+        heure_debut_fenetre: "10:00"
+        heure_fin_fenetre: >
+          {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+          {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+          {{ coucher.isoformat() if coucher is not none and coucher.date() == now().date() else none }}
+        heures_evaluees: >
+          {% set previsions = state_attr('sensor.pcha_previsions_meteo_horaires', 'aujourd_hui') or [] %}
+          {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+          {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+          {% set debut_fenetre = now().replace(hour=10, minute=0, second=0, microsecond=0) %}
+          {% set debut = [now(), debut_fenetre] | max %}
+          {% set ns = namespace(nombre=0) %}
+          {% if coucher is not none and coucher.date() == now().date() and now() < coucher %}
+            {% for prevision in previsions %}
+              {% set brut = prevision.get('datetime') if prevision is mapping else none %}
+              {% set h = as_local(as_datetime(brut)) if brut else none %}
+              {% if h is not none and h >= debut and h <= coucher %}
+                {% set ns.nombre = ns.nombre + 1 %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {{ ns.nombre }}
+        temperature_moyenne_prevue_fenetre: >
+          {% set previsions = state_attr('sensor.pcha_previsions_meteo_horaires', 'aujourd_hui') or [] %}
+          {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+          {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+          {% set debut_fenetre = now().replace(hour=10, minute=0, second=0, microsecond=0) %}
+          {% set debut = [now(), debut_fenetre] | max %}
+          {% set ns = namespace(total=0, nombre=0) %}
+          {% if coucher is not none and coucher.date() == now().date() and now() < coucher %}
+            {% for prevision in previsions %}
+              {% set brut = prevision.get('datetime') if prevision is mapping else none %}
+              {% set h = as_local(as_datetime(brut)) if brut else none %}
+              {% set temperature = prevision.get('temperature') if prevision is mapping else none %}
+              {% if h is not none and h >= debut and h <= coucher and is_number(temperature) %}
+                {% set ns.total = ns.total + (temperature | float(0)) %}
+                {% set ns.nombre = ns.nombre + 1 %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {{ (ns.total / ns.nombre) | round(1) if ns.nombre > 0 else none }}
+        heures_ensoleillees_ou_partiellement_nuageuses: >
+          {% set previsions = state_attr('sensor.pcha_previsions_meteo_horaires', 'aujourd_hui') or [] %}
+          {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+          {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+          {% set debut_fenetre = now().replace(hour=10, minute=0, second=0, microsecond=0) %}
+          {% set debut = [now(), debut_fenetre] | max %}
+          {% set ns = namespace(nombre=0) %}
+          {% if coucher is not none and coucher.date() == now().date() and now() < coucher %}
+            {% for prevision in previsions %}
+              {% set brut = prevision.get('datetime') if prevision is mapping else none %}
+              {% set h = as_local(as_datetime(brut)) if brut else none %}
+              {% set condition = prevision.get('condition', 'unknown') if prevision is mapping else 'unknown' %}
+              {% if h is not none and h >= debut and h <= coucher and condition in ['sunny', 'partlycloudy'] %}
+                {% set ns.nombre = ns.nombre + 1 %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {{ ns.nombre }}
+        temperature_bassin_reference: >
+          {% set v = states('sensor.pcha_temperature_piscine') %}
+          {{ v | float(0) | round(1) if is_number(v) else none }}
+
+    - name: PCHA Potentiel thermique jour
+      unique_id: pcha_potentiel_thermique_jour
+      default_entity_id: sensor.pcha_potentiel_thermique_jour
+      icon: mdi:weather-sunny-alert
+      availability: >
+        {{ is_number(states('sensor.pcha_score_potentiel_thermique_jour')) }}
+      state: >
+        {% set score = states('sensor.pcha_score_potentiel_thermique_jour') %}
+        {% if not is_number(score) %}
+          INDISPONIBLE
+        {% elif (score | float(0)) >= 80 %}
+          EXCELLENT
+        {% elif (score | float(0)) >= 65 %}
+          BON
+        {% elif (score | float(0)) >= 45 %}
+          MOYEN
+        {% else %}
+          FAIBLE
+        {% endif %}
+      attributes:
+        score: >
+          {% set score = states('sensor.pcha_score_potentiel_thermique_jour') %}
+          {{ score | float(0) | round(0) if is_number(score) else none }}
+        seuil_moyen: 45
+        seuil_bon: 65
+        seuil_excellent: 80
+        actif_sur_commande_pompe: false
