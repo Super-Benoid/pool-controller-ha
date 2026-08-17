@@ -1,81 +1,127 @@
-# Pool Controller Home Assistant — PCHA V2.0
+# Pool Controller Home Assistant — PCHA V3.0
 
 Contrôleur de filtration, de chauffage solaire et de surveillance hydraulique pour Home Assistant.
 
-## Évolutions V2.0
+**Version courante : V3.0 — planification météo-adaptative active.**
 
-* dashboard Concept D finalisé avec supervision temps réel ;
-* objectif quotidien enrichi avec heure prévisionnelle d’atteinte ;
-* graphiques modernisés, températures bassin/extérieur et delta thermique ;
-* mode TRAITEMENT avec durée réglable de 5 minutes à 24 heures et affichage du temps restant ;
-* mode VIDANGE sécurisé de 1 à 10 minutes avec retour obligatoire sur `OFF` ;
-* défaut de débit critique mémorisé jusqu'à un réarmement manuel contrôlé ;
-* onglet Maintenance avec simulations temporaires des capteurs.
+## Évolutions V3.0
 
-Les documents `docs/V1.1/` restent la référence fonctionnelle détaillée du moteur de filtration.
+* loi de durée de filtration rendue paramétrable tout en conservant les valeurs historiques par défaut ;
+* marge avant coucher du soleil configurable ;
+* abstraction météo quotidienne et horaire derrière des entités `pcha_*` ;
+* calcul d'un score et d'un niveau de potentiel thermique journalier ;
+* cible de filtration météo-adaptative selon le potentiel thermique, la température du bassin, la consigne et la tendance J+1 ;
+* activation de cette cible dans la demande de filtration du mode `AUTO` ;
+* compatibilité conservée avec les anciennes entités de filtration requise et d'heure d'atteinte ;
+* accueil enrichi avec météo J/J+1, potentiel thermique, stratégie et cible utilisée ;
+* nouvelle vue **Paramètres PCHA V3.0** séparant réglages métier et informations avancées de sécurité.
 
-Le dashboard V2.0 actif est :
+La référence fonctionnelle V3.0 est :
+
+```text
+docs/V3.0/README.md
+```
+
+Le dashboard actif est :
 
 ```text
 dashboard/piscine.yaml
 ```
 
-## Base fonctionnelle V1.1
-
-* sonde de température directement immergée dans le bassin ;
-* suppression du délai de circulation nécessaire à la température ;
-* calibrage signé de `−3,0 à +3,0 °C` par pas de `0,1 °C` ;
-* objectif quotidien basé sur la température calibrée moyenne de la veille, figée au changement de jour après au moins 18 heures de mesures valides ;
-* planification visant une fin deux heures avant le coucher du soleil ;
-* BH1750 déporté sur D1 mini et transmis à l'ESP32 Jardin par Packet Transport UDP ;
-* MES-004 étendu à la liaison distante et à l'état du BH1750 ;
-* chauffage solaire de secours lorsque la température extérieure dépasse celle du bassin de `2 °C`, avec arrêt à `1 °C` ;
-* dashboard Concept D sombre cyan/violet, avec quatre graphiques détaillés sur 24 heures, statistiques min/max, jauge de progression et vues Pilotage / Solaire / Diagnostics.
-
-## Installation
-
-Consulter :
+La vue Paramètres est isolée dans :
 
 ```text
-docs/V1.1/INSTALLATION.md
-docs/V1.1/MIGRATION-V1.0-V1.1.md
-docs/V1.1/RECETTE-V1.1.md
+dashboard/views/parametres.yaml
 ```
 
-Après chaque mise à jour de la branche, resynchroniser les packages installés :
+## Principes fonctionnels
+
+### Objectif quotidien
+
+La température de référence est construite à partir de la température calibrée cohérente du bassin et figée au changement de jour à partir de la moyenne fiable de la veille.
+
+La durée est calculée avec les paramètres :
+
+```text
+input_number.pcha_coefficient_filtration_base
+input_number.pcha_temperature_seuil_acceleration_filtration
+input_number.pcha_coefficient_filtration_acceleration
+```
+
+### Planification V3
+
+La durée demandée et l'heure à laquelle elle doit être terminée restent deux notions distinctes.
+
+La météo influence la **planification** via :
+
+```text
+sensor.pcha_meteo_aujourd_hui
+sensor.pcha_meteo_demain
+sensor.pcha_previsions_meteo_horaires
+sensor.pcha_score_potentiel_thermique_jour
+sensor.pcha_potentiel_thermique_jour
+sensor.pcha_heure_cible_objectif
+```
+
+La décision active de filtration est exposée par :
+
+```text
+binary_sensor.pcha_filtration_requise_v3
+sensor.pcha_heure_atteinte_objectif_v3
+```
+
+### Sécurité et solaire
+
+Les diagnostics MES / COH / PRO, la machine à états, les sécurités hydrauliques et la protection du serpentin restent indépendants de l'optimisation météo. Les seuils de sécurité ne sont pas exposés comme paramètres utilisateur courants.
+
+## Base historique V1.1
+
+La documentation `docs/V1.1/` reste la référence technique détaillée des fondations du moteur : abstraction des mesures, température bassin, diagnostics, modes, chauffage solaire et protections.
+
+Les anciennes versions restent consultables dans l'historique Git et les tags de version, notamment `v2.0`.
+
+## Installation / mise à jour
+
+Après mise à jour de la branche locale :
+
+```bash
+cd /config/pool-controller-ha
+git pull --ff-only origin main
+```
+
+Les fichiers installés sous `/config/packages/` peuvent être resynchronisés si l'installation utilise les copies fournies par le dépôt :
 
 ```bash
 cp /config/pool-controller-ha/installation/packages/piscine.yaml /config/packages/piscine.yaml
 cp /config/pool-controller-ha/installation/packages/piscine_diagnostics.yaml /config/packages/piscine_diagnostics.yaml
 ```
 
-## Avertissement de migration du calibrage
+Pour une modification touchant les templates, automatisations, scripts, helpers ou packages, valider la configuration avant application :
 
-L'identifiant historique du helper est conservé, mais sa formule change :
-
-```text
-V1.0 : brute − correction
-V1.1 : brute + calibrage
+```bash
+ha core check
 ```
 
-Une ancienne correction `+2,0 °C` doit donc devenir un calibrage `−2,0 °C`.
+Un simple changement de dashboard ne nécessite normalement ni `ha core check` ni redémarrage de Home Assistant Core.
 
 ## Documentation
 
 * architecture : `docs/ARCHITECTURE.md` ;
 * conventions : `docs/CONVENTIONS.md` ;
-* documentation courante : `docs/V1.1/` ;
+* référence V3.0 : `docs/V3.0/README.md` ;
+* référence historique du moteur : `docs/V1.1/` ;
+* maintenance et tests : `docs/MAINTENANCE.md` ;
 * exemples ESPHome : `esphome/`.
-* maintenance et tests : `docs/MAINTENANCE.md`.
 
-Les anciennes versions restent consultables dans l'historique Git et dans les tags de version, notamment `v2.0`.
-
-## Entités physiques nouvelles
+## Entités physiques principales
 
 ```text
 sensor.jardin_esp32_jardin_temperature_bassin
+sensor.jardin_esp32_jardin_debit_filtration_piscine
+sensor.prises_exterieur_power
+sensor.jardin_esp32_jardin_luminosite
 binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite
 binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok
 ```
 
-Le mode doit être placé sur `OFF` pendant la migration et la vérification de configuration.
+Aucune fonction métier PCHA ne doit contourner les abstractions `pcha_*` pour lire directement ces entités physiques.
