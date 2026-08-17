@@ -4,7 +4,7 @@
 #
 # Entrées
 #   binary_sensor.pcha_chauffage_solaire_requis
-#   binary_sensor.pcha_filtration_requise
+#   binary_sensor.pcha_filtration_requise_v3
 #   binary_sensor.pcha_protection_serpentin_requise
 #   input_select.pcha_mode_de_fonctionnement
 #   timer.pcha_traitement
@@ -30,7 +30,7 @@
           {{ is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') }}
         {% elif mode == 'AUTO' %}
           {{
-            is_state('binary_sensor.pcha_filtration_requise', 'on')
+            is_state('binary_sensor.pcha_filtration_requise_v3', 'on')
             or is_state('binary_sensor.pcha_chauffage_solaire_requis', 'on')
             or is_state('binary_sensor.pcha_protection_serpentin_requise', 'on')
           }}
