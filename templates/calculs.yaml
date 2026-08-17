@@ -254,35 +254,48 @@
           {{ none }}
         {% endif %}
 
+# Interface historique conservée pour le dashboard et les consommateurs V1/V2.
+# La source de vérité de la planification est désormais la couche V3.
 - sensor:
     - name: PCHA Heure atteinte objectif
       unique_id: pcha_heure_atteinte_objectif
       default_entity_id: sensor.pcha_heure_atteinte_objectif
       icon: mdi:clock-check-outline
       state: >
-        {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
-        {% if not is_number(restant_brut) %}
-          Indisponible
+        {% set v3 = states('sensor.pcha_heure_atteinte_objectif_v3') %}
+        {% if v3 not in ['unknown', 'unavailable', 'none', ''] %}
+          {{ v3 }}
         {% else %}
-          {% set restant = restant_brut | float(0) %}
-          {% if restant <= 0 %}
-            Atteint
+          {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
+          {% if not is_number(restant_brut) %}
+            Indisponible
           {% else %}
-            {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
-            {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
-            {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
-            {% if is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
-              {% set fin = now() + timedelta(minutes=restant) %}
-            {% elif coucher is not none and coucher.date() == now().date() %}
-              {% set echeance = coucher - timedelta(minutes=marge) %}
-              {% set depart = echeance - timedelta(minutes=restant) %}
-              {% set fin = echeance if now() < depart else now() + timedelta(minutes=restant) %}
+            {% set restant = restant_brut | float(0) %}
+            {% if restant <= 0 %}
+              Atteint
             {% else %}
-              {% set fin = now() + timedelta(minutes=restant) %}
+              {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+              {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+              {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
+              {% if is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
+                {% set fin = now() + timedelta(minutes=restant) %}
+              {% elif coucher is not none and coucher.date() == now().date() %}
+                {% set echeance = coucher - timedelta(minutes=marge) %}
+                {% set depart = echeance - timedelta(minutes=restant) %}
+                {% set fin = echeance if now() < depart else now() + timedelta(minutes=restant) %}
+              {% else %}
+                {% set fin = now() + timedelta(minutes=restant) %}
+              {% endif %}
+              {{ fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') }}
             {% endif %}
-            {{ fin.strftime('%H') ~ 'H' ~ fin.strftime('%M') }}
           {% endif %}
         {% endif %}
+      attributes:
+        source_planification: >
+          {{ 'V3' if states('sensor.pcha_heure_atteinte_objectif_v3') not in ['unknown', 'unavailable', 'none', ''] else 'REPLI_V2' }}
+        source_cible: "{{ state_attr('sensor.pcha_heure_atteinte_objectif_v3', 'source_cible') }}"
+        cible_utilisee: "{{ state_attr('sensor.pcha_heure_atteinte_objectif_v3', 'cible_utilisee') }}"
+        depart_au_plus_tard: "{{ state_attr('sensor.pcha_heure_atteinte_objectif_v3', 'depart_au_plus_tard') }}"
 
 - sensor:
     - name: PCHA Progression objectif quotidien
@@ -301,31 +314,41 @@
           {{ 0 }}
         {% endif %}
 
+# Alias de compatibilité : la décision V3 est la référence, avec repli V2 si la
+# couche V3 n'est pas encore disponible pendant un démarrage.
 - binary_sensor:
     - name: PCHA Filtration requise
       unique_id: pcha_filtration_requise
       default_entity_id: binary_sensor.pcha_filtration_requise
       icon: mdi:water-pump
       state: >
-        {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
-        {% if not is_number(restant_brut) or (restant_brut | float(0)) <= 0 %}
-          false
+        {% set v3 = states('binary_sensor.pcha_filtration_requise_v3') %}
+        {% if v3 in ['on', 'off'] %}
+          {{ v3 == 'on' }}
         {% else %}
-          {% set restant = restant_brut | float(0) %}
-          {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
-          {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
-          {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
-          {% if coucher is none %}
-            true
-          {% elif coucher.date() != now().date() %}
-            true
+          {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
+          {% if not is_number(restant_brut) or (restant_brut | float(0)) <= 0 %}
+            false
           {% else %}
-            {# L'objectif quotidien doit être terminé avant le coucher selon la marge paramétrable. #}
-            {% set echeance = coucher - timedelta(minutes=marge) %}
-            {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
-            {{ now() >= depart_au_plus_tard }}
+            {% set restant = restant_brut | float(0) %}
+            {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+            {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+            {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
+            {% if coucher is none or coucher.date() != now().date() %}
+              true
+            {% else %}
+              {% set echeance = coucher - timedelta(minutes=marge) %}
+              {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
+              {{ now() >= depart_au_plus_tard }}
+            {% endif %}
           {% endif %}
         {% endif %}
+      attributes:
+        source_planification: >
+          {{ 'V3' if states('binary_sensor.pcha_filtration_requise_v3') in ['on', 'off'] else 'REPLI_V2' }}
+        source_cible: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'source_cible') }}"
+        cible_utilisee: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'cible_utilisee') }}"
+        depart_au_plus_tard: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'depart_au_plus_tard') }}"
 
 ################################################################################
 # Compteur quotidien de filtration. L'état est restauré après redémarrage.
