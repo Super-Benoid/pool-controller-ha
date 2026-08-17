@@ -1,6 +1,6 @@
 ################################################################################
 # Pool Controller Home Assistant (PCHA)
-# V3.0 — Prévisions météo J / J+1
+# V3.0 — Abstraction météo J / J+1 et horaire
 #
 # Entrée physique / externe
 #   weather.forecast_maison
@@ -11,17 +11,11 @@
 #   sensor.pcha_meteo_aujourd_hui
 #   sensor.pcha_meteo_demain
 #
-# Principe d'architecture
-#   Seul ce fichier accède directement à l'entité weather externe. Les futurs
-#   calculs de stratégie PCHA doivent utiliser les entités PCHA ci-dessus.
+# Seul ce fichier accède directement à l'entité weather externe.
 ################################################################################
 
 ################################################################################
-# Acquisition des prévisions journalières.
-#
-# Home Assistant fournit les prévisions via l'action weather.get_forecasts.
-# Le résultat brut est conservé dans deux attributs sélectionnés par date afin
-# de ne pas dépendre aveuglément de la position [0] / [1] dans la réponse.
+# Prévisions journalières.
 ################################################################################
 - triggers:
     - trigger: homeassistant
@@ -56,37 +50,31 @@
           {{ source.get('forecast', []) | count }}
         aujourd_hui: >
           {% set source = pcha_previsions_meteo_brutes.get('weather.forecast_maison', {}) %}
-          {% set previsions = source.get('forecast', []) %}
           {% set cible = now().date() %}
           {% set ns = namespace(valeur={}) %}
-          {% for prevision in previsions %}
+          {% for prevision in source.get('forecast', []) %}
             {% set brut = prevision.get('datetime') if prevision is mapping else none %}
-            {% set horodatage = as_local(as_datetime(brut)) if brut else none %}
-            {% if horodatage is not none and horodatage.date() == cible %}
+            {% set h = as_local(as_datetime(brut)) if brut else none %}
+            {% if h is not none and h.date() == cible %}
               {% set ns.valeur = prevision %}
             {% endif %}
           {% endfor %}
           {{ ns.valeur }}
         demain: >
           {% set source = pcha_previsions_meteo_brutes.get('weather.forecast_maison', {}) %}
-          {% set previsions = source.get('forecast', []) %}
           {% set cible = now().date() + timedelta(days=1) %}
           {% set ns = namespace(valeur={}) %}
-          {% for prevision in previsions %}
+          {% for prevision in source.get('forecast', []) %}
             {% set brut = prevision.get('datetime') if prevision is mapping else none %}
-            {% set horodatage = as_local(as_datetime(brut)) if brut else none %}
-            {% if horodatage is not none and horodatage.date() == cible %}
+            {% set h = as_local(as_datetime(brut)) if brut else none %}
+            {% if h is not none and h.date() == cible %}
               {% set ns.valeur = prevision %}
             {% endif %}
           {% endfor %}
           {{ ns.valeur }}
 
 ################################################################################
-# Acquisition des prévisions horaires.
-#
-# Elles servent de matière première au calcul du potentiel thermique. Elles
-# sont séparées des prévisions journalières pour conserver une abstraction
-# claire et éviter que la stratégie n'accède directement à weather.forecast_maison.
+# Prévisions horaires J / J+1.
 ################################################################################
 - triggers:
     - trigger: homeassistant
@@ -121,36 +109,31 @@
           {{ source.get('forecast', []) | count }}
         aujourd_hui: >
           {% set source = pcha_previsions_meteo_horaires_brutes.get('weather.forecast_maison', {}) %}
-          {% set previsions = source.get('forecast', []) %}
           {% set cible = now().date() %}
           {% set ns = namespace(valeurs=[]) %}
-          {% for prevision in previsions %}
+          {% for prevision in source.get('forecast', []) %}
             {% set brut = prevision.get('datetime') if prevision is mapping else none %}
-            {% set horodatage = as_local(as_datetime(brut)) if brut else none %}
-            {% if horodatage is not none and horodatage.date() == cible %}
+            {% set h = as_local(as_datetime(brut)) if brut else none %}
+            {% if h is not none and h.date() == cible %}
               {% set ns.valeurs = ns.valeurs + [prevision] %}
             {% endif %}
           {% endfor %}
           {{ ns.valeurs }}
         demain: >
           {% set source = pcha_previsions_meteo_horaires_brutes.get('weather.forecast_maison', {}) %}
-          {% set previsions = source.get('forecast', []) %}
           {% set cible = now().date() + timedelta(days=1) %}
           {% set ns = namespace(valeurs=[]) %}
-          {% for prevision in previsions %}
+          {% for prevision in source.get('forecast', []) %}
             {% set brut = prevision.get('datetime') if prevision is mapping else none %}
-            {% set horodatage = as_local(as_datetime(brut)) if brut else none %}
-            {% if horodatage is not none and horodatage.date() == cible %}
+            {% set h = as_local(as_datetime(brut)) if brut else none %}
+            {% if h is not none and h.date() == cible %}
               {% set ns.valeurs = ns.valeurs + [prevision] %}
             {% endif %}
           {% endfor %}
           {{ ns.valeurs }}
 
 ################################################################################
-# Entités métier J / J+1.
-# Les champs absents chez le fournisseur météo restent à null sans rendre le
-# capteur entier indisponible. Température max et min sont les champs utiles
-# prioritaires pour la future stratégie thermique V3.0.
+# Entités métier quotidiennes J / J+1.
 ################################################################################
 - sensor:
     - name: PCHA Météo aujourd'hui
@@ -201,7 +184,7 @@
         {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
         {{ p.get('condition', 'unknown') if p is mapping else 'unknown' }}
       attributes:
-        date: "{{ (now().date() + timedelta(days=1)) }}"
+        date: "{{ now().date() + timedelta(days=1) }}"
         temperature_max: >
           {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
           {{ p.get('temperature') if p is mapping else none }}
@@ -221,8 +204,8 @@
           {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
           {{ p.get('humidity') if p is mapping else none }}
         wind_speed: >
-          {% set p = state_attr('sensor.pcha_meteo_demain', 'wind_speed') %}
-          {{ p if p is not none else (state_attr('sensor.pcha_previsions_meteo', 'demain') or {}).get('wind_speed') }}
+          {% set p = state_attr('sensor.pcha_previsions_meteo', 'demain') %}
+          {{ p.get('wind_speed') if p is mapping else none }}
         temperature_unit: "{{ state_attr('weather.forecast_maison', 'temperature_unit') }}"
         precipitation_unit: "{{ state_attr('weather.forecast_maison', 'precipitation_unit') }}"
         wind_speed_unit: "{{ state_attr('weather.forecast_maison', 'wind_speed_unit') }}"
