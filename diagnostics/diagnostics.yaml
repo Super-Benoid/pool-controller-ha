@@ -6,6 +6,7 @@
 #
 # Entrées
 #   binary_sensor.pcha_protection_serpentin_requise
+#   input_boolean.pcha_fenetre_stabilisation_demarrage
 #   input_number.pcha_temps_arret_pompe_min
 #   input_number.pcha_temps_validation_debit
 #   input_number.pcha_temps_validation_luminosite
@@ -28,23 +29,9 @@
 #   binary_sensor.pcha_diagnostic_pro_001_debit_critique
 #   binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
 #   binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
-#   input_boolean.pcha_initialisation_luminosite
 #   input_select.pcha_niveau_fonctionnement
 #   événement pcha_diagnostic
 ################################################################################
-
-################################################################################
-# État interne de stabilisation au démarrage
-################################################################################
-#
-# Ce drapeau est exclusivement interne. Il est activé au démarrage de Home
-# Assistant puis relâché dès que la chaîne luminosité est revenue, ou après
-# cinq minutes maximum. Il n'envoie jamais d'ordre à la pompe.
-input_boolean:
-  pcha_initialisation_luminosite:
-    name: PCHA Initialisation luminosité
-    icon: mdi:progress-clock
-    initial: false
 
 ################################################################################
 # États des diagnostics
@@ -126,8 +113,8 @@ template:
       # MES-004 — Chaîne de luminosité distante indisponible.
       # La mesure est produite par le BH1750 de la D1 mini, diffusée par Packet
       # Transport et reçue par l'ESP32 Jardin. Le délai filtre les pertes brèves.
-      # Une reconnexion normale au démarrage de HA n'est pas publiée comme
-      # défaut pendant la fenêtre interne de stabilisation.
+      # Pendant la fenêtre de stabilisation, un état restauré ON est réarmé
+      # immédiatement et aucune indisponibilité transitoire n'est publiée.
       - name: PCHA Diagnostic MES-004 Luminosité indisponible
         unique_id: pcha_diagnostic_mes_004_luminosite_indisponible
         default_entity_id: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
@@ -136,16 +123,13 @@ template:
         delay_on: >
           {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
         delay_off: >
-          {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
-                or is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+          {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
             0
           {% else %}
             {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
           {% endif %}
         state: >
-          {% set stabilisation =
-               is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
-               or is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+          {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
           {% set liaison_ok = is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
           {% set capteur_ok = is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') %}
           {% set mesure_ok = state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false) %}
@@ -157,13 +141,9 @@ template:
           rearmement: TEMPORISE
           motif: Chaîne de mesure de luminosité distante indisponible
           initialisation_demarrage: >
-            {{
-              is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
-              or is_state('input_boolean.pcha_initialisation_luminosite', 'on')
-            }}
+            {{ is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') }}
           cause: >
-            {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
-                  or is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+            {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
               INITIALISATION_HOME_ASSISTANT
             {% elif not is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
               LIAISON_PACKET_TRANSPORT
@@ -408,32 +388,6 @@ template:
 ################################################################################
 
 automation:
-  - id: pcha_diagnostics_initialiser_luminosite
-    alias: PCHA - Diagnostics - Stabiliser la luminosité au démarrage
-    description: Neutralise la publication MES-004 pendant la reconnexion normale de la chaîne luminosité, au maximum 5 minutes.
-    initial_state: true
-    mode: restart
-    triggers:
-      - trigger: homeassistant
-        event: start
-    actions:
-      - action: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.pcha_initialisation_luminosite
-
-      - wait_template: >
-          {{
-            is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on')
-            and is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on')
-            and state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false)
-          }}
-        timeout: "00:05:00"
-        continue_on_timeout: true
-
-      - action: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.pcha_initialisation_luminosite
-
   - id: pcha_diagnostics_verrouiller_pro_001
     alias: PCHA - Diagnostics - Verrouiller PRO-001
     description: Mémorise tout débit critique validé jusqu'au réarmement manuel.
