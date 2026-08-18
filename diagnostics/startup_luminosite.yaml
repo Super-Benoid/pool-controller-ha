@@ -1,0 +1,44 @@
+################################################################################
+# PCHA V3.0 — Stabilisation luminosité au démarrage de Home Assistant
+#
+# Ce package interne ouvre une courte fenêtre de stabilisation après un
+# redémarrage de Home Assistant. Elle se termine dès que la chaîne de
+# luminosité est revenue, ou au plus tard après 5 minutes.
+#
+# Cette fenêtre ne commande jamais la pompe. Elle sert uniquement à éviter
+# qu'une reconnexion normale Packet Transport / BH1750 soit publiée comme
+# MES-004 avant que les intégrations aient fini de se restaurer.
+################################################################################
+
+input_boolean:
+  pcha_initialisation_luminosite:
+    name: PCHA Initialisation luminosité
+    icon: mdi:progress-clock
+    initial: false
+
+automation:
+  - id: pcha_initialisation_luminosite_au_demarrage
+    alias: PCHA - Initialisation - Stabiliser la luminosité
+    description: Neutralise la publication MES-004 pendant la reconnexion normale de la chaîne luminosité, au maximum 5 minutes.
+    initial_state: true
+    mode: restart
+    triggers:
+      - trigger: homeassistant
+        event: start
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.pcha_initialisation_luminosite
+
+      - wait_template: >
+          {{
+            is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on')
+            and is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on')
+            and state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false)
+          }}
+        timeout: "00:05:00"
+        continue_on_timeout: true
+
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pcha_initialisation_luminosite
