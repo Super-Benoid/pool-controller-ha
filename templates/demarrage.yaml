@@ -1,0 +1,45 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# V3.0 — Fraîcheur de la chaîne luminosité après démarrage
+#
+# Cette abstraction distingue une valeur restaurée par Home Assistant d'une
+# mesure réellement republiée par l'intégration depuis le dernier démarrage.
+################################################################################
+
+- binary_sensor:
+    - name: PCHA Luminosité fraîche après démarrage
+      unique_id: pcha_luminosite_fraiche_apres_demarrage
+      default_entity_id: binary_sensor.pcha_luminosite_fraiche_apres_demarrage
+      device_class: connectivity
+      icon: mdi:refresh-circle
+      delay_on: "00:00:30"
+      state: >
+        {% set fenetre = states.input_boolean.pcha_fenetre_stabilisation_demarrage %}
+        {% set source = states.sensor.jardin_esp32_jardin_luminosite %}
+        {% set source_republiee =
+             fenetre is not none
+             and source is not none
+             and fenetre.state == 'on'
+             and source.last_reported > fenetre.last_changed %}
+        {{
+          source_republiee
+          and is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on')
+          and is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on')
+          and state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+          and state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false)
+        }}
+      attributes:
+        role: INTERFACE_INTERNE_DEMARRAGE
+        source_entity: sensor.jardin_esp32_jardin_luminosite
+        source_last_reported: >
+          {% set source = states.sensor.jardin_esp32_jardin_luminosite %}
+          {{ source.last_reported.isoformat() if source is not none else none }}
+        debut_fenetre: >
+          {% set fenetre = states.input_boolean.pcha_fenetre_stabilisation_demarrage %}
+          {{ fenetre.last_changed.isoformat() if fenetre is not none else none }}
+        liaison_ok: >
+          {{ is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') }}
+        capteur_ok: >
+          {{ is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') }}
+        source_disponible: >
+          {{ state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) }}
