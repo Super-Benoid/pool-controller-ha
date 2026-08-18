@@ -17,11 +17,62 @@
 ################################################################################
 
 # Demande unique consommée par la machine à états.
+#
+# Au démarrage de Home Assistant, la demande reste indisponible tant que les
+# entrées nécessaires au mode courant ne sont pas suffisamment stabilisées.
+# Les automatisations de la machine refusent déjà toute réévaluation lorsque
+# cette interface vaut unknown/unavailable : une pompe physiquement en marche
+# n'est donc ni arrêtée ni redémarrée sur la base d'états transitoires.
 - binary_sensor:
     - name: PCHA Demande fonctionnement
       unique_id: pcha_demande_fonctionnement
       default_entity_id: binary_sensor.pcha_demande_fonctionnement
       icon: mdi:state-machine
+      availability: >
+        {% set mode = states('input_select.pcha_mode_de_fonctionnement') %}
+        {% set modes_valides = ['OFF', 'SECURISATION', 'AUTO', 'TRAITEMENT', 'MARCHE_FORCEE', 'VIDANGE'] %}
+        {% set invalide = ['unknown', 'unavailable', 'none', ''] %}
+
+        {% if mode not in modes_valides %}
+          false
+        {% elif mode in ['OFF', 'MARCHE_FORCEE'] %}
+          true
+        {% elif mode == 'TRAITEMENT' %}
+          {{ states('timer.pcha_traitement') not in invalide }}
+        {% elif mode == 'VIDANGE' %}
+          {{ states('timer.pcha_vidange') not in invalide }}
+        {% elif mode == 'SECURISATION' %}
+          {% set luminosite_prete =
+               state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+               or is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+          {{
+            luminosite_prete
+            and states('binary_sensor.pcha_protection_serpentin_requise') not in invalide
+            and states('sun.sun') not in invalide
+          }}
+        {% elif mode == 'AUTO' %}
+          {% set filtration_prete = is_number(states('sensor.pcha_temps_filtration_restant')) %}
+          {% set temperature_prete =
+               state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false)
+               or is_state('binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible', 'on')
+               or is_state('binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente', 'on') %}
+          {% set luminosite_prete =
+               state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+               or is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+          {% set decisions_pretes =
+               states('binary_sensor.pcha_filtration_requise_v3') not in invalide
+               and states('binary_sensor.pcha_chauffage_solaire_requis') not in invalide
+               and states('binary_sensor.pcha_protection_serpentin_requise') not in invalide %}
+          {{
+            filtration_prete
+            and temperature_prete
+            and luminosite_prete
+            and decisions_pretes
+            and states('sun.sun') not in invalide
+          }}
+        {% else %}
+          false
+        {% endif %}
       state: >
         {% set mode = states('input_select.pcha_mode_de_fonctionnement') %}
         {% if mode == 'OFF' %}
