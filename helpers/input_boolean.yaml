@@ -7,6 +7,7 @@
 #
 # Sorties
 #   input_boolean.pcha_acquitter_alarmes
+#   input_boolean.pcha_fenetre_stabilisation_demarrage
 #   input_boolean.pcha_maintenance_debit_indisponible
 #   input_boolean.pcha_maintenance_luminosite_indisponible
 #   input_boolean.pcha_maintenance_puissance_indisponible
@@ -17,6 +18,14 @@
 pcha_acquitter_alarmes:
   name: Effacer les notifications
   icon: mdi:alarm-check
+  initial: false
+
+# Fenêtre interne de cinq minutes après un redémarrage de Home Assistant.
+# Elle sert à distinguer la restauration des états de la disponibilité métier
+# réellement stabilisée. Elle n'est pas une commande utilisateur.
+pcha_fenetre_stabilisation_demarrage:
+  name: PCHA Fenêtre stabilisation démarrage
+  icon: mdi:progress-clock
   initial: false
 
 # Ce verrou est piloté uniquement par diagnostics/diagnostics.yaml. L'absence

@@ -6,7 +6,9 @@
 #   binary_sensor.pcha_chauffage_solaire_requis
 #   binary_sensor.pcha_filtration_requise_v3
 #   binary_sensor.pcha_protection_serpentin_requise
+#   input_boolean.pcha_fenetre_stabilisation_demarrage
 #   input_select.pcha_mode_de_fonctionnement
+#   switch.pcha_commande_pompe_filtration
 #   timer.pcha_traitement
 #   timer.pcha_vidange
 #
@@ -18,11 +20,11 @@
 
 # Demande unique consommée par la machine à états.
 #
-# Au démarrage de Home Assistant, la demande reste indisponible tant que les
-# entrées nécessaires au mode courant ne sont pas suffisamment stabilisées.
-# Les automatisations de la machine refusent déjà toute réévaluation lorsque
-# cette interface vaut unknown/unavailable : une pompe physiquement en marche
-# n'est donc ni arrêtée ni redémarrée sur la base d'états transitoires.
+# Après un redémarrage de Home Assistant, AUTO et SECURISATION conservent
+# pendant cinq minutes l'état physique déjà observé de la pompe. Cela évite
+# qu'un état restauré ou une interface en cours de reconnexion provoque un
+# arrêt ou un démarrage intempestif. La machine à états reste néanmoins active
+# et conserve la priorité de ses niveaux CRITIQUES.
 - binary_sensor:
     - name: PCHA Demande fonctionnement
       unique_id: pcha_demande_fonctionnement
@@ -30,6 +32,8 @@
       icon: mdi:state-machine
       availability: >
         {% set mode = states('input_select.pcha_mode_de_fonctionnement') %}
+        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
+        {% set pompe_connue = states('switch.pcha_commande_pompe_filtration') in ['on', 'off'] %}
         {% set modes_valides = ['OFF', 'SECURISATION', 'AUTO', 'TRAITEMENT', 'MARCHE_FORCEE', 'VIDANGE'] %}
         {% set invalide = ['unknown', 'unavailable', 'none', ''] %}
 
@@ -41,6 +45,8 @@
           {{ states('timer.pcha_traitement') not in invalide }}
         {% elif mode == 'VIDANGE' %}
           {{ states('timer.pcha_vidange') not in invalide }}
+        {% elif mode in ['SECURISATION', 'AUTO'] and stabilisation %}
+          {{ pompe_connue }}
         {% elif mode == 'SECURISATION' %}
           {% set luminosite_prete =
                state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
@@ -75,10 +81,16 @@
         {% endif %}
       state: >
         {% set mode = states('input_select.pcha_mode_de_fonctionnement') %}
+        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
+        {% set pompe_active = is_state('switch.pcha_commande_pompe_filtration', 'on') %}
         {% if mode == 'OFF' %}
           false
+        {% elif mode == 'SECURISATION' and stabilisation %}
+          {{ pompe_active }}
         {% elif mode == 'SECURISATION' %}
           {{ is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') }}
+        {% elif mode == 'AUTO' and stabilisation %}
+          {{ pompe_active }}
         {% elif mode == 'AUTO' %}
           {{
             is_state('binary_sensor.pcha_filtration_requise_v3', 'on')
@@ -94,6 +106,11 @@
         {% else %}
           false
         {% endif %}
+      attributes:
+        stabilisation_demarrage: >
+          {{ is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') }}
+        strategie_stabilisation: >
+          {{ 'CONSERVER_ETAT_PHYSIQUE_POMPE' if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') else 'LOGIQUE_METIER_NORMALE' }}
 
 # Information d'affichage du temps restant du traitement.
 - sensor:
