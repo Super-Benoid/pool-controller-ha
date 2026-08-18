@@ -2,20 +2,19 @@
 # Pool Controller Home Assistant (PCHA)
 # V3.0 — Stabilisation des interfaces au démarrage
 #
-# Une seule source de vérité pilote désormais la phase de démarrage :
+# Une seule source de vérité pilote la phase de démarrage :
 # input_boolean.pcha_fenetre_stabilisation_demarrage.
 #
 # La fenêtre ne commande pas directement la pompe. Elle empêche les états
 # restaurés au démarrage d'être interprétés comme des états métier stabilisés.
-# Elle dure au minimum cinq minutes. À l'issue de ce délai, un nouveau point de
-# référence est pris et la chaîne luminosité doit publier à nouveau après ce
-# point, puis rester valide pendant 30 secondes. Un timeout évite de masquer
-# indéfiniment une panne durable : MES-004 reprend alors son fonctionnement.
+# Elle est active dès le chargement du helper puis reste ON pendant 60 secondes.
+# À l'issue de ce délai fixe, la logique métier normale reprend et MES-004
+# retrouve ses temporisations habituelles.
 ################################################################################
 
 - id: pcha_demarrage_stabiliser_interfaces
   alias: PCHA - Démarrage - Stabiliser les interfaces
-  description: Maintient la stabilisation au moins cinq minutes puis exige une nouvelle publication réelle et stable de la chaîne luminosité.
+  description: Maintient une fenêtre fixe de stabilisation de 60 secondes après le démarrage de Home Assistant.
   initial_state: true
   mode: restart
   triggers:
@@ -29,47 +28,7 @@
       target:
         entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
 
-    # Laisse Home Assistant, ESPHome et Packet Transport terminer leur phase de
-    # restauration initiale sans utiliser ces premières publications comme
-    # preuve de disponibilité métier.
-    - delay: "00:05:00"
-
-    # Le point de référence est pris APRÈS la période de grâce. Une publication
-    # reçue avant cet instant ne peut donc plus libérer MES-004 trop tôt.
-    - variables:
-        debut_attente_fraicheur: "{{ now() }}"
-
-    # Attend que les trois entités physiques aient toutes été republiées après
-    # le point de référence et que la chaîne reste valide pendant 30 secondes.
-    - wait_for_trigger:
-        - trigger: template
-          value_template: >
-            {% set seuil = as_datetime(debut_attente_fraicheur) %}
-            {% set luminosite = states.sensor.jardin_esp32_jardin_luminosite %}
-            {% set liaison = states.binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite %}
-            {% set capteur = states.binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok %}
-            {% set luminosite_valide =
-                 luminosite is not none
-                 and is_number(luminosite.state)
-                 and (luminosite.state | float(0)) >= 0
-                 and (luminosite.state | float(0)) <= 100000 %}
-            {{
-              seuil is not none
-              and luminosite is not none
-              and liaison is not none
-              and capteur is not none
-              and luminosite.last_reported > seuil
-              and liaison.last_reported > seuil
-              and capteur.last_reported > seuil
-              and luminosite_valide
-              and liaison.state == 'on'
-              and capteur.state == 'on'
-              and state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
-              and state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false)
-            }}
-          for: "00:00:30"
-      timeout: "00:10:00"
-      continue_on_timeout: true
+    - delay: "00:01:00"
 
     - action: input_boolean.turn_off
       target:
