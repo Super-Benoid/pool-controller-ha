@@ -21,7 +21,7 @@
 # Demande unique consommée par la machine à états.
 #
 # Après un redémarrage de Home Assistant, AUTO et SECURISATION conservent
-# pendant cinq minutes l'état physique déjà observé de la pompe. Cela évite
+# pendant 60 secondes l'état physique déjà observé de la pompe. Cela évite
 # qu'un état restauré ou une interface en cours de reconnexion provoque un
 # arrêt ou un démarrage intempestif. La machine à états reste néanmoins active
 # et conserve la priorité de ses niveaux CRITIQUES.

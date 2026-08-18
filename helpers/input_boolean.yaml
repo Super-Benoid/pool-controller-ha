@@ -24,7 +24,7 @@ pcha_acquitter_alarmes:
 # Elle démarre volontairement à ON dès le chargement du helper, avant
 # l'événement homeassistant start, afin que les templates PCHA ne puissent pas
 # interpréter les états transitoires de boot comme des états métier valides.
-# L'automatisation de démarrage la relâche ensuite après stabilisation.
+# L'automatisation de démarrage la relâche après 60 secondes.
 pcha_fenetre_stabilisation_demarrage:
   name: PCHA Fenêtre stabilisation démarrage
   icon: mdi:progress-clock
