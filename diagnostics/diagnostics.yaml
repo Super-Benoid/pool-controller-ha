@@ -136,13 +136,20 @@ template:
         delay_on: >
           {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
         delay_off: >
-          {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
+          {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
+                or is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+            0
+          {% else %}
+            {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
+          {% endif %}
         state: >
-          {% set initialisation = is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+          {% set stabilisation =
+               is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
+               or is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
           {% set liaison_ok = is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
           {% set capteur_ok = is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') %}
           {% set mesure_ok = state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false) %}
-          {{ not initialisation and not (liaison_ok and capteur_ok and mesure_ok) }}
+          {{ not stabilisation and not (liaison_ok and capteur_ok and mesure_ok) }}
         attributes:
           diagnostic_id: MES-004
           famille: MES
@@ -150,9 +157,13 @@ template:
           rearmement: TEMPORISE
           motif: Chaîne de mesure de luminosité distante indisponible
           initialisation_demarrage: >
-            {{ is_state('input_boolean.pcha_initialisation_luminosite', 'on') }}
+            {{
+              is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
+              or is_state('input_boolean.pcha_initialisation_luminosite', 'on')
+            }}
           cause: >
-            {% if is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+            {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
+                  or is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
               INITIALISATION_HOME_ASSISTANT
             {% elif not is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
               LIAISON_PACKET_TRANSPORT
