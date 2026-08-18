@@ -2,6 +2,9 @@
 # Pool Controller Home Assistant (PCHA)
 # V3.0 — Stabilisation des interfaces au démarrage
 #
+# Une seule source de vérité pilote désormais la phase de démarrage :
+# input_boolean.pcha_fenetre_stabilisation_demarrage.
+#
 # La fenêtre ne commande pas directement la pompe. Elle empêche les états
 # restaurés au démarrage d'être interprétés comme des états métier stabilisés.
 # Elle dure au minimum cinq minutes. À l'issue de ce délai, un nouveau point de
@@ -19,13 +22,12 @@
     - trigger: homeassistant
       event: start
   actions:
+    # Le helper démarre déjà à ON dès son chargement. Cette action est conservée
+    # pour rendre explicite l'intention et garantir l'état en cas de relance
+    # manuelle de l'automatisation.
     - action: input_boolean.turn_on
       target:
         entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
-
-    - action: input_boolean.turn_on
-      target:
-        entity_id: input_boolean.pcha_initialisation_luminosite
 
     # Laisse Home Assistant, ESPHome et Packet Transport terminer leur phase de
     # restauration initiale sans utiliser ces premières publications comme
@@ -72,25 +74,3 @@
     - action: input_boolean.turn_off
       target:
         entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
-
-    - action: input_boolean.turn_off
-      target:
-        entity_id: input_boolean.pcha_initialisation_luminosite
-
-- id: pcha_demarrage_maintenir_initialisation_luminosite
-  alias: PCHA - Démarrage - Maintenir initialisation luminosité
-  description: Empêche la logique historique de libérer MES-004 avant la fin de la fenêtre de stabilisation.
-  initial_state: true
-  mode: restart
-  triggers:
-    - trigger: state
-      entity_id: input_boolean.pcha_initialisation_luminosite
-      to: "off"
-  conditions:
-    - condition: state
-      entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
-      state: "on"
-  actions:
-    - action: input_boolean.turn_on
-      target:
-        entity_id: input_boolean.pcha_initialisation_luminosite
