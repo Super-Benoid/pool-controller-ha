@@ -20,13 +20,15 @@ pcha_acquitter_alarmes:
   icon: mdi:alarm-check
   initial: false
 
-# Fenêtre interne de cinq minutes après un redémarrage de Home Assistant.
-# Elle sert à distinguer la restauration des états de la disponibilité métier
-# réellement stabilisée. Elle n'est pas une commande utilisateur.
+# Fenêtre interne de stabilisation après un redémarrage de Home Assistant.
+# Elle démarre volontairement à ON dès le chargement du helper, avant
+# l'événement homeassistant start, afin que les templates PCHA ne puissent pas
+# interpréter les états transitoires de boot comme des états métier valides.
+# L'automatisation de démarrage la relâche ensuite après stabilisation.
 pcha_fenetre_stabilisation_demarrage:
   name: PCHA Fenêtre stabilisation démarrage
   icon: mdi:progress-clock
-  initial: false
+  initial: true
 
 # Ce verrou est piloté uniquement par diagnostics/diagnostics.yaml. L'absence
 # de valeur initiale permet à Home Assistant de restaurer son dernier état.
