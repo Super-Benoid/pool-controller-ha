@@ -4,14 +4,15 @@
 #
 # La fenêtre ne commande pas directement la pompe. Elle empêche les états
 # restaurés au démarrage d'être interprétés comme des états métier stabilisés.
-# Elle dure au minimum cinq minutes puis attend une publication fraîche et
-# cohérente de la chaîne luminosité. Un timeout total évite de masquer une
-# panne durable : MES-004 reprend alors son fonctionnement normal.
+# Elle dure au minimum cinq minutes. À l'issue de ce délai, un nouveau point de
+# référence est pris et la chaîne luminosité doit publier à nouveau après ce
+# point, puis rester valide pendant 30 secondes. Un timeout évite de masquer
+# indéfiniment une panne durable : MES-004 reprend alors son fonctionnement.
 ################################################################################
 
 - id: pcha_demarrage_stabiliser_interfaces
   alias: PCHA - Démarrage - Stabiliser les interfaces
-  description: Maintient la stabilisation au moins cinq minutes puis attend une luminosité fraîche, avec dix minutes d'attente supplémentaires au maximum.
+  description: Maintient la stabilisation au moins cinq minutes puis exige une nouvelle publication réelle et stable de la chaîne luminosité.
   initial_state: true
   mode: restart
   triggers:
@@ -26,14 +27,45 @@
       target:
         entity_id: input_boolean.pcha_initialisation_luminosite
 
-    # Laisse les intégrations et ESPHome terminer leur restauration initiale.
+    # Laisse Home Assistant, ESPHome et Packet Transport terminer leur phase de
+    # restauration initiale sans utiliser ces premières publications comme
+    # preuve de disponibilité métier.
     - delay: "00:05:00"
 
-    # Ne se contente pas d'un état restauré : l'abstraction ci-dessous exige
-    # que la mesure physique de luminosité ait réellement été republiée depuis
-    # le début de la fenêtre, puis soit restée valide pendant 30 secondes.
-    - wait_template: >
-        {{ is_state('binary_sensor.pcha_luminosite_fraiche_apres_demarrage', 'on') }}
+    # Le point de référence est pris APRÈS la période de grâce. Une publication
+    # reçue avant cet instant ne peut donc plus libérer MES-004 trop tôt.
+    - variables:
+        debut_attente_fraicheur: "{{ now() }}"
+
+    # Attend que les trois entités physiques aient toutes été republiées après
+    # le point de référence et que la chaîne reste valide pendant 30 secondes.
+    - wait_for_trigger:
+        - trigger: template
+          value_template: >
+            {% set seuil = as_datetime(debut_attente_fraicheur) %}
+            {% set luminosite = states.sensor.jardin_esp32_jardin_luminosite %}
+            {% set liaison = states.binary_sensor.jardin_esp32_jardin_liaison_capteur_luminosite %}
+            {% set capteur = states.binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok %}
+            {% set luminosite_valide =
+                 luminosite is not none
+                 and is_number(luminosite.state)
+                 and (luminosite.state | float(0)) >= 0
+                 and (luminosite.state | float(0)) <= 100000 %}
+            {{
+              seuil is not none
+              and luminosite is not none
+              and liaison is not none
+              and capteur is not none
+              and luminosite.last_reported > seuil
+              and liaison.last_reported > seuil
+              and capteur.last_reported > seuil
+              and luminosite_valide
+              and liaison.state == 'on'
+              and capteur.state == 'on'
+              and state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+              and state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false)
+            }}
+          for: "00:00:30"
       timeout: "00:10:00"
       continue_on_timeout: true
 
