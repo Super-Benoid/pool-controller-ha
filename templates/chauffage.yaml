@@ -4,6 +4,7 @@
 #
 # Entrées
 #   binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+#   input_boolean.pcha_initialisation_luminosite
 #   input_number.pcha_seuil_luminosite_chauffage
 #   input_number.pcha_temperature_de_consigne
 #   input_select.pcha_etat_machine
@@ -70,7 +71,11 @@
       default_entity_id: sensor.pcha_source_chauffage_solaire
       icon: mdi:source-branch
       state: >
-        {% if not is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+        {% set initialisation = is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+        {% set secours_luminosite = mes004 or (initialisation and not luminosite_disponible) %}
+        {% if not secours_luminosite %}
           LUMINOSITE
         {% elif state_attr('sensor.pcha_temperature_exterieure', 'source_available') | bool(false)
               and state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) %}
@@ -83,8 +88,10 @@
 # Demande de chauffage solaire et état réel du chauffage
 #
 # Mode normal : luminosité supérieure au seuil.
-# Mode dégradé MES-004 : température extérieure au moins 2 °C au-dessus du
-# bassin. Une hystérésis maintient la demande jusqu'à un écart <= 1 °C.
+# Mode dégradé MES-004, ou pendant la stabilisation de démarrage si la chaîne
+# luminosité n'est pas encore revenue : température extérieure au moins 2 °C
+# au-dessus du bassin. Une hystérésis maintient la demande jusqu'à un écart
+# <= 1 °C.
 ################################################################################
 - binary_sensor:
     - name: PCHA Chauffage solaire requis
@@ -95,14 +102,17 @@
         {% set bassin = states('sensor.pcha_temperature_piscine') %}
         {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %}
         {% set sous_consigne = bassin_valide and (bassin | float(0)) < (states('input_number.pcha_temperature_de_consigne') | float(0)) %}
+        {% set initialisation = is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
         {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+        {% set secours_luminosite = mes004 or (initialisation and not luminosite_disponible) %}
 
         {% if not sous_consigne %}
           false
-        {% elif not mes004 %}
+        {% elif not secours_luminosite %}
           {% set luminosite = states('sensor.pcha_luminosite') %}
           {{
-            state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+            luminosite_disponible
             and is_number(luminosite)
             and (luminosite | float(0)) > (states('input_number.pcha_seuil_luminosite_chauffage') | float(0))
           }}
@@ -137,8 +147,9 @@
 # Protection thermique
 #
 # En fonctionnement normal, la luminosité pilote la protection. Pendant
-# MES-004, la position du soleil fournit un secours conservateur : la protection
-# reste possible lorsque le soleil est au-dessus de l'horizon.
+# MES-004, ou pendant la stabilisation de démarrage si la chaîne n'est pas
+# encore revenue, la position du soleil fournit un secours conservateur : la
+# protection reste possible lorsque le soleil est au-dessus de l'horizon.
 ################################################################################
 - binary_sensor:
     - name: PCHA Protection serpentin requise
@@ -148,21 +159,27 @@
       delay_on: "00:25:00"
       delay_off: "00:05:00"
       state: >
+        {% set initialisation = is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
         {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+        {% set secours_luminosite = mes004 or (initialisation and not luminosite_disponible) %}
         {% set luminosite = states('sensor.pcha_luminosite') %}
         {% set exposition_normale =
-             not mes004
-             and state_attr('sensor.pcha_luminosite', 'source_available') | bool(false)
+             not secours_luminosite
+             and luminosite_disponible
              and is_number(luminosite)
              and (luminosite | float(0)) > (states('input_number.pcha_seuil_luminosite_chauffage') | float(0)) %}
-        {% set exposition_secours = mes004 and is_state('sun.sun', 'above_horizon') %}
+        {% set exposition_secours = secours_luminosite and is_state('sun.sun', 'above_horizon') %}
         {{
           (exposition_normale or exposition_secours)
           and not is_state('input_select.pcha_etat_machine', 'FILTRATION')
         }}
       attributes:
         source_protection: >
-          {{ 'POSITION_SOLEIL_SECOURS' if is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') else 'LUMINOSITE' }}
+          {% set initialisation = is_state('input_boolean.pcha_initialisation_luminosite', 'on') %}
+          {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+          {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+          {{ 'POSITION_SOLEIL_SECOURS' if mes004 or (initialisation and not luminosite_disponible) else 'LUMINOSITE' }}
 
 ################################################################################
 # Bilan solaire quotidien
