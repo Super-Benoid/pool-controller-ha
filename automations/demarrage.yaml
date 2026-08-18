@@ -2,14 +2,16 @@
 # Pool Controller Home Assistant (PCHA)
 # V3.0 — Stabilisation des interfaces au démarrage
 #
-# La fenêtre de cinq minutes ne commande pas directement la pompe. Elle sert à
-# empêcher les états restaurés au démarrage d'être interprétés comme des états
-# métier déjà stabilisés.
+# La fenêtre ne commande pas directement la pompe. Elle empêche les états
+# restaurés au démarrage d'être interprétés comme des états métier stabilisés.
+# Elle dure au minimum cinq minutes puis attend une publication fraîche et
+# cohérente de la chaîne luminosité. Un timeout total évite de masquer une
+# panne durable : MES-004 reprend alors son fonctionnement normal.
 ################################################################################
 
 - id: pcha_demarrage_stabiliser_interfaces
   alias: PCHA - Démarrage - Stabiliser les interfaces
-  description: Maintient la fenêtre de stabilisation pendant cinq minutes après le démarrage de Home Assistant.
+  description: Maintient la stabilisation au moins cinq minutes puis attend une luminosité fraîche, avec dix minutes d'attente supplémentaires au maximum.
   initial_state: true
   mode: restart
   triggers:
@@ -24,7 +26,16 @@
       target:
         entity_id: input_boolean.pcha_initialisation_luminosite
 
+    # Laisse les intégrations et ESPHome terminer leur restauration initiale.
     - delay: "00:05:00"
+
+    # Ne se contente pas d'un état restauré : l'abstraction ci-dessous exige
+    # que la mesure physique de luminosité ait réellement été republiée depuis
+    # le début de la fenêtre, puis soit restée valide pendant 30 secondes.
+    - wait_template: >
+        {{ is_state('binary_sensor.pcha_luminosite_fraiche_apres_demarrage', 'on') }}
+      timeout: "00:10:00"
+      continue_on_timeout: true
 
     - action: input_boolean.turn_off
       target:
