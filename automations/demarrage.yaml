@@ -1,0 +1,53 @@
+################################################################################
+# Pool Controller Home Assistant (PCHA)
+# V3.0 — Stabilisation des interfaces au démarrage
+#
+# La fenêtre de cinq minutes ne commande pas directement la pompe. Elle sert à
+# empêcher les états restaurés au démarrage d'être interprétés comme des états
+# métier déjà stabilisés.
+################################################################################
+
+- id: pcha_demarrage_stabiliser_interfaces
+  alias: PCHA - Démarrage - Stabiliser les interfaces
+  description: Maintient la fenêtre de stabilisation pendant cinq minutes après le démarrage de Home Assistant.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: homeassistant
+      event: start
+  actions:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
+
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.pcha_initialisation_luminosite
+
+    - delay: "00:05:00"
+
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
+
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.pcha_initialisation_luminosite
+
+- id: pcha_demarrage_maintenir_initialisation_luminosite
+  alias: PCHA - Démarrage - Maintenir initialisation luminosité
+  description: Empêche la logique historique de libérer MES-004 avant la fin de la fenêtre de stabilisation.
+  initial_state: true
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_boolean.pcha_initialisation_luminosite
+      to: "off"
+  conditions:
+    - condition: state
+      entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
+      state: "on"
+  actions:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.pcha_initialisation_luminosite
