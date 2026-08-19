@@ -33,3 +33,74 @@
     - action: input_boolean.turn_off
       target:
         entity_id: input_boolean.pcha_fenetre_stabilisation_demarrage
+
+################################################################################
+# Initialisation unique des nouveaux paramètres matériels
+################################################################################
+# Les helpers YAML sans valeur initiale restaurent ensuite les réglages choisis
+# par l'utilisateur. Ce bootstrap ne s'exécute qu'une seule fois et reproduit
+# exactement le profil historique de la pompe actuelle.
+- id: pcha_demarrage_initialiser_parametres_materiel
+  alias: PCHA - Démarrage - Initialiser paramètres matériel
+  description: Initialise une seule fois les seuils historiques de pompe et le calibrage extérieur, puis laisse Home Assistant restaurer les réglages utilisateur.
+  initial_state: true
+  mode: single
+  triggers:
+    - trigger: homeassistant
+      event: start
+  conditions:
+    - condition: state
+      entity_id: input_boolean.pcha_parametres_materiel_initialises
+      state: "off"
+  actions:
+    - wait_template: >
+        {{
+          states('input_number.pcha_seuil_debit_critique') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_seuil_debit_insuffisant') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_seuil_puissance_pompe_arretee') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_puissance_pompe_min_normale') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_puissance_pompe_max_normale') not in ['unknown', 'unavailable']
+          and states('input_number.pcha_correction_temperature_exterieure') not in ['unknown', 'unavailable']
+        }}
+      timeout: "00:00:30"
+      continue_on_timeout: false
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.pcha_seuil_debit_critique
+      data:
+        value: 500
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.pcha_seuil_debit_insuffisant
+      data:
+        value: 3000
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.pcha_seuil_puissance_pompe_arretee
+      data:
+        value: 1
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.pcha_puissance_pompe_min_normale
+      data:
+        value: 300
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.pcha_puissance_pompe_max_normale
+      data:
+        value: 350
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.pcha_correction_temperature_exterieure
+      data:
+        value: 0
+
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.pcha_parametres_materiel_initialises
