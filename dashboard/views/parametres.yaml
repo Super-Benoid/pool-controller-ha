@@ -484,7 +484,7 @@ cards:
       cause: |
         [[[
           const c = entity?.state ?? '—';
-          const valide = entity?.attributes?.diagnostic_valide === true;
+          const valide = states['binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents']?.state === 'on';
           return `<b style="color:${valide ? '#fb7185' : (c === 'COHERENT' ? '#34d399' : '#fbbf24')};font-size:18px;">${c}</b>`;
         ]]]
       mesures: |
