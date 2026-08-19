@@ -12,6 +12,7 @@
 #   input_boolean.pcha_maintenance_luminosite_indisponible
 #   input_boolean.pcha_maintenance_puissance_indisponible
 #   input_boolean.pcha_maintenance_temperature_indisponible
+#   input_boolean.pcha_parametres_materiel_initialises
 #   input_boolean.pcha_verrou_pro_001
 ################################################################################
 
@@ -29,6 +30,13 @@ pcha_fenetre_stabilisation_demarrage:
   name: PCHA Fenêtre stabilisation démarrage
   icon: mdi:progress-clock
   initial: true
+
+# Marqueur interne utilisé une seule fois pour initialiser les nouveaux
+# paramètres matériels aux valeurs historiques. Sans champ initial, son état est
+# ensuite restauré par Home Assistant comme les paramètres qu'il protège.
+pcha_parametres_materiel_initialises:
+  name: PCHA Paramètres matériel initialisés
+  icon: mdi:cog-check-outline
 
 # Ce verrou est piloté uniquement par diagnostics/diagnostics.yaml. L'absence
 # de valeur initiale permet à Home Assistant de restaurer son dernier état.
