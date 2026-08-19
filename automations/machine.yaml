@@ -43,7 +43,7 @@
 
 - id: pcha_machine_reevaluer_sur_changement
   alias: PCHA - Machine - Réévaluer sur changement
-  description: Demande une réévaluation lorsque l'une des interfaces de la machine change.
+  description: Demande une réévaluation lorsque l'une des interfaces de la machine change. Le script applique lui-même les temps minimums à toute transition AUTO.
   initial_state: true
   mode: restart
   triggers:
@@ -71,18 +71,3 @@
         }}
   actions:
     - action: script.pcha_machine_reevaluer
-      data:
-        appliquer_temporisations_auto: >
-          {{
-            is_state('input_select.pcha_mode_de_fonctionnement', 'AUTO')
-            and (
-              trigger.entity_id == 'binary_sensor.pcha_demande_fonctionnement'
-              or (
-                trigger.entity_id == 'input_select.pcha_niveau_fonctionnement'
-                and trigger.from_state is not none
-                and trigger.from_state.state == 'CRITIQUE'
-                and trigger.to_state is not none
-                and trigger.to_state.state != 'CRITIQUE'
-              )
-            )
-          }}
