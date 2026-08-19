@@ -410,7 +410,7 @@ cards:
     view_layout: {grid-area: pompe-titre}
     custom_fields:
       titre: Pompe — profil matériel et diagnostic COH-001
-      aide: À adapter si la pompe ou la prise de mesure change. COH-001 n’ajoute plus de fenêtre de 60 s : seule la validation débit s’applique.
+      aide: "À adapter si la pompe ou la prise de mesure change. COH-001 n’ajoute plus de fenêtre de 60 s : seule la validation débit s’applique."
     styles: *section_title_styles
 
   - type: tile
