@@ -3,6 +3,8 @@
 # SPEC-004 — Abstraction des capteurs
 #
 # Entrées
+#   input_boolean.pcha_parametres_materiel_initialises
+#   input_number.pcha_correction_temperature_exterieure
 #   sensor.jardin_esp32_jardin_debit_filtration_piscine
 #   sensor.jardin_esp32_jardin_luminosite
 #   sensor.jardin_esp32_jardin_temperature_bassin
@@ -195,8 +197,13 @@
       state_class: measurement
       state: >
         {% set source = states('sensor.temperature_exterieure_temperature') %}
+        {% set parametres_initialises = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+        {% set correction =
+             (states('input_number.pcha_correction_temperature_exterieure') | float(0))
+             if parametres_initialises and is_number(states('input_number.pcha_correction_temperature_exterieure'))
+             else 0 %}
         {% if is_number(source) %}
-          {{ source | float(0) | round(1) }}
+          {{ (source | float(0) + correction) | round(1) }}
         {% elif is_number(this.state) %}
           {{ this.state | float(0) | round(1) }}
         {% else %}
@@ -205,6 +212,36 @@
       attributes:
         source_available: >
           {{ is_number(states('sensor.temperature_exterieure_temperature')) }}
+        source_entity: sensor.temperature_exterieure_temperature
+        source_value: >
+          {{ states('sensor.temperature_exterieure_temperature') }}
+        calibrage_applique: >
+          {% if is_state('input_boolean.pcha_parametres_materiel_initialises', 'on')
+                and is_number(states('input_number.pcha_correction_temperature_exterieure')) %}
+            {{ states('input_number.pcha_correction_temperature_exterieure') | float(0) }}
+          {% else %}
+            0
+          {% endif %}
+        correction_appliquee: >
+          {% if is_state('input_boolean.pcha_parametres_materiel_initialises', 'on')
+                and is_number(states('input_number.pcha_correction_temperature_exterieure')) %}
+            {{ states('input_number.pcha_correction_temperature_exterieure') | float(0) }}
+          {% else %}
+            0
+          {% endif %}
+        formule_calibrage: temperature_exterieure = temperature_source + calibrage
+        temperature_calibree_candidate: >
+          {% set source = states('sensor.temperature_exterieure_temperature') %}
+          {% set correction =
+               (states('input_number.pcha_correction_temperature_exterieure') | float(0))
+               if is_state('input_boolean.pcha_parametres_materiel_initialises', 'on')
+                  and is_number(states('input_number.pcha_correction_temperature_exterieure'))
+               else 0 %}
+          {% if is_number(source) %}
+            {{ (source | float(0) + correction) | round(1) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
 
     - name: PCHA Température bassin brute
       unique_id: pcha_temperature_piscine_brute
