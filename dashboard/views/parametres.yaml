@@ -2,8 +2,8 @@
 # Pool Controller Home Assistant (PCHA)
 # V3.0 — Vue Paramètres
 #
-# Réglages métier : modifiables dans les bornes définies par les helpers.
-# Paramètres diagnostics / sécurité : lecture seule depuis cette vue.
+# Réglages métier et profil matériel : modifiables dans les bornes des helpers.
+# Temporisations diagnostics et verrous : lecture seule depuis cette vue.
 ################################################################################
 
 title: Paramètres
@@ -18,11 +18,14 @@ layout:
     "filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre filtration-titre"
     "coef-base coef-base coef-base seuil-acc seuil-acc seuil-acc coef-acc coef-acc coef-acc marge-coucher marge-coucher marge-coucher"
     "thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre"
-    "consigne consigne consigne consigne consigne consigne calibrage calibrage calibrage calibrage calibrage calibrage"
+    "consigne consigne consigne consigne calibrage calibrage calibrage calibrage calibrage-ext calibrage-ext calibrage-ext calibrage-ext"
     "solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre"
     "seuil-solaire seuil-solaire seuil-solaire seuil-solaire seuil-solaire seuil-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
     "fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre"
     "duree-traitement duree-traitement duree-traitement duree-vidange duree-vidange duree-vidange marche-min marche-min marche-min arret-min arret-min arret-min"
+    "pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre"
+    "debit-crit debit-crit debit-crit debit-normal debit-normal debit-normal puissance-arret puissance-arret puissance-arret puissance-min puissance-min puissance-min"
+    "puissance-max puissance-max puissance-max analyse-coh analyse-coh analyse-coh analyse-coh analyse-coh analyse-coh analyse-coh analyse-coh analyse-coh"
     "avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre"
     "validation-debit validation-debit validation-debit validation-lum validation-lum validation-lum validation-temp validation-temp validation-temp verrou-pro verrou-pro verrou-pro"
   grid-gap: 12px
@@ -37,11 +40,16 @@ layout:
         "coef-acc coef-acc coef-acc coef-acc marge-coucher marge-coucher marge-coucher marge-coucher"
         "thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre"
         "consigne consigne consigne consigne calibrage calibrage calibrage calibrage"
+        "calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext"
         "solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre"
         "seuil-solaire seuil-solaire seuil-solaire seuil-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
         "fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre"
         "duree-traitement duree-traitement duree-traitement duree-traitement duree-vidange duree-vidange duree-vidange duree-vidange"
         "marche-min marche-min marche-min marche-min arret-min arret-min arret-min arret-min"
+        "pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre"
+        "debit-crit debit-crit debit-crit debit-crit debit-normal debit-normal debit-normal debit-normal"
+        "puissance-arret puissance-arret puissance-arret puissance-arret puissance-min puissance-min puissance-min puissance-min"
+        "puissance-max puissance-max puissance-max puissance-max analyse-coh analyse-coh analyse-coh analyse-coh"
         "avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre avance-titre"
         "validation-debit validation-debit validation-debit validation-debit validation-lum validation-lum validation-lum validation-lum"
         "validation-temp validation-temp validation-temp validation-temp verrou-pro verrou-pro verrou-pro verrou-pro"
@@ -57,6 +65,7 @@ layout:
         "thermique-titre"
         "consigne"
         "calibrage"
+        "calibrage-ext"
         "solaire-titre"
         "seuil-solaire"
         "contexte-solaire"
@@ -65,6 +74,13 @@ layout:
         "duree-vidange"
         "marche-min"
         "arret-min"
+        "pompe-titre"
+        "debit-crit"
+        "debit-normal"
+        "puissance-arret"
+        "puissance-min"
+        "puissance-max"
+        "analyse-coh"
         "avance-titre"
         "validation-debit"
         "validation-lum"
@@ -91,7 +107,7 @@ cards:
       grid-area: header-param
     custom_fields:
       titre: Paramètres PCHA V3.0
-      sous_titre: Réglages de la stratégie et du fonctionnement
+      sous_titre: Réglages de la stratégie, du fonctionnement et du profil matériel
       heure: |
         [[[
           return new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
@@ -236,7 +252,7 @@ cards:
     view_layout: {grid-area: thermique-titre}
     custom_fields:
       titre: Régulation thermique
-      aide: Consigne de confort et calibrage de la mesure du bassin.
+      aide: Consigne de confort et calibrage indépendant des mesures bassin / extérieur.
     styles: *section_title_styles
 
   - type: tile
@@ -259,6 +275,17 @@ cards:
       - type: numeric-input
         style: buttons
     view_layout: {grid-area: calibrage}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_correction_temperature_exterieure
+    name: Calibrage température extérieure
+    icon: mdi:thermometer-lines
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: calibrage-ext}
     card_mod: *editable_card_mod
 
   ##########################################################################
@@ -374,6 +401,146 @@ cards:
     card_mod: *editable_card_mod
 
   ##########################################################################
+  # Profil matériel de la pompe
+  ##########################################################################
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    tap_action: {action: none}
+    view_layout: {grid-area: pompe-titre}
+    custom_fields:
+      titre: Pompe — profil matériel et diagnostic COH-001
+      aide: À adapter si la pompe ou la prise de mesure change. COH-001 n’ajoute plus de fenêtre de 60 s : seule la validation débit s’applique.
+    styles: *section_title_styles
+
+  - type: tile
+    entity: input_number.pcha_seuil_debit_critique
+    name: Débit critique
+    icon: mdi:water-alert
+    color: red
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: debit-crit}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_seuil_debit_insuffisant
+    name: Débit normal minimal
+    icon: mdi:waves-arrow-right
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: debit-normal}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_seuil_puissance_pompe_arretee
+    name: Seuil puissance arrêtée
+    icon: mdi:flash-off
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: puissance-arret}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_puissance_pompe_min_normale
+    name: Puissance normale min.
+    icon: mdi:flash-triangle-outline
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: puissance-min}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_puissance_pompe_max_normale
+    name: Puissance normale max.
+    icon: mdi:flash-triangle
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: puissance-max}
+    card_mod: *editable_card_mod
+
+  - type: custom:button-card
+    entity: sensor.pcha_analyse_coh_001
+    show_name: false
+    show_icon: true
+    icon: mdi:stethoscope
+    tap_action:
+      action: more-info
+    triggers_update:
+      - sensor.pcha_analyse_coh_001
+      - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
+    view_layout: {grid-area: analyse-coh}
+    custom_fields:
+      titre: Analyse COH-001 en temps réel
+      cause: |
+        [[[
+          const c = entity?.state ?? '—';
+          const valide = entity?.attributes?.diagnostic_valide === true;
+          return `<b style="color:${valide ? '#fb7185' : (c === 'COHERENT' ? '#34d399' : '#fbbf24')};font-size:18px;">${c}</b>`;
+        ]]]
+      mesures: |
+        [[[
+          const a=entity?.attributes ?? {};
+          const cmd=(a.commande_pompe ?? '—').toString().toUpperCase();
+          return `Commande <b>${cmd}</b> · âge <b>${a.anciennete_commande_s ?? '—'} s</b> · débit <b>${a.debit_l_h ?? '—'} L/h</b> · puissance <b>${a.puissance_w ?? '—'} W</b>`;
+        ]]]
+      seuils: |
+        [[[
+          const a=entity?.attributes ?? {};
+          return `Seuils : critique <b>${a.seuil_debit_critique_l_h ?? '—'} L/h</b> · normal <b>${a.seuil_debit_normal_l_h ?? '—'} L/h</b> · arrêt <b>${a.seuil_puissance_arret_w ?? '—'} W</b> · puissance normale <b>${a.puissance_normale_min_w ?? '—'}–${a.puissance_normale_max_w ?? '—'} W</b>`;
+        ]]]
+      validation: |
+        [[[
+          const a=entity?.attributes ?? {};
+          return `Profil seuils : <b>${a.profil_seuils_valide === true ? 'VALIDE' : 'INVALIDE'}</b> · validation COH-001 : <b>${a.validation_coh001_s ?? '—'} s</b>`;
+        ]]]
+    styles:
+      card:
+        - background: linear-gradient(145deg, rgba(20,30,45,.98), rgba(15,23,42,.98))
+        - border: 1px solid rgba(251,191,36,.28)
+        - border-radius: 18px
+        - min-height: 105px
+        - padding: 12px 16px
+      grid:
+        - grid-template-areas: '"i titre" "i cause" "mesures mesures" "seuils seuils" "validation validation"'
+        - grid-template-columns: 44px 1fr
+      icon:
+        - color: '#fbbf24'
+        - width: 30px
+      custom_fields:
+        titre:
+          - justify-self: start
+          - color: '#e2e8f0'
+          - font-size: 14px
+          - font-weight: 700
+        cause:
+          - justify-self: start
+        mesures:
+          - justify-self: start
+          - color: '#cbd5e1'
+          - font-size: 12px
+          - padding-top: 5px
+        seuils:
+          - justify-self: start
+          - color: '#94a3b8'
+          - font-size: 11px
+          - padding-top: 3px
+        validation:
+          - justify-self: start
+          - color: '#94a3b8'
+          - font-size: 11px
+          - padding-top: 3px
+
+  ##########################################################################
   # Avancé / sécurité — lecture seule
   ##########################################################################
   - type: custom:button-card
@@ -383,7 +550,7 @@ cards:
     view_layout: {grid-area: avance-titre}
     custom_fields:
       titre: Avancé / sécurité — lecture seule
-      aide: Ces valeurs participent aux diagnostics ou aux protections. Aucun contrôle de modification n’est exposé ici.
+      aide: Temporisations diagnostics et verrou critique. Aucun contrôle de modification n’est exposé ici.
     styles:
       card:
         - background: linear-gradient(90deg, rgba(45,20,28,.96), rgba(15,23,42,.96))
