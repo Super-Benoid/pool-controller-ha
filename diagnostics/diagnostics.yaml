@@ -7,6 +7,12 @@
 # Entrées
 #   binary_sensor.pcha_protection_serpentin_requise
 #   input_boolean.pcha_fenetre_stabilisation_demarrage
+#   input_boolean.pcha_parametres_materiel_initialises
+#   input_number.pcha_puissance_pompe_max_normale
+#   input_number.pcha_puissance_pompe_min_normale
+#   input_number.pcha_seuil_debit_critique
+#   input_number.pcha_seuil_debit_insuffisant
+#   input_number.pcha_seuil_puissance_pompe_arretee
 #   input_number.pcha_temps_arret_pompe_min
 #   input_number.pcha_temps_validation_debit
 #   input_number.pcha_temps_validation_luminosite
@@ -29,6 +35,7 @@
 #   binary_sensor.pcha_diagnostic_pro_001_debit_critique
 #   binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
 #   binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
+#   sensor.pcha_analyse_coh_001
 #   input_select.pcha_niveau_fonctionnement
 #   événement pcha_diagnostic
 ################################################################################
@@ -170,11 +177,11 @@ template:
 
       # COH-001 — Incohérence entre débit, puissance et commande de pompe.
       #
-      # Débit et puissance ne basculent pas forcément au même instant que le
-      # switch Zigbee. La commande doit donc être stable au moins 60 s avant
-      # d'autoriser la comparaison, puis la condition doit encore rester vraie
-      # pendant le délai de validation débit. Cela filtre les transitions ON/OFF
-      # normales sans modifier les seuils de cohérence en régime établi.
+      # Aucune fenêtre supplémentaire n'est masquée après une transition de la
+      # pompe. La condition brute est évaluée immédiatement et seul le délai
+      # normal de validation débit (30 s par défaut) filtre un transitoire.
+      # sensor.pcha_analyse_coh_001 expose en permanence la cause brute, les
+      # mesures, la commande et tous les seuils utiles au diagnostic terrain.
       - name: PCHA Diagnostic COH-001 Débit puissance incohérents
         unique_id: pcha_diagnostic_coh_001_debit_puissance_incoherents
         default_entity_id: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
@@ -185,46 +192,43 @@ template:
         delay_off: >
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         state: >
-          {% set debit_disponible =
-               state_attr('sensor.pcha_debit_filtration', 'source_available')
-               | bool(false) %}
-          {% set puissance_disponible =
-               state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available')
-               | bool(false) %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+          {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+          {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+          {% set arret_cfg = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
+          {% set pmin_cfg = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
+          {% set pmax_cfg = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
+          {% set profil_valide = critique_cfg > 0 and normal_cfg > critique_cfg and arret_cfg > 0 and pmin_cfg > arret_cfg and pmax_cfg > pmin_cfg %}
+          {% set seuil_critique = critique_cfg if profil_valide else 500 %}
+          {% set seuil_normal = normal_cfg if profil_valide else 3000 %}
+          {% set seuil_arret = arret_cfg if profil_valide else 1 %}
+          {% set puissance_min = pmin_cfg if profil_valide else 300 %}
+          {% set puissance_max = pmax_cfg if profil_valide else 350 %}
+          {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
+          {% set puissance_disponible = state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available') | bool(false) %}
           {% set commande = states('switch.pcha_commande_pompe_filtration') %}
           {% set commande_connue = commande in ['on', 'off'] %}
-          {% set anciennete_commande =
-               (as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed))
-               if commande_connue else 0 %}
-          {% set stabilisation_commande = [states('input_number.pcha_temps_validation_debit') | int(30), 60] | max %}
-          {% set commande_stable = commande_connue and anciennete_commande >= stabilisation_commande %}
           {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
           {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %}
-          {% set pompe_active = commande == 'on' %}
-          {% set pompe_arretee = commande == 'off' %}
-          {% set puissance_normale = 300 <= puissance <= 350 %}
           {% set incoherence_marche =
-               pompe_active
+               commande == 'on'
                and (
-                 (debit >= 500 and puissance < 1)
-                 or (debit >= 3000 and not puissance_normale)
+                 (debit >= seuil_critique and puissance < seuil_arret)
+                 or (debit >= seuil_normal and not (puissance_min <= puissance <= puissance_max))
                ) %}
           {% set incoherence_arret =
-               pompe_arretee
-               and (puissance >= 1 or debit >= 500) %}
+               commande == 'off'
+               and (puissance >= seuil_arret or debit >= seuil_critique) %}
           {{
-            debit_disponible
-            and puissance_disponible
-            and commande_stable
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
-              'on'
+            not profil_valide
+            or (
+              debit_disponible
+              and puissance_disponible
+              and commande_connue
+              and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
+              and not is_state('binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible', 'on')
+              and (incoherence_marche or incoherence_arret)
             )
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
-              'on'
-            )
-            and (incoherence_marche or incoherence_arret)
           }}
         attributes:
           diagnostic_id: COH-001
@@ -233,58 +237,29 @@ template:
           rearmement: TEMPORISE
           motif: Débit, puissance ou commande de pompe incohérents
           cause: >
-            {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
-            {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %}
-            {% set commande = states('switch.pcha_commande_pompe_filtration') %}
-            {% set commande_connue = commande in ['on', 'off'] %}
-            {% set anciennete_commande =
-                 (as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed))
-                 if commande_connue else 0 %}
-            {% set stabilisation_commande = [states('input_number.pcha_temps_validation_debit') | int(30), 60] | max %}
-            {% if not state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
-              DEBIT_INDISPONIBLE
-            {% elif not state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available') | bool(false) %}
-              PUISSANCE_INDISPONIBLE
-            {% elif not commande_connue %}
-              COMMANDE_INDISPONIBLE
-            {% elif anciennete_commande < stabilisation_commande %}
-              STABILISATION_TRANSITION
-            {% elif commande == 'off' and debit >= 500 and puissance >= 1 %}
-              COMMANDE_OFF_DEBIT_ET_PUISSANCE_PRESENTS
-            {% elif commande == 'off' and debit >= 500 %}
-              COMMANDE_OFF_DEBIT_PRESENT
-            {% elif commande == 'off' and puissance >= 1 %}
-              COMMANDE_OFF_PUISSANCE_PRESENTE
-            {% elif commande == 'on' and debit >= 500 and puissance < 1 %}
-              COMMANDE_ON_DEBIT_PRESENT_PUISSANCE_ABSENTE
-            {% elif commande == 'on' and debit >= 3000 and not (300 <= puissance <= 350) %}
-              COMMANDE_ON_PUISSANCE_HORS_PLAGE
-            {% else %}
-              AUCUNE
-            {% endif %}
+            {{ states('sensor.pcha_analyse_coh_001') }}
           commande_pompe: >
-            {{ states('switch.pcha_commande_pompe_filtration') }}
-          commande_stable: >
-            {% set commande = states('switch.pcha_commande_pompe_filtration') %}
-            {% set commande_connue = commande in ['on', 'off'] %}
-            {% set anciennete =
-                 (as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed))
-                 if commande_connue else 0 %}
-            {% set stabilisation = [states('input_number.pcha_temps_validation_debit') | int(30), 60] | max %}
-            {{ commande_connue and anciennete >= stabilisation }}
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'commande_pompe') }}
           anciennete_commande_s: >
-            {% if states('switch.pcha_commande_pompe_filtration') in ['on', 'off'] %}
-              {{ (as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed)) | round(0) }}
-            {% else %}
-              0
-            {% endif %}
-          stabilisation_commande_s: >
-            {{ [states('input_number.pcha_temps_validation_debit') | int(30), 60] | max }}
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'anciennete_commande_s') }}
           debit_l_h: >
-            {{ states('sensor.pcha_debit_filtration') }}
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'debit_l_h') }}
           puissance_w: >
-            {{ states('sensor.pcha_puissance_pompe_filtration') }}
-          plage_puissance_normale_w: 300-350
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'puissance_w') }}
+          seuil_debit_critique_l_h: >
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'seuil_debit_critique_l_h') }}
+          seuil_debit_normal_l_h: >
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'seuil_debit_normal_l_h') }}
+          seuil_puissance_arret_w: >
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'seuil_puissance_arret_w') }}
+          puissance_normale_min_w: >
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'puissance_normale_min_w') }}
+          puissance_normale_max_w: >
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'puissance_normale_max_w') }}
+          profil_seuils_valide: >
+            {{ state_attr('sensor.pcha_analyse_coh_001', 'profil_seuils_valide') }}
+          validation_s: >
+            {{ states('input_number.pcha_temps_validation_debit') | int(30) }}
 
       # COH-002 — Température bassin hors de la plage physique stricte 10–50 °C.
       - name: PCHA Diagnostic COH-002 Température bassin incohérente
@@ -336,24 +311,25 @@ template:
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         delay_off: "00:00:00"
         state: >
-          {% set debit_disponible =
-               state_attr('sensor.pcha_debit_filtration', 'source_available')
-               | bool(false) %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+          {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+          {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+          {% set seuil_critique = critique_cfg if critique_cfg > 0 and normal_cfg > critique_cfg else 500 %}
+          {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
           {{
             debit_disponible
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
-              'on'
-            )
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
-              'on'
-            )
+            and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
+            and not is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on')
             and is_state('input_select.pcha_etat_machine', 'FILTRATION')
-            and states('sensor.pcha_debit_filtration') | float(0) < 500
+            and states('sensor.pcha_debit_filtration') | float(0) < seuil_critique
           }}
         attributes:
           role: CONDITION_INTERNE
+          seuil_debit_critique_l_h: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {{ critique if critique > 0 and normal > critique else 500 }}
 
       # PRO-001 publié : le verrou reste actif après l'arrêt de la pompe. Cela
       # interdit les cycles arrêt/redémarrage en cas de tuyau percé, débranché,
@@ -370,9 +346,12 @@ template:
           famille: PRO
           gravite: CRITIQUE
           rearmement: MANUEL
-          motif: Débit de filtration inférieur à 500 L/h — inspection et réarmement requis
+          seuil_debit_critique_l_h: >
+            {{ state_attr('binary_sensor.pcha_condition_pro_001_debit_critique', 'seuil_debit_critique_l_h') }}
+          motif: >
+            Débit de filtration inférieur à {{ state_attr('binary_sensor.pcha_condition_pro_001_debit_critique', 'seuil_debit_critique_l_h') }} L/h — inspection et réarmement requis
 
-      # PRO-002 — Débit compris entre 500 et 3 000 L/h pendant la filtration.
+      # PRO-002 — Débit inférieur au seuil normal mais supérieur au seuil critique.
       - name: PCHA Diagnostic PRO-002 Débit insuffisant
         unique_id: pcha_diagnostic_pro_002_debit_insuffisant
         default_entity_id: binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant
@@ -383,33 +362,39 @@ template:
         delay_off: >
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
         state: >
-          {% set debit_disponible =
-               state_attr('sensor.pcha_debit_filtration', 'source_available')
-               | bool(false) %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+          {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+          {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+          {% set profil_valide = critique_cfg > 0 and normal_cfg > critique_cfg %}
+          {% set seuil_critique = critique_cfg if profil_valide else 500 %}
+          {% set seuil_normal = normal_cfg if profil_valide else 3000 %}
+          {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
           {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
           {{
             debit_disponible
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
-              'on'
-            )
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
-              'on'
-            )
-            and not is_state(
-              'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
-              'on'
-            )
+            and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
+            and not is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on')
+            and not is_state('binary_sensor.pcha_diagnostic_pro_001_debit_critique', 'on')
             and is_state('input_select.pcha_etat_machine', 'FILTRATION')
-            and 500 <= debit < 3000
+            and seuil_critique <= debit < seuil_normal
           }}
         attributes:
           diagnostic_id: PRO-002
           famille: PRO
           gravite: DEGRADE
           rearmement: TEMPORISE
-          motif: Débit de filtration compris entre 500 et 3 000 L/h
+          seuil_debit_critique_l_h: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {{ critique if critique > 0 and normal > critique else 500 }}
+          seuil_debit_normal_l_h: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {{ normal if critique > 0 and normal > critique else 3000 }}
+          motif: >
+            Débit de filtration compris entre {{ state_attr('binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant', 'seuil_debit_critique_l_h') }} et {{ state_attr('binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant', 'seuil_debit_normal_l_h') }} L/h
 
       # PRO-003 — Une protection solaire demandée ne peut pas être assurée.
       #
@@ -454,6 +439,116 @@ template:
           gravite: CRITIQUE
           rearmement: AUTOMATIQUE
           motif: Protection du serpentin demandée mais circulation impossible
+
+  ##########################################################################
+  # Analyse instantanée de COH-001 — aucune temporisation
+  ##########################################################################
+  - sensor:
+      - name: PCHA Analyse COH-001
+        unique_id: pcha_analyse_coh_001
+        default_entity_id: sensor.pcha_analyse_coh_001
+        icon: mdi:stethoscope
+        state: >
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+          {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+          {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+          {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
+          {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
+          {% set pmax = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
+          {% set profil_valide = critique > 0 and normal > critique and arret > 0 and pmin > arret and pmax > pmin %}
+          {% set seuil_critique = critique if profil_valide else 500 %}
+          {% set seuil_normal = normal if profil_valide else 3000 %}
+          {% set seuil_arret = arret if profil_valide else 1 %}
+          {% set puissance_min = pmin if profil_valide else 300 %}
+          {% set puissance_max = pmax if profil_valide else 350 %}
+          {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
+          {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %}
+          {% set commande = states('switch.pcha_commande_pompe_filtration') %}
+          {% if not profil_valide %}
+            CONFIGURATION_SEUILS_INVALIDE
+          {% elif not state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
+            DEBIT_INDISPONIBLE
+          {% elif not state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available') | bool(false) %}
+            PUISSANCE_INDISPONIBLE
+          {% elif commande not in ['on', 'off'] %}
+            COMMANDE_INDISPONIBLE
+          {% elif commande == 'off' and debit >= seuil_critique and puissance >= seuil_arret %}
+            COMMANDE_OFF_DEBIT_ET_PUISSANCE_PRESENTS
+          {% elif commande == 'off' and debit >= seuil_critique %}
+            COMMANDE_OFF_DEBIT_PRESENT
+          {% elif commande == 'off' and puissance >= seuil_arret %}
+            COMMANDE_OFF_PUISSANCE_PRESENTE
+          {% elif commande == 'on' and debit >= seuil_critique and puissance < seuil_arret %}
+            COMMANDE_ON_DEBIT_PRESENT_PUISSANCE_ABSENTE
+          {% elif commande == 'on' and debit >= seuil_normal and not (puissance_min <= puissance <= puissance_max) %}
+            COMMANDE_ON_PUISSANCE_HORS_PLAGE
+          {% else %}
+            COHERENT
+          {% endif %}
+        attributes:
+          diagnostic_valide: >
+            {{ is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on') }}
+          commande_pompe: >
+            {{ states('switch.pcha_commande_pompe_filtration') }}
+          anciennete_commande_s: >
+            {% if states('switch.pcha_commande_pompe_filtration') in ['on', 'off'] %}
+              {{ (as_timestamp(now()) - as_timestamp(states.switch.pcha_commande_pompe_filtration.last_changed)) | round(0) }}
+            {% else %}
+              0
+            {% endif %}
+          debit_l_h: >
+            {{ states('sensor.pcha_debit_filtration') }}
+          debit_disponible: >
+            {{ state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) }}
+          puissance_w: >
+            {{ states('sensor.pcha_puissance_pompe_filtration') }}
+          puissance_disponible: >
+            {{ state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available') | bool(false) }}
+          profil_seuils_valide: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
+            {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
+            {% set pmax = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
+            {{ critique > 0 and normal > critique and arret > 0 and pmin > arret and pmax > pmin }}
+          seuil_debit_critique_l_h: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {{ critique if critique > 0 and normal > critique else 500 }}
+          seuil_debit_normal_l_h: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {{ normal if critique > 0 and normal > critique else 3000 }}
+          seuil_puissance_arret_w: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
+            {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
+            {{ arret if arret > 0 and pmin > arret else 1 }}
+          puissance_normale_min_w: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
+            {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
+            {% set pmax = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
+            {{ pmin if arret > 0 and pmin > arret and pmax > pmin else 300 }}
+          puissance_normale_max_w: >
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
+            {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
+            {% set pmax = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
+            {{ pmax if arret > 0 and pmin > arret and pmax > pmin else 350 }}
+          validation_coh001_s: >
+            {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
+          seuils_bruts: >
+            {{
+              'debit_critique=' ~ states('input_number.pcha_seuil_debit_critique')
+              ~ '; debit_normal=' ~ states('input_number.pcha_seuil_debit_insuffisant')
+              ~ '; puissance_arret=' ~ states('input_number.pcha_seuil_puissance_pompe_arretee')
+              ~ '; puissance_min=' ~ states('input_number.pcha_puissance_pompe_min_normale')
+              ~ '; puissance_max=' ~ states('input_number.pcha_puissance_pompe_max_normale')
+            }}
 
 ################################################################################
 # Niveau global et événements
