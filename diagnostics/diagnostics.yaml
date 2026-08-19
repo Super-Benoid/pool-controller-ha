@@ -316,10 +316,14 @@ template:
           {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
           {% set seuil_critique = critique_cfg if critique_cfg > 0 and normal_cfg > critique_cfg else 500 %}
           {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
+          {% set coh_configuration = is_state('sensor.pcha_analyse_coh_001', 'CONFIGURATION_SEUILS_INVALIDE') %}
           {{
             debit_disponible
             and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
-            and not is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on')
+            and (
+              not is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on')
+              or coh_configuration
+            )
             and is_state('input_select.pcha_etat_machine', 'FILTRATION')
             and states('sensor.pcha_debit_filtration') | float(0) < seuil_critique
           }}
@@ -370,10 +374,14 @@ template:
           {% set seuil_normal = normal_cfg if profil_valide else 3000 %}
           {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
           {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
+          {% set coh_configuration = is_state('sensor.pcha_analyse_coh_001', 'CONFIGURATION_SEUILS_INVALIDE') %}
           {{
             debit_disponible
             and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
-            and not is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on')
+            and (
+              not is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on')
+              or coh_configuration
+            )
             and not is_state('binary_sensor.pcha_diagnostic_pro_001_debit_critique', 'on')
             and is_state('input_select.pcha_etat_machine', 'FILTRATION')
             and seuil_critique <= debit < seuil_normal
@@ -394,7 +402,14 @@ template:
             {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
             {{ normal if critique > 0 and normal > critique else 3000 }}
           motif: >
-            Débit de filtration compris entre {{ state_attr('binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant', 'seuil_debit_critique_l_h') }} et {{ state_attr('binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant', 'seuil_debit_normal_l_h') }} L/h
+            {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
+            {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
+            {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
+            {% if critique <= 0 or normal <= critique %}
+              Débit de filtration compris entre 500 et 3000 L/h
+            {% else %}
+              Débit de filtration compris entre {{ critique | round(0) }} et {{ normal | round(0) }} L/h
+            {% endif %}
 
       # PRO-003 — Une protection solaire demandée ne peut pas être assurée.
       #
@@ -486,8 +501,6 @@ template:
             COHERENT
           {% endif %}
         attributes:
-          diagnostic_valide: >
-            {{ is_state('binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents', 'on') }}
           commande_pompe: >
             {{ states('switch.pcha_commande_pompe_filtration') }}
           anciennete_commande_s: >
