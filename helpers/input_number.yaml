@@ -12,6 +12,7 @@
 #   input_number.pcha_correction_temperature_piscine
 #   input_number.pcha_duree_traitement
 #   input_number.pcha_duree_vidange
+#   input_number.pcha_hysteresis_luminosite_chauffage
 #   input_number.pcha_marge_objectif_avant_coucher
 #   input_number.pcha_puissance_pompe_max_normale
 #   input_number.pcha_puissance_pompe_min_normale
@@ -23,6 +24,8 @@
 #   input_number.pcha_temperature_seuil_acceleration_filtration
 #   input_number.pcha_temps_arret_pompe_min
 #   input_number.pcha_temps_marche_pompe_min
+#   input_number.pcha_temps_validation_activation_chauffage_solaire
+#   input_number.pcha_temps_validation_arret_chauffage_solaire
 #   input_number.pcha_temps_validation_debit
 #   input_number.pcha_temps_validation_luminosite
 #   input_number.pcha_temps_validation_temperature_piscine
@@ -90,6 +93,19 @@ pcha_duree_vidange:
   step: 1
   unit_of_measurement: "min"
   mode: slider
+
+# Hystérésis appliquée uniquement au chauffage solaire normal piloté par la
+# luminosité. Elle est exprimée en klux pour rester lisible depuis le dashboard.
+# Exemple : seuil 20 klux + hystérésis 2 klux => activation > 20 klux et
+# maintien jusqu'à 18 klux.
+pcha_hysteresis_luminosite_chauffage:
+  name: Hystérésis luminosité chauffage solaire
+  icon: mdi:sun-angle-outline
+  min: 0
+  max: 10
+  step: 0.5
+  unit_of_measurement: "klux"
+  mode: box
 
 pcha_marge_objectif_avant_coucher:
   name: Marge objectif avant coucher du soleil
@@ -190,6 +206,26 @@ pcha_temps_marche_pompe_min:
   icon: mdi:pump
   min: 5
   max: 60
+  step: 1
+  unit_of_measurement: "min"
+  mode: box
+
+# Temporisations propres au chauffage solaire. Elles ne remplacent pas les
+# délais de diagnostic MES-004 et n'affectent pas la protection serpentin.
+pcha_temps_validation_activation_chauffage_solaire:
+  name: Validation activation chauffage solaire
+  icon: mdi:timer-play-outline
+  min: 0
+  max: 600
+  step: 10
+  unit_of_measurement: "s"
+  mode: box
+
+pcha_temps_validation_arret_chauffage_solaire:
+  name: Validation arrêt chauffage solaire
+  icon: mdi:timer-stop-outline
+  min: 0
+  max: 30
   step: 1
   unit_of_measurement: "min"
   mode: box

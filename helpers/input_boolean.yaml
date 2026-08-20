@@ -12,6 +12,7 @@
 #   input_boolean.pcha_maintenance_luminosite_indisponible
 #   input_boolean.pcha_maintenance_puissance_indisponible
 #   input_boolean.pcha_maintenance_temperature_indisponible
+#   input_boolean.pcha_parametres_chauffage_solaire_initialises
 #   input_boolean.pcha_parametres_materiel_initialises
 #   input_boolean.pcha_verrou_pro_001
 ################################################################################
@@ -37,6 +38,13 @@ pcha_fenetre_stabilisation_demarrage:
 pcha_parametres_materiel_initialises:
   name: PCHA Paramètres matériel initialisés
   icon: mdi:cog-check-outline
+
+# Marqueur interne d'initialisation unique des paramètres d'hystérésis et de
+# temporisation du chauffage solaire. Sans champ initial, il est restauré après
+# le premier démarrage comme les helpers correspondants.
+pcha_parametres_chauffage_solaire_initialises:
+  name: PCHA Paramètres chauffage solaire initialisés
+  icon: mdi:weather-sunny-alert
 
 # Ce verrou est piloté uniquement par diagnostics/diagnostics.yaml. L'absence
 # de valeur initiale permet à Home Assistant de restaurer son dernier état.
