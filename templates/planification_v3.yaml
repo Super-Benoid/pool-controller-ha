@@ -15,16 +15,53 @@
 #
 # La cible V3 est utilisée lorsqu'elle est exploitable. En cas d'indisponibilité
 # ou d'incohérence, la logique historique coucher du soleil - marge est reprise.
+#
+# Une fois le départ au plus tard atteint, la demande de filtration est
+# verrouillée jusqu'à l'atteinte de l'objectif quotidien. Une évolution météo
+# ultérieure ne peut donc plus repousser une filtration déjà devenue obligatoire.
 ################################################################################
 
-- binary_sensor:
+- triggers:
+    - trigger: homeassistant
+      event: start
+      id: demarrage
+    - trigger: time
+      at: "00:00:00"
+      id: minuit
+    - trigger: time_pattern
+      minutes: "/1"
+      seconds: "00"
+      id: minute
+    - trigger: state
+      entity_id: sensor.pcha_temps_filtration_restant
+      id: restant
+    - trigger: state
+      entity_id: sensor.pcha_heure_cible_objectif
+      id: cible
+    - trigger: state
+      entity_id: input_number.pcha_marge_objectif_avant_coucher
+      id: marge
+  binary_sensor:
     - name: PCHA Filtration requise V3
       unique_id: pcha_filtration_requise_v3
       default_entity_id: binary_sensor.pcha_filtration_requise_v3
       icon: mdi:water-pump
       state: >
+        {% set tid = trigger.id if trigger is defined else 'evaluation' %}
+        {% set aujourd_hui = now().date() | string %}
+        {% set jour_engagement = this.attributes.jour_engagement | default('') %}
+        {% set deja_engagee = this.state == 'on' and jour_engagement == aujourd_hui %}
         {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
-        {% if not is_number(restant_brut) or (restant_brut | float(0)) <= 0 %}
+
+        {% if tid == 'minuit' %}
+          false
+        {% elif deja_engagee %}
+          {% if is_number(restant_brut) and (restant_brut | float(0)) <= 0 %}
+            false
+          {% else %}
+            true
+          {% endif %}
+        {% elif not is_number(restant_brut) or (restant_brut | float(0)) <= 0 %}
           false
         {% else %}
           {% set restant = restant_brut | float(0) %}
@@ -53,8 +90,39 @@
           {% endif %}
         {% endif %}
       attributes:
-        version_planification: V3.0-ACTIVE-1
+        version_planification: V3.0-ACTIVE-2-LATCH
         active_sur_commande_pompe: true
+        strategie_verrouillage: JUSQU_OBJECTIF_QUOTIDIEN_ATTEINT
+        jour_engagement: >
+          {% set tid = trigger.id if trigger is defined else 'evaluation' %}
+          {% set aujourd_hui = now().date() | string %}
+          {% set precedent = this.attributes.jour_engagement | default('') %}
+          {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
+          {% if tid == 'minuit' %}
+            {{ none }}
+          {% elif is_number(restant_brut) and (restant_brut | float(0)) <= 0 %}
+            {{ none }}
+          {% elif this.state == 'on' and precedent == aujourd_hui %}
+            {{ aujourd_hui }}
+          {% elif not is_number(restant_brut) %}
+            {{ none }}
+          {% else %}
+            {% set restant = restant_brut | float(0) %}
+            {% set cible_brute = states('sensor.pcha_heure_cible_objectif') %}
+            {% set cible = as_local(as_datetime(cible_brute)) if cible_brute not in ['unknown', 'unavailable', 'none', ''] else none %}
+            {% if cible is none or cible.date() != now().date() %}
+              {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+              {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+              {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
+              {% set cible = coucher - timedelta(minutes=marge) if coucher is not none and coucher.date() == now().date() else none %}
+            {% endif %}
+            {% if cible is none %}
+              {{ aujourd_hui }}
+            {% else %}
+              {% set depart = cible - timedelta(minutes=restant) %}
+              {{ aujourd_hui if now() >= depart else none }}
+            {% endif %}
+          {% endif %}
         source_cible: >
           {% set cible_brute = states('sensor.pcha_heure_cible_objectif') %}
           {% set cible = as_local(as_datetime(cible_brute)) if cible_brute not in ['unknown', 'unavailable', 'none', ''] else none %}
@@ -121,7 +189,8 @@
           {% endif %}
         {% endif %}
       attributes:
-        version_planification: V3.0-ACTIVE-1
+        version_planification: V3.0-ACTIVE-2-LATCH
         source_cible: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'source_cible') }}"
         cible_utilisee: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'cible_utilisee') }}"
         depart_au_plus_tard: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'depart_au_plus_tard') }}"
+        jour_engagement: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'jour_engagement') }}"
