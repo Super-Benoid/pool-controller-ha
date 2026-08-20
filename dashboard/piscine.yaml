@@ -87,6 +87,7 @@ views:
           - binary_sensor.pcha_chauffage_solaire_requis
           - binary_sensor.pcha_chauffage_solaire_actif
           - binary_sensor.pcha_protection_serpentin_requise
+          - sensor.pcha_motif_fonctionnement
         view_layout:
           grid-area: header
         custom_fields:
@@ -113,8 +114,23 @@ views:
               const solaireRequis = on('binary_sensor.pcha_chauffage_solaire_requis');
               const protection = on('binary_sensor.pcha_protection_serpentin_requise');
               const solaire = solaireActif ? 'Actif' : solaireRequis ? 'Requis' : 'Inactif';
+              const motif = states['sensor.pcha_motif_fonctionnement']?.state ?? 'Indisponible';
+              const motifColor = motif.includes('PROTECTION') ? '#fb7185'
+                : motif.includes('CHAUFFAGE SOLAIRE') ? '#fbbf24'
+                : motif.includes('FILTRATION') ? '#22d3ee'
+                : motif.includes('MARCHE MINIMALE') ? '#a78bfa'
+                : motif.includes('STABILISATION') ? '#fbbf24'
+                : ['AUCUNE DEMANDE', 'ARRÊT'].includes(motif) ? '#94a3b8'
+                : '#c4b5fd';
+              const motifIcon = motif.includes('PROTECTION') ? 'mdi:shield-sun-outline'
+                : motif.includes('CHAUFFAGE SOLAIRE') ? 'mdi:white-balance-sunny'
+                : motif.includes('FILTRATION') ? 'mdi:water-pump'
+                : motif.includes('MARCHE MINIMALE') ? 'mdi:timer-sand'
+                : motif.includes('STABILISATION') ? 'mdi:progress-clock'
+                : 'mdi:source-branch';
               return `<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;">
                 ${pill('mdi:play-circle-outline', 'Demande', demande ? 'Active' : 'Inactive', demande ? '#34d399' : '#94a3b8')}
+                ${pill(motifIcon, 'Motif', motif, motifColor)}
                 ${pill('mdi:white-balance-sunny', 'Solaire', solaire, solaireActif ? '#fbbf24' : solaireRequis ? '#a78bfa' : '#94a3b8')}
                 ${pill('mdi:shield-sun-outline', 'Serpentin', protection ? 'Protection requise' : 'Normal', protection ? '#fb7185' : '#22d3ee')}
               </div>`;
