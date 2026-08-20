@@ -19,6 +19,11 @@
 # Une fois le départ au plus tard atteint, la demande de filtration est
 # verrouillée jusqu'à l'atteinte de l'objectif quotidien. Une évolution météo
 # ultérieure ne peut donc plus repousser une filtration déjà devenue obligatoire.
+#
+# Le temps restant et l'évaluation de planification étant à la minute, une
+# tolérance de 60 s est appliquée au seuil d'engagement. Elle évite que le départ
+# au plus tard avance d'une minute à chaque minute de filtration solaire et soit
+# ainsi poursuivi sans jamais être franchi.
 ################################################################################
 
 - triggers:
@@ -86,13 +91,15 @@
             true
           {% else %}
             {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
-            {{ now() >= depart_au_plus_tard }}
+            {% set seuil_engagement = depart_au_plus_tard - timedelta(seconds=60) %}
+            {{ now() >= seuil_engagement }}
           {% endif %}
         {% endif %}
       attributes:
-        version_planification: V3.0-ACTIVE-2-LATCH
+        version_planification: V3.0-ACTIVE-3-LATCH-60S
         active_sur_commande_pompe: true
         strategie_verrouillage: JUSQU_OBJECTIF_QUOTIDIEN_ATTEINT
+        tolerance_engagement_s: 60
         jour_engagement: >
           {% set tid = trigger.id if trigger is defined else 'evaluation' %}
           {% set aujourd_hui = now().date() | string %}
@@ -120,7 +127,8 @@
               {{ aujourd_hui }}
             {% else %}
               {% set depart = cible - timedelta(minutes=restant) %}
-              {{ aujourd_hui if now() >= depart else none }}
+              {% set seuil = depart - timedelta(seconds=60) %}
+              {{ aujourd_hui if now() >= seuil else none }}
             {% endif %}
           {% endif %}
         source_cible: >
@@ -152,6 +160,21 @@
               {% set cible = coucher - timedelta(minutes=marge) if coucher is not none and coucher.date() == now().date() else none %}
             {% endif %}
             {{ (cible - timedelta(minutes=(restant_brut | float(0)))).isoformat() if cible is not none else none }}
+          {% endif %}
+        seuil_engagement: >
+          {% set restant_brut = states('sensor.pcha_temps_filtration_restant') %}
+          {% set cible_brute = states('sensor.pcha_heure_cible_objectif') %}
+          {% set cible = as_local(as_datetime(cible_brute)) if cible_brute not in ['unknown', 'unavailable', 'none', ''] else none %}
+          {% if not is_number(restant_brut) %}
+            {{ none }}
+          {% else %}
+            {% if cible is none or cible.date() != now().date() %}
+              {% set coucher_brut = state_attr('sun.sun', 'next_setting') %}
+              {% set coucher = as_local(as_datetime(coucher_brut)) if coucher_brut else none %}
+              {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
+              {% set cible = coucher - timedelta(minutes=marge) if coucher is not none and coucher.date() == now().date() else none %}
+            {% endif %}
+            {{ (cible - timedelta(minutes=(restant_brut | float(0)), seconds=60)).isoformat() if cible is not none else none }}
           {% endif %}
 
 - sensor:
@@ -189,8 +212,9 @@
           {% endif %}
         {% endif %}
       attributes:
-        version_planification: V3.0-ACTIVE-2-LATCH
+        version_planification: V3.0-ACTIVE-3-LATCH-60S
         source_cible: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'source_cible') }}"
         cible_utilisee: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'cible_utilisee') }}"
         depart_au_plus_tard: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'depart_au_plus_tard') }}"
+        seuil_engagement: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'seuil_engagement') }}"
         jour_engagement: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'jour_engagement') }}"
