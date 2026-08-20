@@ -4,9 +4,11 @@
 #
 # Entrées PCHA
 #   input_number.pcha_marge_objectif_avant_coucher
+#   input_number.pcha_temps_arret_pompe_min
 #   input_select.pcha_etat_machine
 #   sensor.pcha_heure_cible_objectif
 #   sensor.pcha_temps_filtration_restant
+#   switch.pcha_commande_pompe_filtration
 #   sun.sun
 #
 # Sorties
@@ -21,9 +23,12 @@
 # ultérieure ne peut donc plus repousser une filtration déjà devenue obligatoire.
 #
 # Le temps restant et l'évaluation de planification étant à la minute, une
-# tolérance de 60 s est appliquée au seuil d'engagement. Elle évite que le départ
-# au plus tard avance d'une minute à chaque minute de filtration solaire et soit
-# ainsi poursuivi sans jamais être franchi.
+# tolérance de 60 s est appliquée au seuil d'engagement.
+#
+# Lorsque la pompe tourne déjà avant l'engagement de la filtration quotidienne,
+# le seuil est en plus anticipé du temps minimum d'arrêt configuré. Ainsi PCHA ne
+# laisse pas s'arrêter une pompe déjà en marche si l'arrêt imposé ensuite ferait
+# dépasser le départ au plus tard nécessaire pour atteindre la cible V3.
 ################################################################################
 
 - triggers:
@@ -46,6 +51,12 @@
     - trigger: state
       entity_id: input_number.pcha_marge_objectif_avant_coucher
       id: marge
+    - trigger: state
+      entity_id: input_number.pcha_temps_arret_pompe_min
+      id: arret_min
+    - trigger: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      id: pompe
   binary_sensor:
     - name: PCHA Filtration requise V3
       unique_id: pcha_filtration_requise_v3
@@ -91,15 +102,25 @@
             true
           {% else %}
             {% set depart_au_plus_tard = echeance - timedelta(minutes=restant) %}
-            {% set seuil_engagement = depart_au_plus_tard - timedelta(seconds=60) %}
+            {% set pompe_active = is_state('switch.pcha_commande_pompe_filtration', 'on') %}
+            {% set arret_min = states('input_number.pcha_temps_arret_pompe_min') | float(25) %}
+            {% set anticipation_arret_s = ([arret_min, 0] | max) * 60 if pompe_active else 0 %}
+            {% set seuil_engagement = depart_au_plus_tard - timedelta(seconds=(60 + anticipation_arret_s)) %}
             {{ now() >= seuil_engagement }}
           {% endif %}
         {% endif %}
       attributes:
-        version_planification: V3.0-ACTIVE-3-LATCH-60S
+        version_planification: V3.0-ACTIVE-4-LATCH-ARRET-MIN
         active_sur_commande_pompe: true
         strategie_verrouillage: JUSQU_OBJECTIF_QUOTIDIEN_ATTEINT
         tolerance_engagement_s: 60
+        anticipation_arret_min: >
+          {% if is_state('switch.pcha_commande_pompe_filtration', 'on') %}
+            {{ [states('input_number.pcha_temps_arret_pompe_min') | float(25), 0] | max | round(0) }}
+          {% else %}
+            0
+          {% endif %}
+        pompe_active_au_calcul: "{{ is_state('switch.pcha_commande_pompe_filtration', 'on') }}"
         jour_engagement: >
           {% set tid = trigger.id if trigger is defined else 'evaluation' %}
           {% set aujourd_hui = now().date() | string %}
@@ -127,7 +148,10 @@
               {{ aujourd_hui }}
             {% else %}
               {% set depart = cible - timedelta(minutes=restant) %}
-              {% set seuil = depart - timedelta(seconds=60) %}
+              {% set pompe_active = is_state('switch.pcha_commande_pompe_filtration', 'on') %}
+              {% set arret_min = states('input_number.pcha_temps_arret_pompe_min') | float(25) %}
+              {% set anticipation_arret_s = ([arret_min, 0] | max) * 60 if pompe_active else 0 %}
+              {% set seuil = depart - timedelta(seconds=(60 + anticipation_arret_s)) %}
               {{ aujourd_hui if now() >= seuil else none }}
             {% endif %}
           {% endif %}
@@ -174,8 +198,19 @@
               {% set marge = states('input_number.pcha_marge_objectif_avant_coucher') | float(120) %}
               {% set cible = coucher - timedelta(minutes=marge) if coucher is not none and coucher.date() == now().date() else none %}
             {% endif %}
-            {{ (cible - timedelta(minutes=(restant_brut | float(0)), seconds=60)).isoformat() if cible is not none else none }}
+            {% if cible is none %}
+              {{ none }}
+            {% else %}
+              {% set pompe_active = is_state('switch.pcha_commande_pompe_filtration', 'on') %}
+              {% set arret_min = states('input_number.pcha_temps_arret_pompe_min') | float(25) %}
+              {% set anticipation_arret_s = ([arret_min, 0] | max) * 60 if pompe_active else 0 %}
+              {{ (cible - timedelta(minutes=(restant_brut | float(0)), seconds=(60 + anticipation_arret_s))).isoformat() }}
+            {% endif %}
           {% endif %}
+        marge_avant_depart_s: >
+          {% set depart = state_attr('binary_sensor.pcha_filtration_requise_v3', 'depart_au_plus_tard') %}
+          {% set depart_dt = as_local(as_datetime(depart)) if depart not in [none, 'unknown', 'unavailable', 'none', ''] else none %}
+          {{ ((depart_dt - now()).total_seconds() | round(0)) if depart_dt is not none else none }}
 
 - sensor:
     - name: PCHA Heure atteinte objectif V3
@@ -212,9 +247,10 @@
           {% endif %}
         {% endif %}
       attributes:
-        version_planification: V3.0-ACTIVE-3-LATCH-60S
+        version_planification: V3.0-ACTIVE-4-LATCH-ARRET-MIN
         source_cible: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'source_cible') }}"
         cible_utilisee: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'cible_utilisee') }}"
         depart_au_plus_tard: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'depart_au_plus_tard') }}"
         seuil_engagement: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'seuil_engagement') }}"
+        anticipation_arret_min: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'anticipation_arret_min') }}"
         jour_engagement: "{{ state_attr('binary_sensor.pcha_filtration_requise_v3', 'jour_engagement') }}"
