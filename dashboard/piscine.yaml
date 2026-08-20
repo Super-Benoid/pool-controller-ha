@@ -1002,7 +1002,7 @@ views:
                     <div><span>Référence</span><strong>${temperature('sensor.pcha_temperature_reference_objectif_quotidien')}</strong></div>
                     <div><span>Temps réalisé</span><strong>${duration('sensor.pcha_temps_filtration_realise')}</strong></div>
                     <div><span>Temps restant</span><strong>${duration('sensor.pcha_temps_filtration_restant')}</strong></div>
-                    <div><span>À atteindre à</span><strong>${targetTime()}</strong></div>
+                    <div><span>Fin estimée</span><strong>${targetTime()}</strong></div>
                   </div>
                   <div class="pcha-objectif-anneau" style="--progress:${progress}">
                     <div class="pcha-objectif-centre">
@@ -1254,13 +1254,15 @@ views:
             [[[
               const score=Math.max(0,Math.min(100,Number(entity?.state)||0));
               const niveau=states['sensor.pcha_potentiel_thermique_jour']?.state??'INDISPONIBLE';
-              const cible=states['sensor.pcha_heure_atteinte_objectif']?.state??'—';
+              const cibleState=states['sensor.pcha_heure_cible_objectif']?.state;
+              const cibleDate=cibleState && !['unknown','unavailable','none',''].includes(cibleState) ? new Date(cibleState) : null;
+              const cible=cibleDate && !Number.isNaN(cibleDate.getTime()) ? cibleDate.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}).replace(':','H') : '—';
               const strategie=(states['sensor.pcha_heure_cible_objectif']?.attributes?.strategie??'—').replaceAll('_',' ');
               const favorables=Number(entity?.attributes?.heures_ensoleillees_ou_partiellement_nuageuses);
               const evaluees=Number(entity?.attributes?.heures_evaluees);
               const moyenne=Number(entity?.attributes?.temperature_moyenne_prevue_fenetre);
               const fmt=(n,d=0)=>Number.isFinite(n)?n.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
-              return `<div class="pcha-pot"><div class="pcha-pot-head"><span><ha-icon icon="mdi:white-balance-sunny"></ha-icon>Potentiel thermique</span><b>${niveau} · ${Math.round(score)}%</b></div><div class="pcha-pot-bar"><i style="width:${score}%"></i></div><div class="pcha-pot-grid"><span>Heures favorables<strong>${fmt(favorables)} / ${fmt(evaluees)} h</strong></span><span>T° moyenne prévue<strong>${fmt(moyenne,1)} °C</strong></span><span>Cible filtration<strong>${cible}</strong></span></div><div class="pcha-pot-strat">${strategie}</div></div>`;
+              return `<div class="pcha-pot"><div class="pcha-pot-head"><span><ha-icon icon="mdi:white-balance-sunny"></ha-icon>Potentiel thermique</span><b>${niveau} · ${Math.round(score)}%</b></div><div class="pcha-pot-bar"><i style="width:${score}%"></i></div><div class="pcha-pot-grid"><span>Heures favorables<strong>${fmt(favorables)} / ${fmt(evaluees)} h</strong></span><span>T° moyenne prévue<strong>${fmt(moyenne,1)} °C</strong></span><span>Cible V3<strong>${cible}</strong></span></div><div class="pcha-pot-strat">${strategie}</div></div>`;
             ]]]
         styles:
           card:
