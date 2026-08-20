@@ -5,8 +5,12 @@
 # Entrées
 #   binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
 #   input_boolean.pcha_fenetre_stabilisation_demarrage
+#   input_boolean.pcha_parametres_chauffage_solaire_initialises
+#   input_number.pcha_hysteresis_luminosite_chauffage
 #   input_number.pcha_seuil_luminosite_chauffage
 #   input_number.pcha_temperature_de_consigne
+#   input_number.pcha_temps_validation_activation_chauffage_solaire
+#   input_number.pcha_temps_validation_arret_chauffage_solaire
 #   input_select.pcha_etat_machine
 #   sensor.pcha_luminosite
 #   sensor.pcha_temperature_exterieure
@@ -16,6 +20,7 @@
 # Sorties
 #   binary_sensor.pcha_chauffage_solaire_actif
 #   binary_sensor.pcha_chauffage_solaire_requis
+#   binary_sensor.pcha_exposition_solaire_chauffage_validee
 #   binary_sensor.pcha_protection_serpentin_requise
 #   sensor.pcha_ecart_temperature_bassin_exterieure
 #   sensor.pcha_ecart_temperature_exterieure_bassin
@@ -85,9 +90,88 @@
         {% endif %}
 
 ################################################################################
+# Validation de l'exposition solaire pour le chauffage
+#
+# Cette entité filtre uniquement la condition de luminosité :
+# - activation après une luminosité durablement supérieure au seuil ;
+# - maintien avec une hystérésis configurable ;
+# - arrêt après une luminosité durablement inférieure au seuil de maintien.
+#
+# Elle ne contient volontairement ni la consigne bassin ni l'état machine :
+# une consigne atteinte doit pouvoir supprimer immédiatement la demande de
+# chauffage, sans subir le délai d'arrêt solaire.
+################################################################################
+- binary_sensor:
+    - name: PCHA Exposition solaire chauffage validée
+      unique_id: pcha_exposition_solaire_chauffage_validee
+      default_entity_id: binary_sensor.pcha_exposition_solaire_chauffage_validee
+      icon: mdi:sun-clock-outline
+      delay_on: >
+        {% if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on') %}
+          {{ states('input_number.pcha_temps_validation_activation_chauffage_solaire') | int(60) }}
+        {% else %}
+          60
+        {% endif %}
+      delay_off: >
+        {% if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on') %}
+          {{ (states('input_number.pcha_temps_validation_arret_chauffage_solaire') | float(5) * 60) | int }}
+        {% else %}
+          300
+        {% endif %}
+      state: >
+        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
+        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
+        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
+        {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %}
+        {% set luminosite = states('sensor.pcha_luminosite') %}
+        {% set seuil_activation = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
+        {% set hysteresis_klux =
+             states('input_number.pcha_hysteresis_luminosite_chauffage') | float(2)
+             if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on')
+             else 2 %}
+        {% set seuil_maintien = [seuil_activation - hysteresis_klux * 1000, 0] | max %}
+        {% set seuil_effectif = seuil_maintien if this.state == 'on' else seuil_activation %}
+        {{
+          not secours_luminosite
+          and luminosite_disponible
+          and is_number(luminosite)
+          and (luminosite | float(0)) > seuil_effectif
+        }}
+      attributes:
+        luminosite_lux: >
+          {{ states('sensor.pcha_luminosite') }}
+        seuil_activation_lux: >
+          {{ states('input_number.pcha_seuil_luminosite_chauffage') | float(0) }}
+        hysteresis_klux: >
+          {% if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on') %}
+            {{ states('input_number.pcha_hysteresis_luminosite_chauffage') | float(2) }}
+          {% else %}
+            2
+          {% endif %}
+        seuil_maintien_lux: >
+          {% set seuil = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
+          {% set hysteresis =
+               states('input_number.pcha_hysteresis_luminosite_chauffage') | float(2)
+               if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on')
+               else 2 %}
+          {{ [seuil - hysteresis * 1000, 0] | max }}
+        validation_activation_s: >
+          {% if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on') %}
+            {{ states('input_number.pcha_temps_validation_activation_chauffage_solaire') | int(60) }}
+          {% else %}
+            60
+          {% endif %}
+        validation_arret_min: >
+          {% if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on') %}
+            {{ states('input_number.pcha_temps_validation_arret_chauffage_solaire') | float(5) }}
+          {% else %}
+            5
+          {% endif %}
+
+################################################################################
 # Demande de chauffage solaire et état réel du chauffage
 #
-# Mode normal : luminosité supérieure au seuil.
+# Mode normal : exposition solaire validée ci-dessus.
 # Mode dégradé MES-004, ou pendant la stabilisation de démarrage si la chaîne
 # luminosité n'est pas encore revenue : température extérieure au moins 2 °C
 # au-dessus du bassin. Une hystérésis maintient la demande jusqu'à un écart
@@ -110,12 +194,7 @@
         {% if not sous_consigne %}
           false
         {% elif not secours_luminosite %}
-          {% set luminosite = states('sensor.pcha_luminosite') %}
-          {{
-            luminosite_disponible
-            and is_number(luminosite)
-            and (luminosite | float(0)) > (states('input_number.pcha_seuil_luminosite_chauffage') | float(0))
-          }}
+          {{ is_state('binary_sensor.pcha_exposition_solaire_chauffage_validee', 'on') }}
         {% else %}
           {% set ecart = states('sensor.pcha_ecart_temperature_exterieure_bassin') %}
           {% set seuil = 1.0 if this.state == 'on' else 2.0 %}
@@ -128,6 +207,8 @@
       attributes:
         source_pilotage: >
           {{ states('sensor.pcha_source_chauffage_solaire') }}
+        exposition_solaire_validee: >
+          {{ is_state('binary_sensor.pcha_exposition_solaire_chauffage_validee', 'on') }}
         ecart_temperature_exterieure_bassin: >
           {{ states('sensor.pcha_ecart_temperature_exterieure_bassin') }}
         seuil_activation_secours: 2.0
