@@ -20,7 +20,8 @@ layout:
     "thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre thermique-titre"
     "consigne consigne consigne consigne calibrage calibrage calibrage calibrage calibrage-ext calibrage-ext calibrage-ext calibrage-ext"
     "solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre"
-    "seuil-solaire seuil-solaire seuil-solaire seuil-solaire seuil-solaire seuil-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
+    "seuil-solaire seuil-solaire seuil-solaire activation-solaire activation-solaire activation-solaire hysteresis-solaire hysteresis-solaire hysteresis-solaire arret-solaire arret-solaire arret-solaire"
+    "contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
     "fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre"
     "duree-traitement duree-traitement duree-traitement duree-vidange duree-vidange duree-vidange marche-min marche-min marche-min arret-min arret-min arret-min"
     "pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre pompe-titre"
@@ -42,7 +43,9 @@ layout:
         "consigne consigne consigne consigne calibrage calibrage calibrage calibrage"
         "calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext calibrage-ext"
         "solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre solaire-titre"
-        "seuil-solaire seuil-solaire seuil-solaire seuil-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
+        "seuil-solaire seuil-solaire seuil-solaire seuil-solaire activation-solaire activation-solaire activation-solaire activation-solaire"
+        "hysteresis-solaire hysteresis-solaire hysteresis-solaire hysteresis-solaire arret-solaire arret-solaire arret-solaire arret-solaire"
+        "contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire contexte-solaire"
         "fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre fonction-titre"
         "duree-traitement duree-traitement duree-traitement duree-traitement duree-vidange duree-vidange duree-vidange duree-vidange"
         "marche-min marche-min marche-min marche-min arret-min arret-min arret-min arret-min"
@@ -68,6 +71,9 @@ layout:
         "calibrage-ext"
         "solaire-titre"
         "seuil-solaire"
+        "activation-solaire"
+        "hysteresis-solaire"
+        "arret-solaire"
         "contexte-solaire"
         "fonction-titre"
         "duree-traitement"
@@ -298,18 +304,51 @@ cards:
     view_layout: {grid-area: solaire-titre}
     custom_fields:
       titre: Chauffage solaire
-      aide: Seuil d’activation solaire présenté en klux pour faciliter le réglage.
+      aide: "Seuil, temporisations et hystérésis du chauffage solaire normal. Ces réglages sont indépendants du diagnostic MES-004 et de la protection serpentin."
     styles: *section_title_styles
 
   - type: tile
     entity: number.pcha_seuil_luminosite_chauffage_klux
-    name: Seuil de luminosité chauffage
+    name: Seuil activation
     icon: mdi:white-balance-sunny
     color: purple
     features:
       - type: numeric-input
         style: buttons
     view_layout: {grid-area: seuil-solaire}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_temps_validation_activation_chauffage_solaire
+    name: Validation activation
+    icon: mdi:timer-play-outline
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: activation-solaire}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_hysteresis_luminosite_chauffage
+    name: Hystérésis luminosité
+    icon: mdi:sun-angle-outline
+    color: purple
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: hysteresis-solaire}
+    card_mod: *editable_card_mod
+
+  - type: tile
+    entity: input_number.pcha_temps_validation_arret_chauffage_solaire
+    name: Validation arrêt
+    icon: mdi:timer-stop-outline
+    color: cyan
+    features:
+      - type: numeric-input
+        style: buttons
+    view_layout: {grid-area: arret-solaire}
     card_mod: *editable_card_mod
 
   - type: custom:button-card
