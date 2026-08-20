@@ -14,6 +14,7 @@
 #
 # Sorties
 #   binary_sensor.pcha_demande_fonctionnement
+#   sensor.pcha_motif_fonctionnement
 #   sensor.pcha_temps_traitement_restant
 #   sensor.pcha_temps_vidange_restant
 ################################################################################
@@ -111,6 +112,75 @@
           {{ is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') }}
         strategie_stabilisation: >
           {{ 'CONSERVER_ETAT_PHYSIQUE_POMPE' if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') else 'LOGIQUE_METIER_NORMALE' }}
+
+# Motif lisible de la demande / du fonctionnement courant.
+# En AUTO, les trois contributeurs sont exposés séparément et combinés lorsque
+# plusieurs demandes sont actives au même instant. Si la pompe reste en marche
+# sans demande active, l'état signale la temporisation minimale de marche.
+- sensor:
+    - name: PCHA Motif fonctionnement
+      unique_id: pcha_motif_fonctionnement
+      default_entity_id: sensor.pcha_motif_fonctionnement
+      icon: mdi:source-branch
+      state: >
+        {% set mode = states('input_select.pcha_mode_de_fonctionnement') %}
+        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
+        {% set pompe_active = is_state('switch.pcha_commande_pompe_filtration', 'on') %}
+        {% set filtration = is_state('binary_sensor.pcha_filtration_requise_v3', 'on') %}
+        {% set solaire = is_state('binary_sensor.pcha_chauffage_solaire_requis', 'on') %}
+        {% set protection = is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') %}
+        {% set ns = namespace(motifs=[]) %}
+
+        {% if mode == 'OFF' %}
+          ARRÊT
+        {% elif mode == 'MARCHE_FORCEE' %}
+          MARCHE FORCÉE
+        {% elif mode == 'TRAITEMENT' %}
+          TRAITEMENT
+        {% elif mode == 'VIDANGE' %}
+          VIDANGE
+        {% elif mode in ['AUTO', 'SECURISATION'] and stabilisation %}
+          {{ 'STABILISATION — ÉTAT POMPE CONSERVÉ' if pompe_active else 'STABILISATION — POMPE ARRÊTÉE' }}
+        {% elif mode == 'SECURISATION' %}
+          {{ 'PROTECTION SERPENTIN' if protection else 'AUCUNE DEMANDE' }}
+        {% elif mode == 'AUTO' %}
+          {% if filtration %}
+            {% set ns.motifs = ns.motifs + ['FILTRATION'] %}
+          {% endif %}
+          {% if solaire %}
+            {% set ns.motifs = ns.motifs + ['CHAUFFAGE SOLAIRE'] %}
+          {% endif %}
+          {% if protection %}
+            {% set ns.motifs = ns.motifs + ['PROTECTION SERPENTIN'] %}
+          {% endif %}
+          {% if ns.motifs | count > 0 %}
+            {{ ns.motifs | join(' + ') }}
+          {% elif pompe_active and is_state('input_select.pcha_etat_machine', 'FILTRATION') %}
+            MARCHE MINIMALE
+          {% else %}
+            AUCUNE DEMANDE
+          {% endif %}
+        {% else %}
+          INDISPONIBLE
+        {% endif %}
+      attributes:
+        mode: "{{ states('input_select.pcha_mode_de_fonctionnement') }}"
+        etat_machine: "{{ states('input_select.pcha_etat_machine') }}"
+        pompe_active: "{{ is_state('switch.pcha_commande_pompe_filtration', 'on') }}"
+        demande_active: "{{ is_state('binary_sensor.pcha_demande_fonctionnement', 'on') }}"
+        filtration_requise_v3: "{{ is_state('binary_sensor.pcha_filtration_requise_v3', 'on') }}"
+        chauffage_solaire_requis: "{{ is_state('binary_sensor.pcha_chauffage_solaire_requis', 'on') }}"
+        protection_serpentin_requise: "{{ is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') }}"
+        stabilisation_demarrage: "{{ is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') }}"
+        temporisation_marche_minimale: >
+          {{
+            is_state('input_select.pcha_mode_de_fonctionnement', 'AUTO')
+            and is_state('switch.pcha_commande_pompe_filtration', 'on')
+            and is_state('input_select.pcha_etat_machine', 'FILTRATION')
+            and not is_state('binary_sensor.pcha_filtration_requise_v3', 'on')
+            and not is_state('binary_sensor.pcha_chauffage_solaire_requis', 'on')
+            and not is_state('binary_sensor.pcha_protection_serpentin_requise', 'on')
+          }}
 
 # Information d'affichage du temps restant du traitement.
 - sensor:
