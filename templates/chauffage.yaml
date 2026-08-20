@@ -135,7 +135,11 @@
           not secours_luminosite
           and luminosite_disponible
           and is_number(luminosite)
-          and (luminosite | float(0)) > seuil_effectif
+          and (
+            (luminosite | float(0)) >= seuil_effectif
+            if this.state == 'on'
+            else (luminosite | float(0)) > seuil_effectif
+          )
         }}
       attributes:
         luminosite_lux: >
