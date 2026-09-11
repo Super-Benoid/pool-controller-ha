@@ -1,5 +1,12 @@
 # Changelog
 
+## V3.0 — Diagnostic liaison ESP32 — 2026-09-11
+
+* ajout de MES-005, critique après 60 s de perte du statut ESPHome et réarmé après 60 s de retour stable ;
+* intégration au niveau global, à la machine (y compris VIDANGE), aux notifications et aux historiques J à J-7 ;
+* ajout du fragment ESPHome de statut et de la procédure dans docs/V3.0/LIAISON-ESP32.md ;
+* les protections de débit existantes restent actives.
+
 ## V3.0 — 2026-08-18
 
 ### Objectif quotidien paramétrable
@@ -124,3 +131,4 @@
 * ajout de `sensor.pcha_progression_objectif_quotidien` et d’une jauge de progression ;
 * modernisation de l’anneau de progression avec dégradé cyan, bleu, violet et fuchsia ;
 * réorganisation des vues Accueil, Pilotage, Solaire et Diagnostics.
+

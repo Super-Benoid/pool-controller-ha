@@ -47,6 +47,8 @@
         Vérifier la mesure de puissance de la prise de filtration.
       {% elif diagnostic_id == 'MES-004' %}
         Vérifier le BH1750, la D1 mini, le Wi-Fi et la liaison Packet Transport vers l’ESP32 Jardin.
+      {% elif diagnostic_id == 'MES-005' %}
+        Vérifier l'alimentation, le Wi-Fi et la connexion API de l'ESP32 Jardin. Le défaut disparaît après 60 secondes de liaison stable.
       {% elif diagnostic_id == 'COH-001' %}
         Vérifier la pompe, la prise, le débitmètre et la cohérence entre débit et puissance.
       {% elif diagnostic_id == 'COH-002' %}
@@ -122,6 +124,7 @@
           - pcha_mes_002
           - pcha_mes_003
           - pcha_mes_004
+          - pcha_mes_005
           - pcha_coh_001
           - pcha_coh_002
           - pcha_pro_001
@@ -134,3 +137,4 @@
     - action: input_boolean.turn_off
       target:
         entity_id: input_boolean.pcha_acquitter_alarmes
+

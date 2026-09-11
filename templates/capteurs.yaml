@@ -30,6 +30,20 @@
 # et source_coherent permettent aux diagnostics de distinguer une source absente d'une mesure aberrante.
 ################################################################################
 
+# Statut natif ESPHome : seul ON confirme la connexion.
+# Adapter l'identifiant physique ici si Home Assistant en a créé un autre.
+- binary_sensor:
+    - name: PCHA Liaison ESP32
+      unique_id: pcha_liaison_esp32
+      default_entity_id: binary_sensor.pcha_liaison_esp32
+      device_class: connectivity
+      icon: mdi:lan-connect
+      state: >
+        {{ is_state('binary_sensor.jardin_esp32_jardin_statut_connexion', 'on') }}
+      attributes:
+        source_entity: binary_sensor.jardin_esp32_jardin_statut_connexion
+        source_state: "{{ states('binary_sensor.jardin_esp32_jardin_statut_connexion') }}"
+
 # État abstrait de la chaîne de luminosité distante.
 - binary_sensor:
     - name: PCHA Liaison luminosité distante
@@ -371,3 +385,4 @@
           {% else %}
             {{ none }}
           {% endif %}
+

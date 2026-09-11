@@ -29,6 +29,7 @@
 #   binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
 #   binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
 #   binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
+#   binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
 #   binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
 #   binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
 #   binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
@@ -116,6 +117,31 @@ template:
           gravite: DEGRADE
           rearmement: TEMPORISE
           motif: Puissance de la pompe indisponible
+
+      # MES-005 — Connexion native API de l'ESP32 Jardin.
+      # Une mesure constante ou un RSSI faible ne constitue pas une déconnexion.
+      - name: PCHA Diagnostic MES-005 Liaison ESP32 indisponible
+        unique_id: pcha_diagnostic_mes_005_liaison_esp32_indisponible
+        default_entity_id: binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
+        device_class: problem
+        icon: mdi:lan-disconnect
+        delay_on: "00:01:00"
+        delay_off: "00:01:00"
+        state: >
+          {{
+            not is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
+            and not is_state('binary_sensor.pcha_liaison_esp32', 'on')
+          }}
+        attributes:
+          diagnostic_id: MES-005
+          famille: MES
+          gravite: CRITIQUE
+          rearmement: TEMPORISE
+          source_entity: binary_sensor.pcha_liaison_esp32
+          etat_liaison: "{{ states('binary_sensor.pcha_liaison_esp32') }}"
+          validation_secondes: 60
+          retour_stable_secondes: 60
+          motif: Liaison Home Assistant / ESP32 Jardin indisponible — vérifier alimentation, Wi-Fi et API ESPHome
 
       # MES-004 — Chaîne de luminosité distante indisponible.
       # La mesure est produite par le BH1750 de la D1 mini, diffusée par Packet
@@ -431,6 +457,8 @@ template:
           {% set actionneur_indisponible =
                not has_value('switch.pcha_commande_pompe_filtration') %}
           {% set securite_hydraulique_indisponible =
+               is_state('binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible', 'on')
+               or
                is_state(
                  'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
                  'on'
@@ -635,6 +663,7 @@ automation:
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
           - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
           - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
           - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
           - binary_sensor.pcha_diagnostic_pro_001_debit_critique
@@ -648,6 +677,7 @@ automation:
             'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
             'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
             'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+            'binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible',
             'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
             'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
             'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
@@ -671,6 +701,7 @@ automation:
       - variables:
           niveau_calcule: >
             {% set critiques = [
+              'binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible',
               'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
               'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
               'binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible'
@@ -728,6 +759,7 @@ automation:
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
           - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
           - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
           - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
           - binary_sensor.pcha_diagnostic_pro_001_debit_critique
@@ -740,6 +772,7 @@ automation:
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
           - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
           - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
           - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
           - binary_sensor.pcha_diagnostic_pro_001_debit_critique
@@ -762,3 +795,4 @@ automation:
           motif: >
             {{ state_attr(trigger.entity_id, 'motif') }}
           entity_id: "{{ trigger.entity_id }}"
+

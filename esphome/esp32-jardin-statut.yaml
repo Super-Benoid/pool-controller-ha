@@ -1,0 +1,8 @@
+# Fragment à fusionner sous binary_sensor: dans l'ESP32 Jardin existant.
+# Ne pas remplacer le firmware complet ni dupliquer la clé binary_sensor.
+binary_sensor:
+  - platform: status
+    id: statut_connexion
+    name: "Statut connexion"
+    entity_category: diagnostic
+    device_class: connectivity
