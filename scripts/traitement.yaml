@@ -42,6 +42,8 @@ pcha_traitement_demarrer:
   icon: mdi:timer-play-outline
   mode: restart
   sequence:
+    - condition: template
+      value_template: "{{ not is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
     - action: timer.start
       target:
         entity_id: timer.pcha_traitement
@@ -56,6 +58,8 @@ pcha_traitement_demarrer:
         - action: timer.pause
           target:
             entity_id: timer.pcha_traitement
+    - condition: template
+      value_template: "{{ not is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
     - action: input_select.select_option
       target:
         entity_id: input_select.pcha_mode_de_fonctionnement
@@ -78,3 +82,4 @@ pcha_traitement_terminer:
             entity_id: input_select.pcha_mode_de_fonctionnement
           data:
             option: AUTO
+

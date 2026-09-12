@@ -79,6 +79,10 @@
       event_type: timer.finished
       event_data:
         entity_id: timer.pcha_vidange
+  conditions:
+    - condition: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      state: VIDANGE
   actions:
     - action: persistent_notification.dismiss
       data:
@@ -118,7 +122,7 @@
         entity_id: timer.pcha_vidange
     - if:
         - condition: template
-          value_template: "{{ trigger.to_state is not none and trigger.to_state.state != 'OFF' }}"
+          value_template: "{{ trigger.to_state is not none and trigger.to_state.state not in ['OFF', 'HIVERNAGE'] }}"
       then:
         - action: input_select.select_option
           target:
@@ -152,3 +156,4 @@
         - action: timer.cancel
           target:
             entity_id: timer.pcha_vidange
+

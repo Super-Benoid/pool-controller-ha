@@ -125,3 +125,8 @@ binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok
 ```
 
 Aucune fonction métier PCHA ne doit contourner les abstractions `pcha_*` pour lire directement ces entités physiques.
+
+
+## Piscine démontée
+
+Utiliser le [mode HIVERNAGE](docs/V3.0/HIVERNAGE.md) pour suspendre les diagnostics, les demandes de filtration et les publications PCHA sur AWTRIX.

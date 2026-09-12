@@ -26,7 +26,10 @@
       event: start
   conditions: []
   actions:
-    - wait_template: >
+    - wait_template: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          true
+        {% else %}
         {{
           states('binary_sensor.pcha_demande_fonctionnement') not in ['unknown', 'unavailable']
           and states('input_number.pcha_temps_arret_pompe_min') not in ['unknown', 'unavailable']
@@ -37,6 +40,7 @@
           and states('input_boolean.pcha_verrou_pro_001') not in ['unknown', 'unavailable']
           and states('switch.pcha_commande_pompe_filtration') not in ['unknown', 'unavailable']
         }}
+        {% endif %}
       timeout: "00:01:00"
       continue_on_timeout: false
     - action: script.pcha_machine_initialiser
@@ -58,7 +62,10 @@
         - switch.pcha_commande_pompe_filtration
   conditions:
     - condition: template
-      value_template: >
+      value_template: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          true
+        {% else %}
         {{
           states('binary_sensor.pcha_demande_fonctionnement') not in ['unknown', 'unavailable']
           and states('input_number.pcha_temps_arret_pompe_min') not in ['unknown', 'unavailable']
@@ -69,5 +76,7 @@
           and states('input_boolean.pcha_verrou_pro_001') not in ['unknown', 'unavailable']
           and states('switch.pcha_commande_pompe_filtration') not in ['unknown', 'unavailable']
         }}
+        {% endif %}
   actions:
     - action: script.pcha_machine_reevaluer
+

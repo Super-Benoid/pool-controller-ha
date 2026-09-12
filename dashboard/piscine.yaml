@@ -83,6 +83,7 @@ views:
         tap_action:
           action: none
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - binary_sensor.pcha_demande_fonctionnement
           - binary_sensor.pcha_chauffage_solaire_requis
           - binary_sensor.pcha_chauffage_solaire_actif
@@ -92,7 +93,10 @@ views:
           grid-area: header
         custom_fields:
           titre: Pool Controller Home Assistant
-          sous_titre: Synthèse décisionnelle en temps réel
+          sous_titre: |
+            [[[ return states['input_select.pcha_mode_de_fonctionnement']?.state === 'HIVERNAGE'
+              ? 'HIVERNAGE — piscine démontée, surveillance suspendue'
+              : 'Synthèse décisionnelle en temps réel'; ]]]
           heure: |
             [[[
               return new Date().toLocaleTimeString('fr-FR', {
@@ -961,6 +965,7 @@ views:
         tap_action:
           action: more-info
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - sensor.pcha_heure_atteinte_objectif
         view_layout:
           grid-area: objectif
@@ -968,6 +973,8 @@ views:
         custom_fields:
           contenu: |
             [[[
+              if (states['input_select.pcha_mode_de_fonctionnement']?.state === 'HIVERNAGE')
+                return '<div style="padding:24px;color:#a5f3fc;text-align:center"><strong>HIVERNAGE</strong><p>Objectif de filtration suspendu</p></div>';
               const get = (id) => states[id];
               const valid = (s) => s && !['unknown', 'unavailable', 'none', ''].includes(s.state);
               const duration = (id) => {
@@ -1157,6 +1164,7 @@ views:
         tap_action:
           action: more-info
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - sensor.pcha_meteo_aujourd_hui
         view_layout:
           grid-area: meteo-j
@@ -1207,6 +1215,7 @@ views:
         tap_action:
           action: more-info
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - sensor.pcha_meteo_demain
         view_layout:
           grid-area: meteo-j1
@@ -1243,6 +1252,7 @@ views:
         tap_action:
           action: more-info
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - sensor.pcha_score_potentiel_thermique_jour
           - sensor.pcha_potentiel_thermique_jour
           - sensor.pcha_heure_cible_objectif
@@ -1405,6 +1415,7 @@ views:
               tap_action:
                 action: more-info
               triggers_update:
+                - input_select.pcha_mode_de_fonctionnement
                 - timer.pcha_traitement
               custom_fields:
                 duree: >
@@ -1588,6 +1599,7 @@ views:
         tap_action:
           action: none
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - input_select.pcha_mode_de_fonctionnement
           - input_select.pcha_niveau_fonctionnement
           - binary_sensor.pcha_demande_fonctionnement
@@ -1865,6 +1877,7 @@ views:
         tap_action:
           action: more-info
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - input_select.pcha_mode_de_fonctionnement
           - timer.pcha_traitement
           - sensor.pcha_temps_traitement_restant
@@ -2290,6 +2303,7 @@ views:
         tap_action:
           action: none
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - sensor.pcha_source_chauffage_solaire
           - binary_sensor.pcha_chauffage_solaire_requis
           - binary_sensor.pcha_chauffage_solaire_actif
@@ -2881,6 +2895,7 @@ views:
         tap_action:
           action: none
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - input_select.pcha_niveau_fonctionnement
           - input_select.pcha_etat_machine
           - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
@@ -2897,7 +2912,10 @@ views:
           grid-area: header-diagnostics
         custom_fields:
           titre: Diagnostics et sécurité
-          sous_titre: Disponibilité, cohérence et surveillance du procédé
+          sous_titre: |
+            [[[ return states['input_select.pcha_mode_de_fonctionnement']?.state === 'HIVERNAGE'
+              ? 'HIVERNAGE — diagnostics et alertes PCHA suspendus'
+              : 'Disponibilité, cohérence et surveillance du procédé'; ]]]
           heure: |
             [[[
               return new Date().toLocaleTimeString('fr-FR', {
@@ -3024,6 +3042,7 @@ views:
         tap_action:
           action: none
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
@@ -3132,7 +3151,7 @@ views:
         view_layout:
           grid-area: mes-001
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
         styles: &diag_card_styles
           card:
             - background: linear-gradient(145deg, rgba(7,27,45,.98), rgba(15,23,42,.98))
@@ -3195,7 +3214,7 @@ views:
         view_layout:
           grid-area: mes-002
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: &diag_critique_state
           - value: 'on'
@@ -3223,7 +3242,7 @@ views:
         view_layout:
           grid-area: mes-003
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_degrade_state
 
@@ -3244,7 +3263,7 @@ views:
         view_layout:
           grid-area: mes-004
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_degrade_state
 
@@ -3260,7 +3279,7 @@ views:
         view_layout:
           grid-area: mes-005
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_critique_state
 
@@ -3283,7 +3302,7 @@ views:
         view_layout:
           grid-area: coh-001
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_degrade_state
 
@@ -3299,7 +3318,7 @@ views:
         view_layout:
           grid-area: coh-002
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_degrade_state
 
@@ -3322,7 +3341,7 @@ views:
         view_layout:
           grid-area: pro-001
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_critique_state
 
@@ -3338,7 +3357,7 @@ views:
         view_layout:
           grid-area: pro-002
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "DÉGRADÉ" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_degrade_state
 
@@ -3354,7 +3373,7 @@ views:
         view_layout:
           grid-area: pro-003
         custom_fields:
-          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+          gravite: '[[[ return entity.attributes?.suspendu ? "SUSPENDU" : entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
         styles: *diag_card_styles
         state: *diag_critique_state
 
@@ -3516,6 +3535,7 @@ views:
           action: none
         triggers_update:
           - input_select.pcha_mode_de_fonctionnement
+          - input_select.pcha_mode_de_fonctionnement
           - input_select.pcha_niveau_fonctionnement
           - timer.pcha_maintenance
         view_layout:
@@ -3577,6 +3597,7 @@ views:
         tap_action:
           action: none
         triggers_update:
+          - input_select.pcha_mode_de_fonctionnement
           - input_boolean.pcha_maintenance_temperature_indisponible
           - input_boolean.pcha_maintenance_debit_indisponible
           - input_boolean.pcha_maintenance_puissance_indisponible
@@ -4339,7 +4360,7 @@ views:
                 curve: stepline
                 extend_to: end
                 transform: |
-                  const valeurs = {OFF:0, SECURISATION:1, AUTO:2, TRAITEMENT:3, MARCHE_FORCEE:4, VIDANGE:5};
+                  const valeurs = {OFF:0, SECURISATION:1, AUTO:2, TRAITEMENT:3, MARCHE_FORCEE:4, VIDANGE:5, HIVERNAGE:6};
                   return valeurs[x] ?? -1;
             apex_config:
               chart:
@@ -4358,8 +4379,8 @@ views:
                   show: false
               yaxis:
                 min: 0
-                max: 5
-                tickAmount: 5
+                max: 6
+                tickAmount: 6
                 labels:
                   minWidth: 125
                   maxWidth: 125
@@ -4369,7 +4390,7 @@ views:
                     fontWeight: 650
                   formatter: |
                     EVAL:function(value) {
-                      const etats = {0:'OFF',1:'SÉCURISATION',2:'AUTO',3:'TRAITEMENT',4:'MARCHE FORCÉE',5:'VIDANGE'};
+                      const etats = {0:'OFF',1:'SÉCURISATION',2:'AUTO',3:'TRAITEMENT',4:'MARCHE FORCÉE',5:'VIDANGE',6:'HIVERNAGE'};
                       return etats[Math.round(value)] || '';
                     }
               grid:
@@ -4381,7 +4402,7 @@ views:
                 y:
                   formatter: |
                     EVAL:function(value) {
-                      const etats = {0:'OFF',1:'SÉCURISATION',2:'AUTO',3:'TRAITEMENT',4:'MARCHE FORCÉE',5:'VIDANGE'};
+                      const etats = {0:'OFF',1:'SÉCURISATION',2:'AUTO',3:'TRAITEMENT',4:'MARCHE FORCÉE',5:'VIDANGE',6:'HIVERNAGE'};
                       return etats[Math.round(value)] || 'INDISPONIBLE';
                     }
             card_mod: &history_lane_mod
@@ -4409,7 +4430,7 @@ views:
                 curve: stepline
                 extend_to: end
                 transform: |
-                  const valeurs = {INITIALISATION:0, ATTENTE:1, FILTRATION:2, VIDANGE:3};
+                  const valeurs = {INITIALISATION:0, ATTENTE:1, FILTRATION:2, VIDANGE:3, HIVERNAGE:4};
                   return valeurs[x] ?? -1;
             apex_config:
               chart:
@@ -4428,8 +4449,8 @@ views:
                   show: false
               yaxis:
                 min: 0
-                max: 3
-                tickAmount: 3
+                max: 4
+                tickAmount: 4
                 labels:
                   minWidth: 125
                   maxWidth: 125
@@ -4439,7 +4460,7 @@ views:
                     fontWeight: 650
                   formatter: |
                     EVAL:function(value) {
-                      const etats = {0:'INITIALISATION',1:'ATTENTE',2:'FILTRATION',3:'VIDANGE'};
+                      const etats = {0:'INITIALISATION',1:'ATTENTE',2:'FILTRATION',3:'VIDANGE',4:'HIVERNAGE'};
                       return etats[Math.round(value)] || '';
                     }
               grid:
@@ -4451,7 +4472,7 @@ views:
                 y:
                   formatter: |
                     EVAL:function(value) {
-                      const etats = {0:'INITIALISATION',1:'ATTENTE',2:'FILTRATION',3:'VIDANGE'};
+                      const etats = {0:'INITIALISATION',1:'ATTENTE',2:'FILTRATION',3:'VIDANGE',4:'HIVERNAGE'};
                       return etats[Math.round(value)] || 'INDISPONIBLE';
                     }
             card_mod: *history_lane_mod

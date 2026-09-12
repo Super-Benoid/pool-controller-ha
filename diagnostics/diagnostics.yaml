@@ -59,14 +59,23 @@ template:
         icon: mdi:thermometer-alert
         delay_on: >
           {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
-        delay_off: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
           {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
-        state: >
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {{
             not (state_attr('sensor.pcha_temperature_piscine', 'source_available')
                  | bool(false))
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: MES-001
           famille: MES
           gravite: DEGRADE
@@ -83,13 +92,23 @@ template:
         # imposer une intervention. La disparition et le retour doivent être
         # stables pendant une minute.
         delay_on: "00:01:00"
-        delay_off: "00:01:00"
-        state: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
+          00:01:00
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {{
             not (state_attr('sensor.pcha_debit_filtration', 'source_available')
                  | bool(false))
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: MES-002
           famille: MES
           gravite: CRITIQUE
@@ -105,13 +124,23 @@ template:
         # Ignore les microcoupures de la prise connectée et exige une mesure
         # stable avant de refermer le diagnostic.
         delay_on: "00:01:00"
-        delay_off: "00:00:10"
-        state: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
+          00:00:10
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {{
             not (state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available')
                  | bool(false))
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: MES-003
           famille: MES
           gravite: DEGRADE
@@ -126,13 +155,23 @@ template:
         device_class: problem
         icon: mdi:lan-disconnect
         delay_on: "00:01:00"
-        delay_off: "00:01:00"
-        state: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
+          00:01:00
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {{
             not is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on')
             and not is_state('binary_sensor.pcha_liaison_esp32', 'on')
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: MES-005
           famille: MES
           gravite: CRITIQUE
@@ -155,19 +194,24 @@ template:
         icon: mdi:sun-wireless
         delay_on: >
           {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
-        delay_off: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
           {% if is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
             0
           {% else %}
             {{ states('input_number.pcha_temps_validation_luminosite') | int(60) }}
           {% endif %}
-        state: >
-          {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
-          {% set liaison_ok = is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %}
-          {% set capteur_ok = is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') %}
-          {% set mesure_ok = state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false) %}
-          {{ not stabilisation and not (liaison_ok and capteur_ok and mesure_ok) }}
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
+          {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %} {% set liaison_ok = is_state('binary_sensor.pcha_liaison_luminosite_distante', 'on') %} {% set capteur_ok = is_state('binary_sensor.pcha_capteur_luminosite_distant_ok', 'on') %} {% set mesure_ok = state_attr('sensor.pcha_luminosite', 'source_coherent') | bool(false) %} {{ not stabilisation and not (liaison_ok and capteur_ok and mesure_ok) }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: MES-004
           famille: MES
           gravite: DEGRADE
@@ -215,28 +259,17 @@ template:
         icon: mdi:vector-difference-ab
         delay_on: >
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        delay_off: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        state: >
-          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
-          {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
-          {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
-          {% set arret_cfg = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
-          {% set pmin_cfg = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
-          {% set pmax_cfg = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
-          {% set profil_valide = critique_cfg > 0 and normal_cfg > critique_cfg and arret_cfg > 0 and pmin_cfg > arret_cfg and pmax_cfg > pmin_cfg %}
-          {% set seuil_critique = critique_cfg if profil_valide else 500 %}
-          {% set seuil_normal = normal_cfg if profil_valide else 3000 %}
-          {% set seuil_arret = arret_cfg if profil_valide else 1 %}
-          {% set puissance_min = pmin_cfg if profil_valide else 300 %}
-          {% set puissance_max = pmax_cfg if profil_valide else 350 %}
-          {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
-          {% set puissance_disponible = state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available') | bool(false) %}
-          {% set commande = states('switch.pcha_commande_pompe_filtration') %}
-          {% set commande_connue = commande in ['on', 'off'] %}
-          {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
-          {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %}
-          {% set incoherence_marche =
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %} {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %} {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %} {% set arret_cfg = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %} {% set pmin_cfg = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %} {% set pmax_cfg = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %} {% set profil_valide = critique_cfg > 0 and normal_cfg > critique_cfg and arret_cfg > 0 and pmin_cfg > arret_cfg and pmax_cfg > pmin_cfg %} {% set seuil_critique = critique_cfg if profil_valide else 500 %} {% set seuil_normal = normal_cfg if profil_valide else 3000 %} {% set seuil_arret = arret_cfg if profil_valide else 1 %} {% set puissance_min = pmin_cfg if profil_valide else 300 %} {% set puissance_max = pmax_cfg if profil_valide else 350 %} {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %} {% set puissance_disponible = state_attr('sensor.pcha_puissance_pompe_filtration', 'source_available') | bool(false) %} {% set commande = states('switch.pcha_commande_pompe_filtration') %} {% set commande_connue = commande in ['on', 'off'] %} {% set debit = states('sensor.pcha_debit_filtration') | float(0) %} {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %} {% set incoherence_marche =
                commande == 'on'
                and (
                  (debit >= seuil_critique and puissance < seuil_arret)
@@ -256,7 +289,9 @@ template:
               and (incoherence_marche or incoherence_arret)
             )
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: COH-001
           famille: COH
           gravite: DEGRADE
@@ -295,9 +330,16 @@ template:
         icon: mdi:thermometer-alert
         delay_on: >
           {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
-        delay_off: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
           {{ states('input_number.pcha_temps_validation_temperature_piscine') | int(30) }}
-        state: >
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {% set temperature_disponible =
                state_attr('sensor.pcha_temperature_piscine', 'source_available')
                | bool(false) %}
@@ -315,7 +357,9 @@ template:
             )
             and (not source_coherente or not corrigee_coherente)
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: COH-002
           famille: COH
           gravite: DEGRADE
@@ -335,15 +379,17 @@ template:
         icon: mdi:water-alert
         delay_on: >
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        delay_off: "00:00:00"
-        state: >
-          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
-          {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
-          {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
-          {% set seuil_critique = critique_cfg if critique_cfg > 0 and normal_cfg > critique_cfg else 500 %}
-          {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
-          {% set coh_configuration = is_state('sensor.pcha_analyse_coh_001', 'CONFIGURATION_SEUILS_INVALIDE') %}
-          {{
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
+          00:00:00
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %} {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %} {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %} {% set seuil_critique = critique_cfg if critique_cfg > 0 and normal_cfg > critique_cfg else 500 %} {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %} {% set coh_configuration = is_state('sensor.pcha_analyse_coh_001', 'CONFIGURATION_SEUILS_INVALIDE') %} {{
             debit_disponible
             and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
             and (
@@ -353,6 +399,7 @@ template:
             and is_state('input_select.pcha_etat_machine', 'FILTRATION')
             and states('sensor.pcha_debit_filtration') | float(0) < seuil_critique
           }}
+          {% endif %}
         attributes:
           role: CONDITION_INTERNE
           seuil_debit_critique_l_h: >
@@ -369,9 +416,14 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_pro_001_debit_critique
         device_class: problem
         icon: mdi:water-alert
-        state: >
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {{ is_state('input_boolean.pcha_verrou_pro_001', 'on') }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: PRO-001
           famille: PRO
           gravite: CRITIQUE
@@ -389,19 +441,17 @@ template:
         icon: mdi:water-minus
         delay_on: >
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        delay_off: >
+        delay_off: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            0
+          {% else %}
           {{ [states('input_number.pcha_temps_validation_debit') | int(30), 30] | max }}
-        state: >
-          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
-          {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
-          {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
-          {% set profil_valide = critique_cfg > 0 and normal_cfg > critique_cfg %}
-          {% set seuil_critique = critique_cfg if profil_valide else 500 %}
-          {% set seuil_normal = normal_cfg if profil_valide else 3000 %}
-          {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
-          {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
-          {% set coh_configuration = is_state('sensor.pcha_analyse_coh_001', 'CONFIGURATION_SEUILS_INVALIDE') %}
-          {{
+          {% endif %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %} {% set critique_cfg = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %} {% set normal_cfg = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %} {% set profil_valide = critique_cfg > 0 and normal_cfg > critique_cfg %} {% set seuil_critique = critique_cfg if profil_valide else 500 %} {% set seuil_normal = normal_cfg if profil_valide else 3000 %} {% set debit_disponible = state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %} {% set debit = states('sensor.pcha_debit_filtration') | float(0) %} {% set coh_configuration = is_state('sensor.pcha_analyse_coh_001', 'CONFIGURATION_SEUILS_INVALIDE') %} {{
             debit_disponible
             and not is_state('binary_sensor.pcha_diagnostic_mes_002_debit_indisponible', 'on')
             and (
@@ -412,7 +462,9 @@ template:
             and is_state('input_select.pcha_etat_machine', 'FILTRATION')
             and seuil_critique <= debit < seuil_normal
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: PRO-002
           famille: PRO
           gravite: DEGRADE
@@ -447,7 +499,10 @@ template:
         default_entity_id: binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible
         device_class: problem
         icon: mdi:shield-sun-outline
-        state: >
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            false
+          {% else %}
           {% set protection_requise =
                is_state('binary_sensor.pcha_protection_serpentin_requise', 'on') %}
           {% set mode_off =
@@ -476,7 +531,9 @@ template:
               or securite_hydraulique_indisponible
             )
           }}
+          {% endif %}
         attributes:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: PRO-003
           famille: PRO
           gravite: CRITIQUE
@@ -491,23 +548,11 @@ template:
         unique_id: pcha_analyse_coh_001
         default_entity_id: sensor.pcha_analyse_coh_001
         icon: mdi:stethoscope
-        state: >
-          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %}
-          {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %}
-          {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %}
-          {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %}
-          {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %}
-          {% set pmax = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %}
-          {% set profil_valide = critique > 0 and normal > critique and arret > 0 and pmin > arret and pmax > pmin %}
-          {% set seuil_critique = critique if profil_valide else 500 %}
-          {% set seuil_normal = normal if profil_valide else 3000 %}
-          {% set seuil_arret = arret if profil_valide else 1 %}
-          {% set puissance_min = pmin if profil_valide else 300 %}
-          {% set puissance_max = pmax if profil_valide else 350 %}
-          {% set debit = states('sensor.pcha_debit_filtration') | float(0) %}
-          {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %}
-          {% set commande = states('switch.pcha_commande_pompe_filtration') %}
-          {% if not profil_valide %}
+        state: |
+          {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+            HIVERNAGE
+          {% else %}
+          {% set init = is_state('input_boolean.pcha_parametres_materiel_initialises', 'on') %} {% set critique = states('input_number.pcha_seuil_debit_critique') | float(500) if init else 500 %} {% set normal = states('input_number.pcha_seuil_debit_insuffisant') | float(3000) if init else 3000 %} {% set arret = states('input_number.pcha_seuil_puissance_pompe_arretee') | float(1) if init else 1 %} {% set pmin = states('input_number.pcha_puissance_pompe_min_normale') | float(300) if init else 300 %} {% set pmax = states('input_number.pcha_puissance_pompe_max_normale') | float(350) if init else 350 %} {% set profil_valide = critique > 0 and normal > critique and arret > 0 and pmin > arret and pmax > pmin %} {% set seuil_critique = critique if profil_valide else 500 %} {% set seuil_normal = normal if profil_valide else 3000 %} {% set seuil_arret = arret if profil_valide else 1 %} {% set puissance_min = pmin if profil_valide else 300 %} {% set puissance_max = pmax if profil_valide else 350 %} {% set debit = states('sensor.pcha_debit_filtration') | float(0) %} {% set puissance = states('sensor.pcha_puissance_pompe_filtration') | float(0) %} {% set commande = states('switch.pcha_commande_pompe_filtration') %} {% if not profil_valide %}
             CONFIGURATION_SEUILS_INVALIDE
           {% elif not state_attr('sensor.pcha_debit_filtration', 'source_available') | bool(false) %}
             DEBIT_INDISPONIBLE
@@ -527,6 +572,7 @@ template:
             COMMANDE_ON_PUISSANCE_HORS_PLAGE
           {% else %}
             COHERENT
+          {% endif %}
           {% endif %}
         attributes:
           commande_pompe: >
@@ -605,6 +651,9 @@ automation:
       - trigger: state
         entity_id: binary_sensor.pcha_condition_pro_001_debit_critique
         to: "on"
+    conditions:
+      - condition: template
+        value_template: "{{ not is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
     actions:
       - action: input_boolean.turn_on
         target:
@@ -659,6 +708,7 @@ automation:
         event: start
       - trigger: state
         entity_id:
+          - input_select.pcha_mode_de_fonctionnement
           - binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
@@ -699,40 +749,38 @@ automation:
         continue_on_timeout: false
 
       - variables:
-          niveau_calcule: >
+          niveau_calcule: |
+            {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+              NORMAL
+            {% else %}
             {% set critiques = [
               'binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible',
               'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
               'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
               'binary_sensor.pcha_diagnostic_pro_003_protection_serpentin_impossible'
-            ] %}
-            {% set degrades = [
+            ] %} {% set degrades = [
               'binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible',
               'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
               'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
               'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
               'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
               'binary_sensor.pcha_diagnostic_pro_002_debit_insuffisant'
-            ] %}
-            {% set ns = namespace(critique=false, degrade=false) %}
-            {% for entity_id in critiques %}
+            ] %} {% set ns = namespace(critique=false, degrade=false) %} {% for entity_id in critiques %}
               {% if is_state(entity_id, 'on') %}
                 {% set ns.critique = true %}
               {% endif %}
-            {% endfor %}
-            {% for entity_id in degrades %}
+            {% endfor %} {% for entity_id in degrades %}
               {% if is_state(entity_id, 'on') %}
                 {% set ns.degrade = true %}
               {% endif %}
-            {% endfor %}
-            {% if ns.critique %}
+            {% endfor %} {% if ns.critique %}
               CRITIQUE
             {% elif ns.degrade %}
               DEGRADE
             {% else %}
               NORMAL
             {% endif %}
-
+            {% endif %}
       - condition: template
         value_template: >
           {{
@@ -784,6 +832,7 @@ automation:
     actions:
       - event: pcha_diagnostic
         event_data:
+          suspendu: "{{ is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
           diagnostic_id: >
             {{ state_attr(trigger.entity_id, 'diagnostic_id') }}
           famille: >
