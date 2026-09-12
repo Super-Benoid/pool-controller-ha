@@ -24,3 +24,11 @@ binary_sensor.jardin_esp32_jardin_capteur_luminosite_ok
 ```
 
 Si Home Assistant crée un autre identifiant, renommer l'entité avant d'activer PCHA V1.1 ou adapter uniquement la couche d'abstraction `templates/capteurs.yaml`.
+
+
+## Statut de connexion ESP32 — MES-005 (V3.0)
+
+Ajouter le fragment `esp32-jardin-statut.yaml` à la section `binary_sensor:`
+existante avant de déployer le diagnostic.
+Suivre [la procédure MES-005](../docs/V3.0/LIAISON-ESP32.md), notamment la vérification
+de l'identifiant physique créé par Home Assistant.

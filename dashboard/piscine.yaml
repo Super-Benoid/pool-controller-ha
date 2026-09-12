@@ -2811,6 +2811,7 @@ views:
         "niveau-global niveau-global niveau-global actifs actifs actifs machine-diagnostic machine-diagnostic machine-diagnostic acquitter acquitter acquitter"
         "mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre"
         "mes-001 mes-001 mes-001 mes-002 mes-002 mes-002 mes-003 mes-003 mes-003 mes-004 mes-004 mes-004"
+        "mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005"
         "coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre"
         "coh-001 coh-001 coh-001 coh-001 coh-001 coh-001 coh-002 coh-002 coh-002 coh-002 coh-002 coh-002"
         "pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre"
@@ -2830,6 +2831,7 @@ views:
             "mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre mes-titre"
             "mes-001 mes-001 mes-001 mes-001 mes-002 mes-002 mes-002 mes-002"
             "mes-003 mes-003 mes-003 mes-003 mes-004 mes-004 mes-004 mes-004"
+            "mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005 mes-005"
             "coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre coh-titre"
             "coh-001 coh-001 coh-001 coh-001 coh-002 coh-002 coh-002 coh-002"
             "pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre pro-titre"
@@ -2852,6 +2854,7 @@ views:
             "mes-002"
             "mes-003"
             "mes-004"
+            "mes-005"
             "coh-titre"
             "coh-001"
             "coh-002"
@@ -2884,6 +2887,7 @@ views:
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
           - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
           - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
           - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
           - binary_sensor.pcha_diagnostic_pro_001_debit_critique
@@ -2908,6 +2912,7 @@ views:
                 'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
                 'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
                 'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible',
                 'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
                 'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
                 'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
@@ -3023,6 +3028,7 @@ views:
           - binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
           - binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
           - binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
+          - binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
           - binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
           - binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
           - binary_sensor.pcha_diagnostic_pro_001_debit_critique
@@ -3038,6 +3044,7 @@ views:
                 'binary_sensor.pcha_diagnostic_mes_002_debit_indisponible',
                 'binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible',
                 'binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible',
+                'binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible',
                 'binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents',
                 'binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente',
                 'binary_sensor.pcha_diagnostic_pro_001_debit_critique',
@@ -3242,6 +3249,22 @@ views:
         state: *diag_degrade_state
 
       - type: custom:button-card
+        entity: binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
+        name: MES-005 — Liaison ESP32 Jardin
+        label: Perte 60 s · retour stable 60 s
+        icon: mdi:lan-disconnect
+        show_state: false
+        show_label: true
+        tap_action:
+          action: more-info
+        view_layout:
+          grid-area: mes-005
+        custom_fields:
+          gravite: '[[[ return entity.state === "on" ? "CRITIQUE" : "NORMAL"; ]]]'
+        styles: *diag_card_styles
+        state: *diag_critique_state
+
+      - type: custom:button-card
         name: COH — Cohérence des mesures
         icon: mdi:compare-horizontal
         view_layout:
@@ -3404,6 +3427,8 @@ views:
             name: MES-003
           - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
             name: MES-004
+          - entity: binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
+            name: MES-005
           - entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
             name: COH-001
           - entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
@@ -4579,6 +4604,8 @@ views:
             name: MES-003
           - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
             name: MES-004
+          - entity: binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
+            name: MES-005
           - entity: binary_sensor.pcha_diagnostic_coh_001_debit_puissance_incoherents
             name: COH-001
           - entity: binary_sensor.pcha_diagnostic_coh_002_temperature_piscine_incoherente
@@ -4988,24 +5015,29 @@ views:
             name: Niveau global
             color: '#60a5fa'
             stroke_width: 2
-            transform: "return 9 + (x === 'NORMAL' ? 0 : 0.7);"
+            transform: "return 10 + (x === 'NORMAL' ? 0 : 0.7);"
           - entity: binary_sensor.pcha_diagnostic_mes_001_temperature_piscine_indisponible
             name: MES-001
             color: '#fb7185'
             stroke_width: 2
-            transform: "return 8 + (x === 'on' ? 0.7 : 0);"
+            transform: "return 9 + (x === 'on' ? 0.7 : 0);"
           - entity: binary_sensor.pcha_diagnostic_mes_002_debit_indisponible
             name: MES-002
             color: '#fb7185'
             stroke_width: 2
-            transform: "return 7 + (x === 'on' ? 0.7 : 0);"
+            transform: "return 8 + (x === 'on' ? 0.7 : 0);"
           - entity: binary_sensor.pcha_diagnostic_mes_003_puissance_indisponible
             name: MES-003
             color: '#fb7185'
             stroke_width: 2
-            transform: "return 6 + (x === 'on' ? 0.7 : 0);"
+            transform: "return 7 + (x === 'on' ? 0.7 : 0);"
           - entity: binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible
             name: MES-004
+            color: '#fb7185'
+            stroke_width: 2
+            transform: "return 6 + (x === 'on' ? 0.7 : 0);"
+          - entity: binary_sensor.pcha_diagnostic_mes_005_liaison_esp32_indisponible
+            name: MES-005
             color: '#fb7185'
             stroke_width: 2
             transform: "return 5 + (x === 'on' ? 0.7 : 0);"
@@ -5036,7 +5068,7 @@ views:
             transform: "return x === 'on' ? 0.7 : 0;"
         apex_config:
           chart:
-            height: 330
+            height: 360
             toolbar:
               show: false
           stroke:
@@ -5055,14 +5087,14 @@ views:
                 colors: '#94a3b8'
           yaxis:
             min: 0
-            max: 10
-            tickAmount: 10
+            max: 11
+            tickAmount: 11
             labels:
               style:
                 colors: '#94a3b8'
               formatter: |
                 EVAL:function(value) {
-                  const labels = {0:'PRO-003',1:'PRO-002',2:'PRO-001',3:'COH-002',4:'COH-001',5:'MES-004',6:'MES-003',7:'MES-002',8:'MES-001',9:'Niveau'};
+                  const labels = {0:'PRO-003',1:'PRO-002',2:'PRO-001',3:'COH-002',4:'COH-001',5:'MES-005',6:'MES-004',7:'MES-003',8:'MES-002',9:'MES-001',10:'Niveau'};
                   return labels[Math.round(value)] || '';
                 }
           legend:
@@ -6162,3 +6194,4 @@ views:
   ##############################################################################
 
   - !include views/parametres.yaml
+

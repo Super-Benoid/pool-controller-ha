@@ -90,3 +90,9 @@ V3.0 ne modifie pas les principes de sécurité :
 * seuils de sécurité non exposés comme réglages utilisateur courants.
 
 La référence détaillée historique du moteur reste disponible dans `docs/V1.1/`.
+
+
+## Diagnostic liaison ESP32
+
+[MES-005 — installation et comportement](LIAISON-ESP32.md) surveille la connexion
+native API de l'ESP32 Jardin avec validation et retour stable de 60 secondes.
