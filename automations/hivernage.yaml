@@ -1,0 +1,79 @@
+# Hivernage saisonnier : aucun matériel piscine n'est requis pour entrer/rester.
+- id: pcha_hivernage_appliquer
+  alias: PCHA - Hivernage - Appliquer
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      to: HIVERNAGE
+    - trigger: homeassistant
+      event: start
+    - trigger: state
+      entity_id: switch.pcha_commande_pompe_filtration
+      to: "on"
+  conditions:
+    - condition: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      state: HIVERNAGE
+  actions:
+    - action: script.pcha_machine_hivernage
+      continue_on_error: true
+    - action: timer.cancel
+      target:
+        entity_id:
+          - timer.pcha_traitement
+          - timer.pcha_vidange
+          - timer.pcha_maintenance
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_niveau_fonctionnement
+      data:
+        option: NORMAL
+    # Le verrou PRO-001 est conservé ; les notifications ne le réarment pas.
+    - action: input_boolean.turn_off
+      target:
+        entity_id:
+          - input_boolean.pcha_maintenance_temperature_indisponible
+          - input_boolean.pcha_maintenance_debit_indisponible
+          - input_boolean.pcha_maintenance_puissance_indisponible
+          - input_boolean.pcha_maintenance_luminosite_indisponible
+    - repeat:
+        for_each:
+          - pcha_mes_001
+          - pcha_mes_002
+          - pcha_mes_003
+          - pcha_mes_004
+          - pcha_mes_005
+          - pcha_coh_001
+          - pcha_coh_002
+          - pcha_pro_001
+          - pcha_pro_002
+          - pcha_pro_003
+          - pcha_rearmement_pro_001_refuse
+          - pcha_vidange_refusee
+          - pcha_vidange_serpentin
+          - pcha_vidange_terminee
+        sequence:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: "{{ repeat.item }}"
+
+# Une remise en service passe par OFF pour reconnecter et valider les mesures.
+- id: pcha_hivernage_sortir_vers_off
+  alias: PCHA - Hivernage - Sortie vers OFF
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      from: HIVERNAGE
+  conditions:
+    - condition: template
+      value_template: >
+        {{ trigger.to_state is not none
+           and trigger.to_state.state not in ['OFF', 'HIVERNAGE', 'unknown', 'unavailable'] }}
+  actions:
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_mode_de_fonctionnement
+      data:
+        option: "OFF"

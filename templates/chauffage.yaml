@@ -112,26 +112,25 @@
         {% else %}
           60
         {% endif %}
-      delay_off: >
+      delay_off: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          0
+        {% else %}
         {% if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on') %}
           {{ (states('input_number.pcha_temps_validation_arret_chauffage_solaire') | float(5) * 60) | int }}
         {% else %}
           300
         {% endif %}
-      state: >
-        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
-        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
-        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
-        {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %}
-        {% set luminosite = states('sensor.pcha_luminosite') %}
-        {% set seuil_activation = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %}
-        {% set hysteresis_klux =
+        {% endif %}
+      state: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          false
+        {% else %}
+        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %} {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %} {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %} {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %} {% set luminosite = states('sensor.pcha_luminosite') %} {% set seuil_activation = states('input_number.pcha_seuil_luminosite_chauffage') | float(0) %} {% set hysteresis_klux =
              states('input_number.pcha_hysteresis_luminosite_chauffage') | float(2)
              if is_state('input_boolean.pcha_parametres_chauffage_solaire_initialises', 'on')
              else 2 %}
-        {% set seuil_maintien = [seuil_activation - hysteresis_klux * 1000, 0] | max %}
-        {% set seuil_effectif = seuil_maintien if this.state == 'on' else seuil_activation %}
-        {{
+        {% set seuil_maintien = [seuil_activation - hysteresis_klux * 1000, 0] | max %} {% set seuil_effectif = seuil_maintien if this.state == 'on' else seuil_activation %} {{
           not secours_luminosite
           and luminosite_disponible
           and is_number(luminosite)
@@ -141,6 +140,7 @@
             else (luminosite | float(0)) > seuil_effectif
           )
         }}
+        {% endif %}
       attributes:
         luminosite_lux: >
           {{ states('sensor.pcha_luminosite') }}
@@ -186,15 +186,11 @@
       unique_id: pcha_chauffage_solaire_requis
       default_entity_id: binary_sensor.pcha_chauffage_solaire_requis
       icon: mdi:solar-power
-      state: >
-        {% set bassin = states('sensor.pcha_temperature_piscine') %}
-        {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %}
-        {% set sous_consigne = bassin_valide and (bassin | float(0)) < (states('input_number.pcha_temperature_de_consigne') | float(0)) %}
-        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
-        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
-        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
-        {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %}
-
+      state: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          false
+        {% else %}
+        {% set bassin = states('sensor.pcha_temperature_piscine') %} {% set bassin_valide = state_attr('sensor.pcha_temperature_piscine', 'measurement_valid') | bool(false) and is_number(bassin) %} {% set sous_consigne = bassin_valide and (bassin | float(0)) < (states('input_number.pcha_temperature_de_consigne') | float(0)) %} {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %} {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %} {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %} {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %}
         {% if not sous_consigne %}
           false
         {% elif not secours_luminosite %}
@@ -207,6 +203,7 @@
             and is_number(ecart)
             and ((ecart | float(0)) > seuil if this.state == 'on' else (ecart | float(0)) >= seuil)
           }}
+        {% endif %}
         {% endif %}
       attributes:
         source_pilotage: >
@@ -222,12 +219,15 @@
       unique_id: pcha_chauffage_solaire_actif
       default_entity_id: binary_sensor.pcha_chauffage_solaire_actif
       icon: mdi:sun-thermometer
-      state: >
+      state: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          false
+        {% else %}
         {{
           is_state('binary_sensor.pcha_chauffage_solaire_requis', 'on')
           and is_state('input_select.pcha_etat_machine', 'FILTRATION')
         }}
-
+        {% endif %}
 ################################################################################
 # Protection thermique
 #
@@ -242,23 +242,26 @@
       default_entity_id: binary_sensor.pcha_protection_serpentin_requise
       icon: mdi:shield-sun
       delay_on: "00:25:00"
-      delay_off: "00:05:00"
-      state: >
-        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
-        {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %}
-        {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %}
-        {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %}
-        {% set luminosite = states('sensor.pcha_luminosite') %}
-        {% set exposition_normale =
+      delay_off: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          0
+        {% else %}
+        00:05:00
+        {% endif %}
+      state: |
+        {% if is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') %}
+          false
+        {% else %}
+        {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %} {% set luminosite_disponible = state_attr('sensor.pcha_luminosite', 'source_available') | bool(false) %} {% set mes004 = is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') %} {% set secours_luminosite = mes004 or (stabilisation and not luminosite_disponible) %} {% set luminosite = states('sensor.pcha_luminosite') %} {% set exposition_normale =
              not secours_luminosite
              and luminosite_disponible
              and is_number(luminosite)
              and (luminosite | float(0)) > (states('input_number.pcha_seuil_luminosite_chauffage') | float(0)) %}
-        {% set exposition_secours = secours_luminosite and is_state('sun.sun', 'above_horizon') %}
-        {{
+        {% set exposition_secours = secours_luminosite and is_state('sun.sun', 'above_horizon') %} {{
           (exposition_normale or exposition_secours)
           and not is_state('input_select.pcha_etat_machine', 'FILTRATION')
         }}
+        {% endif %}
       attributes:
         source_protection: >
           {% set stabilisation = is_state('input_boolean.pcha_fenetre_stabilisation_demarrage', 'on') %}
@@ -364,3 +367,4 @@
         strategie_calcul: MOYENNE_MESURES_VALIDES_SOLEIL_AU_DESSUS_HORIZON
         pas_echantillonnage_min: 1
         suspendu_mes004: "{{ is_state('binary_sensor.pcha_diagnostic_mes_004_luminosite_indisponible', 'on') }}"
+

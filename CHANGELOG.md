@@ -1,5 +1,13 @@
 # Changelog
 
+## V3.0 — Hivernage et AWTRIX — 2026-09-12
+
+* mode persistant HIVERNAGE pour piscine démontée : arrêt et blocage pompe, annulation timers, suspension diagnostics et objectif ;
+* conservation du verrou manuel PRO-001 et remise en service via OFF ;
+* affichage explicite dans le dashboard et historiques ;
+* configuration AWTRIX suivie dans GitHub : suppression page piscine et alerte courante, filtrage des publications PCHA en hiver ;
+* installation AWTRIX par lien au dépôt avec sauvegarde et contrôle de la version existante ; voir docs/V3.0/HIVERNAGE.md.
+
 ## V3.0 — Diagnostic liaison ESP32 — 2026-09-11
 
 * ajout de MES-005, critique après 60 s de perte du statut ESPHome et réarmé après 60 s de retour stable ;

@@ -15,6 +15,7 @@ pcha_etat_machine:
   name: État de la machine
   icon: mdi:state-machine
   options:
+    - HIVERNAGE
     - INITIALISATION
     - ATTENTE
     - FILTRATION
@@ -26,6 +27,7 @@ pcha_mode_de_fonctionnement:
   icon: mdi:pool
   options:
     - "OFF"
+    - HIVERNAGE
     - SECURISATION
     - AUTO
     - TRAITEMENT
@@ -40,3 +42,4 @@ pcha_niveau_fonctionnement:
     - INFORMATIF
     - DEGRADE
     - CRITIQUE
+

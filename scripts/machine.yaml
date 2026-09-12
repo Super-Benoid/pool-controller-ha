@@ -109,6 +109,25 @@ pcha_machine_reevaluer:
           }}
 
     - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ is_state('input_select.pcha_etat_machine', 'HIVERNAGE')
+                   and states('input_select.pcha_mode_de_fonctionnement') not in ['OFF', 'HIVERNAGE'] }}
+          sequence:
+            - action: input_select.select_option
+              target:
+                entity_id: input_select.pcha_mode_de_fonctionnement
+              data:
+                option: "OFF"
+
+        - conditions:
+            - condition: state
+              entity_id: input_select.pcha_mode_de_fonctionnement
+              state: HIVERNAGE
+          sequence:
+            - action: script.pcha_machine_hivernage
+
         # Le niveau CRITIQUE est prioritaire et peut arrêter immédiatement la
         # pompe, sans attendre le temps minimum de marche. En VIDANGE, seuls
         # MES-002 et PRO-001 sont tolérés puisque le débitmètre est volontairement
@@ -204,3 +223,19 @@ pcha_machine_reevaluer:
                 }}
             - action: script.pcha_machine_attente
 
+
+pcha_machine_hivernage:
+  alias: PCHA - Machine - Hivernage
+  description: Arrête la pompe si accessible et affiche HIVERNAGE même si le matériel est débranché.
+  mode: single
+  sequence:
+    - action: script.pcha_pompe_arreter
+      continue_on_error: true
+    - condition: state
+      entity_id: input_select.pcha_mode_de_fonctionnement
+      state: HIVERNAGE
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.pcha_etat_machine
+      data:
+        option: HIVERNAGE

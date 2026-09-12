@@ -96,3 +96,7 @@ La référence détaillée historique du moteur reste disponible dans `docs/V1.1
 
 [MES-005 — installation et comportement](LIAISON-ESP32.md) surveille la connexion
 native API de l'ESP32 Jardin avec validation et retour stable de 60 secondes.
+
+## Hivernage saisonnier
+
+[Mode HIVERNAGE et AWTRIX](HIVERNAGE.md) : surveillance suspendue lorsque la piscine est démontée, avec déploiement depuis GitHub.

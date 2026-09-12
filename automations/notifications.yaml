@@ -26,7 +26,8 @@
     - condition: template
       value_template: >
         {{
-          trigger.event.data.gravite in ['DEGRADE', 'CRITIQUE']
+          not is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE')
+          and trigger.event.data.gravite in ['DEGRADE', 'CRITIQUE']
           and trigger.event.data.etat in ['ACTIF', 'INACTIF']
         }}
   variables:
@@ -74,6 +75,8 @@
       Motif surveillé : {{ motif }}
       Date : {{ now().strftime('%d/%m/%Y %H:%M:%S') }}
   actions:
+    - condition: template
+      value_template: "{{ not is_state('input_select.pcha_mode_de_fonctionnement', 'HIVERNAGE') }}"
     - choose:
         - conditions:
             - condition: template

@@ -42,9 +42,9 @@ class LiaisonTests(unittest.TestCase):
                                  str(source != 'on'))
 
     def test_startup_suppresses_new_fault_and_delays_are_symmetric(self):
-        self.assertEqual(render(self.diag['state'], {LINK:'off', START:'on'}), 'False')
+        self.assertEqual(render(self.diag['state'], {LINK:'off', START:'on'}).lower(), 'false')
         self.assertEqual(self.diag['delay_on'], '00:01:00')
-        self.assertEqual(self.diag['delay_off'], '00:01:00')
+        self.assertEqual(render(self.diag['delay_off']), '00:01:00')
         self.assertEqual(self.diag['attributes']['rearmement'], 'TEMPORISE')
 
     def test_global_level_events_and_independent_faults(self):

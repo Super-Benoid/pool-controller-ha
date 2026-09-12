@@ -18,10 +18,13 @@
       state: >
         {{ is_state('switch.jardin_prises_exterieur_pompe_de_filtration', 'on') }}
       turn_on:
-        action: switch.turn_on
-        target:
-          entity_id: switch.jardin_prises_exterieur_pompe_de_filtration
+        - condition: template
+          value_template: "{{ states('input_select.pcha_mode_de_fonctionnement') not in ['HIVERNAGE', 'unknown', 'unavailable'] and not is_state('input_select.pcha_etat_machine', 'HIVERNAGE') }}"
+        - action: switch.turn_on
+          target:
+            entity_id: switch.jardin_prises_exterieur_pompe_de_filtration
       turn_off:
         action: switch.turn_off
         target:
           entity_id: switch.jardin_prises_exterieur_pompe_de_filtration
+
