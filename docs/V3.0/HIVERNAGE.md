@@ -35,7 +35,8 @@ Le matériel débranché n'empêche pas son activation.
 ## AWTRIX du salon
 
 `integrations/awtrix_salon.yaml` reprend la dernière configuration retrouvée
-du 30 août 2026, avec les icônes météo actualisées et les pages maison/Tesla.
+transmise le 12 septembre 2026, avec les icônes météo, la température extérieure,
+la barre Enedis, les alternances Tesla et les pages lave-linge.
 Le topic existant est `awtrix_salon`.
 
 En HIVERNAGE :
@@ -45,7 +46,8 @@ En HIVERNAGE :
   et après démarrage HA en hiver ;
 - arrêt des alertes PCHA dédiées et filtrage des notifications persistantes PCHA
   dans le relais des alertes Home Assistant ;
-- météo, température salon, énergie, Tesla et alertes hors PCHA continuent.
+- l’alternance du traitement piscine est également suspendue, même pendant ses délais ;
+- météo, températures maison/extérieure, énergie, Tesla, lave-linge et alertes hors PCHA continuent.
 
 AWTRIX 3 ne propose pas d'identifiant pour effacer une seule notification :
 `notify/dismiss` ferme la notification courante. L'opération de nettoyage à
