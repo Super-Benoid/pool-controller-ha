@@ -109,6 +109,19 @@ class WinterTests(unittest.TestCase):
         for title,nid,allowed in [('PCHA — DEGRADE','pcha_mes_001',False),('Home Assistant','pcha_pro_001',False),('Météo','meteo',True)]:
             self.assertEqual(render(condition,WIN,trigger={'notification':{'title':title,'notification_id':nid}}),str(allowed))
 
+    def test_awtrix_treatment_cannot_republish_during_winter(self):
+        data=read('integrations/awtrix_salon.yaml')
+        treatment=next(a for a in data if a['id']=='awtrix_salon_traitement_piscine')
+        self.assertEqual(treatment['mode'],'restart')
+        self.assertEqual(render(treatment['actions'][0]['value_template'],WIN),'False')
+        # Every publication rechecks the live mode, including after a delay.
+        for branch in treatment['actions'][-1]['choose']:
+            for index,action in enumerate(branch['sequence']):
+                if action.get('action')=='mqtt.publish':
+                    guard=branch['sequence'][index-1]['value_template']
+                    self.assertEqual(render(guard,WIN),'False')
+                    self.assertEqual(render(guard,{MODE:'TRAITEMENT'}),'True')
+
     def test_ui_exposes_suspension_and_winter_history(self):
         s=(ROOT/'dashboard/piscine.yaml').read_text()
         self.assertIn('Objectif de filtration suspendu',s)

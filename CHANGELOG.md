@@ -1,5 +1,11 @@
 # Changelog
 
+## V3.0 — AWTRIX personnalisé et hivernage — 2026-09-12
+
+* intégration de la configuration salon transmise : température extérieure, barre Enedis, alternances Tesla et lave-linge conservés ;
+* suspension de l’alternance traitement piscine en hivernage, y compris après ses délais ;
+* conservation de l’acquittement des alertes, ajout MES-005 et reconnaissance du fichier installé avec fins de ligne LF ou CRLF.
+
 ## V3.0 — Hivernage et AWTRIX — 2026-09-12
 
 * mode persistant HIVERNAGE pour piscine démontée : arrêt et blocage pompe, annulation timers, suspension diagnostics et objectif ;

@@ -23,12 +23,13 @@ if [[ ! -f "$target_file" || -L "$target_file" ]]; then
   exit 1
 fi
 
-# Accepter uniquement les deux configurations retrouvées dans le projet.
+# Accepter uniquement les configurations relues et intégrées dans le projet.
+# Normaliser CRLF/LF et la dernière fin de ligne (fichier transmis par copier-coller).
 # Une version personnelle différente doit être intégrée dans GitHub d'abord.
-current_hash="$(sha256sum -- "$target_file")"
+current_hash="$(sed 's/\r$//' "$target_file" | sha256sum)"
 current_hash="${current_hash%% *}"
 case "$current_hash" in
-  30f7125f625fe0ca18e5e26b7712384caf8b79f20f1698fe077eacb46d18d377|a4e5da08c656cc734ec0b4b4c09a4e00b95653e90ad262fb899ea08707beaa7a) ;;
+  30f7125f625fe0ca18e5e26b7712384caf8b79f20f1698fe077eacb46d18d377|a4e5da08c656cc734ec0b4b4c09a4e00b95653e90ad262fb899ea08707beaa7a|ebf921e06d165aea859b7f1863d7099f2ed8e201017c38411bfd9f4bbce2056d) ;;
   *)
     echo "La configuration AWTRIX diffère des versions connues. Aucun fichier modifié." >&2
     echo "Transmettre awtrix_salon.yaml pour préserver ses dernières personnalisations." >&2
